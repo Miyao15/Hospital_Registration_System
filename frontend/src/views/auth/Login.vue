@@ -1,342 +1,152 @@
 <template>
-  <div class="login-container">
-    <div class="login-card">
-      <!-- 左侧装饰 -->
-      <div class="login-left">
-        <div class="logo-section">
-          <el-icon :size="80" color="#fff">
-            <User />
-          </el-icon>
-          <h1>医院门诊预约挂号系统</h1>
-          <p>Hospital Registration System</p>
-        </div>
-        <div class="features">
-          <div class="feature-item" v-for="(feature, index) in features" :key="index">
-            <el-icon :size="24"><component :is="feature.icon" /></el-icon>
-            <span>{{ feature.text }}</span>
+  <div class="auth-page">
+    <div class="cream-wrapper">
+      <header class="main-header">
+        <div class="container nav-container">
+          <div class="logo-area" @click="goHome">
+            <div class="logo-box">优</div>
+            <span class="logo-text">优医预约</span>
           </div>
+          <nav class="main-nav">
+            <span class="nav-text">还没有账户？</span>
+            <a href="#" class="nav-link register-link" @click.prevent="goRegister">立即注册</a>
+            <button class="btn-signup" @click="goHome">返回首页</button>
+          </nav>
         </div>
-      </div>
-
-      <!-- 右侧登录表单 -->
-      <div class="login-right">
-        <div class="login-form-wrapper">
-          <h2>欢迎登录</h2>
-          <p class="subtitle">请选择您的身份并登录</p>
-
-          <!-- 角色选择 -->
-          <div class="role-tabs">
-            <div 
-              v-for="role in roles" 
-              :key="role.value"
-              :class="['role-tab', { active: loginForm.role === role.value }]"
-              @click="loginForm.role = role.value"
-            >
-              <el-icon :size="30"><component :is="role.icon" /></el-icon>
-              <span>{{ role.label }}</span>
-            </div>
-          </div>
-
-          <!-- 登录表单 -->
-          <el-form 
-            ref="loginFormRef" 
-            :model="loginForm" 
-            :rules="loginRules"
-            class="login-form"
-          >
-            <el-form-item prop="username">
-              <el-input 
-                v-model="loginForm.username" 
-                placeholder="请输入用户名/手机号"
-                size="large"
-                :prefix-icon="User"
-                clearable
-              />
-            </el-form-item>
-
-            <el-form-item prop="password">
-              <el-input 
-                v-model="loginForm.password" 
-                type="password"
-                placeholder="请输入密码"
-                size="large"
-                :prefix-icon="Lock"
-                show-password
-                @keyup.enter="handleLogin"
-              />
-            </el-form-item>
-
-            <el-form-item>
-              <div class="form-options">
-                <el-checkbox v-model="rememberMe">记住我</el-checkbox>
-                <el-link type="primary" :underline="false">忘记密码？</el-link>
-              </div>
-            </el-form-item>
-
-            <el-form-item>
-              <el-button 
-                type="primary" 
-                size="large" 
-                class="login-btn"
-                :loading="loading"
-                @click="handleLogin"
-              >
-                登 录
-              </el-button>
-            </el-form-item>
-
-            <div class="register-link">
-              还没有账号？
-              <el-link type="primary" @click="goToRegister">立即注册</el-link>
-            </div>
-          </el-form>
-        </div>
-      </div>
+      </header>
     </div>
+
+    <main class="auth-main">
+      <div class="auth-card">
+        <h1 class="auth-title">欢迎回来</h1>
+        <p class="auth-subtitle">请选择您的身份并登录系统</p>
+
+        <div class="role-selector">
+          <button :class="['role-btn', { active: role === 'patient' }]" @click="role = 'patient'">患者登录</button>
+          <button :class="['role-btn', { active: role === 'doctor' }]" @click="role = 'doctor'">医生登录</button>
+          <button :class="['role-btn', { active: role === 'admin' }]" @click="role = 'admin'">管理员</button>
+        </div>
+
+        <form @submit.prevent="handleLogin">
+          <div class="form-group">
+            <label v-if="role !== 'admin'">手机号</label>
+            <label v-else>用户名</label>
+            <input 
+              v-if="role !== 'admin'"
+              type="tel" 
+              v-model="loginForm.identifier" 
+              placeholder="请输入您的手机号" 
+              required
+            >
+            <input 
+              v-else
+              type="text" 
+              v-model="loginForm.identifier" 
+              placeholder="请输入管理员用户名" 
+              required
+            >
+          </div>
+          <div class="form-group" style="margin-top: 20px;">
+            <label>密码</label>
+            <input 
+              type="password" 
+              v-model="loginForm.password" 
+              placeholder="请输入密码" 
+              required
+            >
+          </div>
+          
+          <div class="form-options">
+            <label class="remember-me">
+              <input type="checkbox" v-model="loginForm.remember"> 记住我
+            </label>
+            <a href="#" class="forgot-pwd">忘记密码？</a>
+          </div>
+
+          <button type="submit" class="btn-submit" :disabled="loading">
+            {{ loading ? '登录中...' : '立即登录' }}
+          </button>
+        </form>
+      </div>
+    </main>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
-import { useRouter } from 'vue-router'
-import { useUserStore } from '@/stores/user'
-import { User, Lock, Checked, ChatDotRound, TrendCharts } from '@element-plus/icons-vue'
+import { ref, reactive } from 'vue';
+import { useRouter } from 'vue-router';
+import { login } from '@/api/auth';
 
-const router = useRouter()
-const userStore = useUserStore()
-
-const loginFormRef = ref(null)
-const loading = ref(false)
-const rememberMe = ref(false)
-
-const roles = [
-  { value: 'patient', label: '患者', icon: 'User' },
-  { value: 'doctor', label: '医生', icon: 'UserFilled' },
-  { value: 'admin', label: '管理员', icon: 'Management' }
-]
-
-const features = [
-  { icon: 'Checked', text: '快速预约挂号' },
-  { icon: 'ChatDotRound', text: '在线咨询' },
-  { icon: 'TrendCharts', text: '智能推荐' }
-]
+const router = useRouter();
+const role = ref('patient');
+const loading = ref(false);
 
 const loginForm = reactive({
-  username: '',
+  identifier: '',
   password: '',
-  role: 'patient'
-})
+  remember: false
+});
 
-const loginRules = {
-  username: [
-    { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 3, max: 20, message: '用户名长度在 3 到 20 个字符', trigger: 'blur' }
-  ],
-  password: [
-    { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, max: 20, message: '密码长度在 6 到 20 个字符', trigger: 'blur' }
-  ]
-}
+const goHome = () => router.push('/');
+const goRegister = () => router.push('/register');
 
 const handleLogin = async () => {
-  await loginFormRef.value.validate(async (valid) => {
-    if (valid) {
-      loading.value = true
-      try {
-        const success = await userStore.loginAction(loginForm)
-        if (success) {
-          // 根据角色跳转到不同页面
-          const roleRoutes = {
-            patient: '/patient/home',
-            doctor: '/doctor/home',
-            admin: '/admin/home'
-          }
-          router.push(roleRoutes[loginForm.role])
-        }
-      } finally {
-        loading.value = false
-      }
-    }
-  })
-}
+  loading.value = true;
+  try {
+    const res = await login({
+      identifier: loginForm.identifier,
+      password: loginForm.password,
+      role: role.value.toUpperCase()
+    });
 
-const goToRegister = () => {
-  router.push('/register')
-}
+    // 存储 JWT Token 和基本用户信息
+    localStorage.setItem('token', res.data.token);
+    localStorage.setItem('userRole', role.value);
+    
+    alert('登录成功！');
+    router.push('/');
+  } catch (error) {
+    const errorMsg = error.response?.data?.message || '登录失败，请检查您的凭据。';
+    alert(errorMsg);
+  } finally {
+    loading.value = false;
+  }
+};
 </script>
 
-<style lang="scss" scoped>
-.login-container {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
+<style scoped>
+.auth-page { background-color: #fff; min-height: 100vh; }
+.cream-wrapper { background-color: #FFF9E5; }
+.main-header { height: 60px; display: flex; align-items: center; }
+.container { max-width: 1080px; margin: 0 auto; padding: 0 20px; width: 100%; }
+.nav-container { display: flex; justify-content: space-between; align-items: center; }
+.logo-area { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.logo-box { background: #FFD300; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-weight: bold; border-radius: 4px 0 4px 0; font-size: 13px; }
+.logo-text { font-size: 18px; font-weight: 700; color: #2A2A2A; }
+.main-nav { display: flex; align-items: center; gap: 20px; }
+.nav-text { font-size: 14px; color: #666; }
+.nav-link { text-decoration: none; color: #2A2A2A; font-size: 14px; font-weight: 600; }
+.btn-signup { background: #FFD300; border: none; padding: 8px 18px; font-size: 14px; font-weight: 700; border-radius: 4px; cursor: pointer; color: #2A2A2A; }
 
-.login-card {
-  display: flex;
-  width: 100%;
-  max-width: 1100px;
-  min-height: 650px;
-  background: white;
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  animation: fadeInUp 0.6s ease-out;
-}
+.auth-main { display: flex; justify-content: center; padding: 60px 20px; }
+.auth-card { background-color: #fff; border: 1px solid #E8E8E8; border-radius: 12px; padding: 40px; width: 100%; max-width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+.auth-title { font-size: 28px; font-weight: 700; text-align: center; margin: 0 0 8px; }
+.auth-subtitle { font-size: 15px; text-align: center; color: #666; margin-bottom: 32px; }
 
-.login-left {
-  flex: 1;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 60px 40px;
-  color: white;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
+.role-selector { display: flex; background-color: #f0f0f0; border-radius: 6px; padding: 4px; margin-bottom: 32px; }
+.role-btn { flex: 1; padding: 10px; border: none; background: transparent; border-radius: 4px; font-size: 14px; font-weight: 600; color: #666; cursor: pointer; }
+.role-btn.active { background: #fff; color: #2A2A2A; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 
-.logo-section {
-  text-align: center;
-  
-  h1 {
-    font-size: 32px;
-    margin: 20px 0 10px;
-    font-weight: 600;
-  }
-  
-  p {
-    font-size: 14px;
-    opacity: 0.9;
-  }
-}
+.form-group { display: flex; flex-direction: column; }
+.form-group label { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+.form-group input { padding: 12px; border: 1px solid #E8E8E8; border-radius: 4px; background: #FAFAFA; font-size: 14px; }
+.form-group input:focus { outline: none; border-color: #FFD300; background: #fff; box-shadow: 0 0 0 2px rgba(255, 211, 0, 0.2); }
 
-.features {
-  margin-top: 60px;
-}
+.form-options { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; font-size: 13px; }
+.remember-me { display: flex; align-items: center; gap: 6px; color: #666; cursor: pointer; }
+.forgot-pwd { color: #2A2A2A; text-decoration: none; font-weight: 600; }
 
-.feature-item {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  padding: 20px;
-  margin-bottom: 15px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
-  
-  &:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: translateX(10px);
-  }
-  
-  span {
-    font-size: 16px;
-  }
-}
-
-.login-right {
-  flex: 1;
-  padding: 60px 50px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.login-form-wrapper {
-  width: 100%;
-  max-width: 400px;
-  
-  h2 {
-    font-size: 32px;
-    color: #333;
-    margin-bottom: 10px;
-  }
-  
-  .subtitle {
-    color: #666;
-    margin-bottom: 30px;
-  }
-}
-
-.role-tabs {
-  display: flex;
-  gap: 15px;
-  margin-bottom: 30px;
-}
-
-.role-tab {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 20px 10px;
-  border: 2px solid #e0e0e0;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  
-  &:hover {
-    border-color: #667eea;
-    background: #f5f7ff;
-  }
-  
-  &.active {
-    border-color: #667eea;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-  }
-  
-  span {
-    font-size: 14px;
-    font-weight: 500;
-  }
-}
-
-.login-form {
-  margin-top: 20px;
-}
-
-.form-options {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.login-btn {
-  width: 100%;
-  height: 50px;
-  font-size: 16px;
-  font-weight: 600;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
-  
-  &:hover {
-    opacity: 0.9;
-  }
-}
-
-.register-link {
-  text-align: center;
-  color: #666;
-  margin-top: 20px;
-}
-
-@media (max-width: 768px) {
-  .login-card {
-    flex-direction: column;
-  }
-  
-  .login-left {
-    padding: 40px 20px;
-  }
-  
-  .login-right {
-    padding: 40px 20px;
-  }
-}
+.btn-submit { width: 100%; background: #FFD300; border: none; padding: 14px; font-size: 16px; font-weight: 700; border-radius: 4px; cursor: pointer; margin-top: 32px; color: #2A2A2A; }
+.btn-submit:hover { background: #F4CA00; }
+.btn-submit:disabled { background: #ccc; cursor: not-allowed; }
 </style>

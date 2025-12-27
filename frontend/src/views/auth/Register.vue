@@ -1,432 +1,262 @@
 <template>
-  <div class="register-container">
-    <div class="register-card">
-      <!-- 顶部导航 -->
-      <div class="register-header">
-        <el-icon :size="40" color="#667eea">
-          <User />
-        </el-icon>
-        <h2>用户注册</h2>
-        <p>已有账号？<el-link type="primary" @click="goToLogin">立即登录</el-link></p>
-      </div>
+  <div class="auth-page">
+    <div class="cream-wrapper">
+      <header class="main-header">
+        <div class="container nav-container">
+          <div class="logo-area" @click="goHome">
+            <div class="logo-box">优</div>
+            <span class="logo-text">优医预约</span>
+          </div>
+          <nav class="main-nav">
+            <span class="nav-text">已有账户？</span>
+            <a href="#" class="nav-link login-link" @click.prevent="goLogin">登录</a>
+            <button class="btn-signup" @click="goHome">返回首页</button>
+          </nav>
+        </div>
+      </header>
+    </div>
 
-      <!-- 步骤条 -->
-      <el-steps :active="activeStep" align-center class="register-steps">
-        <el-step title="选择身份" icon="UserFilled" />
-        <el-step title="填写信息" icon="EditPen" />
-        <el-step title="完成注册" icon="SuccessFilled" />
-      </el-steps>
+    <main class="auth-main">
+      <div class="auth-card">
+        <h1 class="auth-title">创建您的专属账户</h1>
+        <p class="auth-subtitle">加入优医，享受便捷的在线医疗服务</p>
 
-      <!-- 步骤内容 -->
-      <div class="register-content">
-        <!-- 步骤 1: 选择身份 -->
-        <div v-show="activeStep === 0" class="step-content fade-in-up">
-          <h3>请选择您的身份</h3>
-          <div class="role-cards">
-            <div 
-              v-for="role in roles" 
-              :key="role.value"
-              :class="['role-card', { active: registerForm.role === role.value }]"
-              @click="registerForm.role = role.value"
-            >
-              <el-icon :size="60"><component :is="role.icon" /></el-icon>
-              <h4>{{ role.label }}</h4>
-              <p>{{ role.description }}</p>
+        <div class="role-selector">
+          <button 
+            :class="['role-btn', { active: role === 'patient' }]" 
+            @click="role = 'patient'">
+            我是患者
+          </button>
+          <button 
+            :class="['role-btn', { active: role === 'doctor' }]" 
+            @click="role = 'doctor'">
+            我是医生
+          </button>
+          <button 
+            :class="['role-btn', { active: role === 'admin' }]" 
+            @click="role = 'admin'">
+            管理员注册
+          </button>
+        </div>
+
+        <!-- Patient Registration Form -->
+        <form v-if="role === 'patient'" @submit.prevent="handleRegister">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="patient-name">姓名</label>
+              <input type="text" id="patient-name" v-model="patientForm.name" placeholder="请输入您的真实姓名" required>
+            </div>
+            <div class="form-group">
+              <label for="patient-phone">手机号</label>
+              <input type="tel" id="patient-phone" v-model="patientForm.phone" placeholder="用于登录和接收通知" required>
+            </div>
+            <div class="form-group">
+              <label for="patient-id-card">身份证号</label>
+              <input type="text" id="patient-id-card" v-model="patientForm.idCard" placeholder="请输入18位身份证号" required>
+            </div>
+            <div class="form-group">
+              <label for="patient-birthdate">出生日期</label>
+              <input 
+                type="text" 
+                id="patient-birthdate" 
+                v-model="patientForm.birthDate" 
+                placeholder="yyyy-mm-dd" 
+                onfocus="(this.type='date')" 
+                onblur="if(!this.value)this.type='text'"
+                required>
+            </div>
+             <div class="form-group">
+              <label>性别</label>
+              <div class="gender-options">
+                <label><input type="radio" v-model="patientForm.gender" value="MALE"> 男</label>
+                <label><input type="radio" v-model="patientForm.gender" value="FEMALE"> 女</label>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="patient-password">设置密码</label>
+              <input type="password" id="patient-password" v-model="patientForm.password" placeholder="至少6位，区分大小写" required>
             </div>
           </div>
-          <el-button 
-            type="primary" 
-            size="large" 
-            @click="nextStep"
-            :disabled="!registerForm.role"
-          >
-            下一步
-          </el-button>
-        </div>
+          <button type="submit" class="btn-submit" :disabled="loading">
+            {{ loading ? '注册中...' : '同意协议并注册' }}
+          </button>
+        </form>
 
-        <!-- 步骤 2: 填写信息 -->
-        <div v-show="activeStep === 1" class="step-content fade-in-up">
-          <h3>填写{{ getRoleLabel() }}信息</h3>
-          
-          <el-form 
-            ref="registerFormRef" 
-            :model="registerForm" 
-            :rules="registerRules"
-            label-width="100px"
-            class="register-form"
-          >
-            <!-- 通用信息 -->
-            <el-form-item label="用户名" prop="username">
-              <el-input v-model="registerForm.username" placeholder="请输入用户名" clearable />
-            </el-form-item>
+        <!-- Doctor Registration Form -->
+        <form v-if="role === 'doctor'" @submit.prevent="handleRegister">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="doctor-name">姓名</label>
+              <input type="text" id="doctor-name" v-model="doctorForm.name" placeholder="请输入您的真实姓名" required>
+            </div>
+             <div class="form-group">
+              <label for="doctor-phone">手机号</label>
+              <input type="tel" id="doctor-phone" v-model="doctorForm.phone" placeholder="用于登录和接收通知" required>
+            </div>
+            <div class="form-group">
+              <label for="doctor-employeeId">工号</label>
+              <input type="text" id="doctor-employeeId" v-model="doctorForm.employeeId" placeholder="请输入您的工号" required>
+            </div>
+            <div class="form-group">
+              <label for="doctor-department">科室</label>
+              <input type="text" id="doctor-department" v-model="doctorForm.departmentId" placeholder="请输入科室ID" required>
+            </div>
+            <div class="form-group">
+              <label for="doctor-title">职称</label>
+              <select id="doctor-title" v-model="doctorForm.title" required>
+                <option disabled value="">请选择您的职称</option>
+                <option value="ATTENDING_PHYSICIAN">主治医师</option>
+                <option value="DEPUTY_CHIEF_PHYSICIAN">副主任医师</option>
+                <option value="CHIEF_PHYSICIAN">主任医师</option>
+                <option value="OTHER">其他</option>
+              </select>
+            </div>
+             <div class="form-group">
+              <label for="doctor-license">医师资格证号</label>
+              <input type="text" id="doctor-license" v-model="doctorForm.licenseNumber" placeholder="请输入资格证号" required>
+            </div>
+            <div class="form-group">
+              <label for="doctor-password">设置密码</label>
+              <input type="password" id="doctor-password" v-model="doctorForm.password" placeholder="至少6位，区分大小写" required>
+            </div>
+          </div>
+          <button type="submit" class="btn-submit" :disabled="loading">
+            {{ loading ? '注册中...' : '提交审核' }}
+          </button>
+        </form>
 
-            <el-form-item label="手机号" prop="phone">
-              <el-input v-model="registerForm.phone" placeholder="请输入手机号" clearable />
-            </el-form-item>
+        <!-- Admin Registration Form -->
+        <form v-if="role === 'admin'" @submit.prevent="handleRegister">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="admin-username">用户名</label>
+              <input type="text" id="admin-username" v-model="adminForm.username" placeholder="用于后台登录" required>
+            </div>
+            <div class="form-group">
+              <label for="admin-password">设置密码</label>
+              <input type="password" id="admin-password" v-model="adminForm.password" placeholder="请确保密码强度" required>
+            </div>
+          </div>
+          <button type="submit" class="btn-submit" :disabled="loading">
+            {{ loading ? '注册中...' : '创建管理员账户' }}
+          </button>
+        </form>
 
-            <el-form-item label="密码" prop="password">
-              <el-input 
-                v-model="registerForm.password" 
-                type="password" 
-                placeholder="请输入密码" 
-                show-password 
-              />
-            </el-form-item>
-
-            <el-form-item label="确认密码" prop="confirmPassword">
-              <el-input 
-                v-model="registerForm.confirmPassword" 
-                type="password" 
-                placeholder="请再次输入密码" 
-                show-password 
-              />
-            </el-form-item>
-
-            <el-form-item label="姓名" prop="realName">
-              <el-input v-model="registerForm.realName" placeholder="请输入真实姓名" clearable />
-            </el-form-item>
-
-            <el-form-item label="身份证号" prop="idCard">
-              <el-input v-model="registerForm.idCard" placeholder="请输入身份证号" clearable />
-            </el-form-item>
-
-            <!-- 患者特有信息 -->
-            <template v-if="registerForm.role === 'patient'">
-              <el-form-item label="过敏史" prop="allergyHistory">
-                <el-input 
-                  v-model="registerForm.allergyHistory" 
-                  type="textarea" 
-                  :rows="2"
-                  placeholder="请输入过敏史（如有）" 
-                />
-              </el-form-item>
-
-              <el-form-item label="病史" prop="medicalHistory">
-                <el-input 
-                  v-model="registerForm.medicalHistory" 
-                  type="textarea" 
-                  :rows="2"
-                  placeholder="请输入既往病史（如有）" 
-                />
-              </el-form-item>
-            </template>
-
-            <!-- 医生特有信息 -->
-            <template v-if="registerForm.role === 'doctor'">
-              <el-form-item label="工号" prop="employeeId">
-                <el-input v-model="registerForm.employeeId" placeholder="请输入工号" clearable />
-              </el-form-item>
-
-              <el-form-item label="职称" prop="title">
-                <el-select v-model="registerForm.title" placeholder="请选择职称" style="width: 100%">
-                  <el-option label="住院医师" value="resident" />
-                  <el-option label="主治医师" value="attending" />
-                  <el-option label="副主任医师" value="associate" />
-                  <el-option label="主任医师" value="chief" />
-                </el-select>
-              </el-form-item>
-
-              <el-form-item label="科室" prop="department">
-                <el-select v-model="registerForm.department" placeholder="请选择科室" style="width: 100%">
-                  <el-option label="内科" value="internal" />
-                  <el-option label="外科" value="surgery" />
-                  <el-option label="儿科" value="pediatrics" />
-                  <el-option label="妇科" value="gynecology" />
-                  <el-option label="骨科" value="orthopedics" />
-                </el-select>
-              </el-form-item>
-
-              <el-form-item label="擅长领域" prop="expertise">
-                <el-input 
-                  v-model="registerForm.expertise" 
-                  type="textarea" 
-                  :rows="2"
-                  placeholder="请输入擅长领域" 
-                />
-              </el-form-item>
-
-              <el-form-item label="医师资格证" prop="licenseNumber">
-                <el-input v-model="registerForm.licenseNumber" placeholder="请输入医师资格证号" clearable />
-              </el-form-item>
-            </template>
-
-            <el-form-item>
-              <el-checkbox v-model="agreeTerms">
-                我已阅读并同意
-                <el-link type="primary">《用户协议》</el-link>
-                和
-                <el-link type="primary">《隐私政策》</el-link>
-              </el-checkbox>
-            </el-form-item>
-
-            <el-form-item>
-              <el-button @click="prevStep">上一步</el-button>
-              <el-button 
-                type="primary" 
-                @click="handleRegister"
-                :loading="loading"
-                :disabled="!agreeTerms"
-              >
-                注册
-              </el-button>
-            </el-form-item>
-          </el-form>
-        </div>
-
-        <!-- 步骤 3: 注册成功 -->
-        <div v-show="activeStep === 2" class="step-content success-content fade-in-up">
-          <el-result icon="success" title="注册成功！" sub-title="您的账号已创建成功，请登录使用">
-            <template #extra>
-              <el-button type="primary" size="large" @click="goToLogin">
-                前往登录
-              </el-button>
-            </template>
-          </el-result>
+         <div class="auth-footer">
+          注册或登录即代表您同意我们的 <a href="#">服务条款</a> 和 <a href="#">隐私政策</a>.
         </div>
       </div>
-    </div>
+    </main>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
-import { useRouter } from 'vue-router'
-import { useUserStore } from '@/stores/user'
-import { User } from '@element-plus/icons-vue'
+import { ref, reactive } from 'vue';
+import { useRouter } from 'vue-router';
+import { registerPatient, registerDoctor, registerAdmin } from '@/api/auth'; 
 
-const router = useRouter()
-const userStore = useUserStore()
+const router = useRouter();
+const role = ref('patient'); // 'patient' or 'doctor'
+const loading = ref(false);
 
-const registerFormRef = ref(null)
-const activeStep = ref(0)
-const loading = ref(false)
-const agreeTerms = ref(false)
-
-const roles = [
-  { 
-    value: 'patient', 
-    label: '患者', 
-    icon: 'User',
-    description: '预约挂号、查看医生、在线咨询'
-  },
-  { 
-    value: 'doctor', 
-    label: '医生', 
-    icon: 'UserFilled',
-    description: '查看预约、管理患者、坐诊管理'
-  },
-  { 
-    value: 'admin', 
-    label: '管理员', 
-    icon: 'Management',
-    description: '系统管理、用户管理、数据统计'
-  }
-]
-
-const registerForm = reactive({
-  role: '',
-  username: '',
+const patientForm = reactive({
   phone: '',
   password: '',
-  confirmPassword: '',
-  realName: '',
+  name: '',
   idCard: '',
-  // 患者特有
-  allergyHistory: '',
-  medicalHistory: '',
-  // 医生特有
+  gender: 'MALE',
+  birthDate: '',
+});
+
+const doctorForm = reactive({
+  phone: '',
+  password: '',
+  name: '',
   employeeId: '',
   title: '',
-  department: '',
-  expertise: '',
-  licenseNumber: ''
-})
+  departmentId: '',
+  licenseNumber: '',
+});
 
-const validatePassword = (rule, value, callback) => {
-  if (value === '') {
-    callback(new Error('请输入密码'))
-  } else if (value.length < 6) {
-    callback(new Error('密码长度不能少于6位'))
-  } else {
-    callback()
-  }
-}
+const adminForm = reactive({
+  username: '',
+  password: '',
+});
 
-const validateConfirmPassword = (rule, value, callback) => {
-  if (value === '') {
-    callback(new Error('请再次输入密码'))
-  } else if (value !== registerForm.password) {
-    callback(new Error('两次输入密码不一致'))
-  } else {
-    callback()
-  }
-}
-
-const registerRules = {
-  username: [
-    { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 3, max: 20, message: '用户名长度在 3 到 20 个字符', trigger: 'blur' }
-  ],
-  phone: [
-    { required: true, message: '请输入手机号', trigger: 'blur' },
-    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
-  ],
-  password: [
-    { required: true, validator: validatePassword, trigger: 'blur' }
-  ],
-  confirmPassword: [
-    { required: true, validator: validateConfirmPassword, trigger: 'blur' }
-  ],
-  realName: [
-    { required: true, message: '请输入真实姓名', trigger: 'blur' }
-  ],
-  idCard: [
-    { required: true, message: '请输入身份证号', trigger: 'blur' },
-    { pattern: /(^\d{15}$)|(^\d{18}$)|(^\d{17}(\d|X|x)$)/, message: '请输入正确的身份证号', trigger: 'blur' }
-  ]
-}
-
-const getRoleLabel = () => {
-  return roles.find(r => r.value === registerForm.role)?.label || ''
-}
-
-const nextStep = () => {
-  if (registerForm.role) {
-    activeStep.value++
-  }
-}
-
-const prevStep = () => {
-  activeStep.value--
-}
+const goHome = () => router.push('/');
+const goLogin = () => router.push('/login');
 
 const handleRegister = async () => {
-  await registerFormRef.value.validate(async (valid) => {
-    if (valid) {
-      loading.value = true
-      try {
-        const success = await userStore.registerAction(registerForm)
-        if (success) {
-          activeStep.value = 2
-        }
-      } finally {
-        loading.value = false
-      }
+  loading.value = true;
+  try {
+    if (role.value === 'patient') {
+      await registerPatient(patientForm);
+      alert('患者注册成功！'); // Placeholder
+    } else if (role.value === 'admin') {
+      await registerAdmin(adminForm);
+      alert('管理员注册成功！');
+    } else {
+      await registerDoctor(doctorForm);
+      alert('医生注册申请已提交，请等待管理员审核。'); // Placeholder
     }
-  })
-}
-
-const goToLogin = () => {
-  router.push('/login')
-}
+    router.push('/login');
+  } catch (error) {
+    console.error('Registration failed:', error);
+    const errorMsg = error.response?.data?.message || '注册失败，请检查网络或输入信息。';
+    alert(errorMsg);
+  } finally {
+    loading.value = false;
+  }
+};
 </script>
 
-<style lang="scss" scoped>
-.register-container {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
+<style scoped>
+/* 继承 Landing.vue 的风格 */
+.auth-page { background-color: #fff; min-height: 100vh; }
+.cream-wrapper { background-color: #FFF9E5; padding-bottom: 0; }
+.main-header { height: 60px; display: flex; align-items: center; position: relative; z-index: 50; }
+.container { max-width: 1080px; margin: 0 auto; padding: 0 20px; position: relative; height: 100%; }
+.nav-container { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+.logo-area { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.logo-box { background: #FFD300; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-weight: bold; border-radius: 4px 0 4px 0; color: #000; font-size: 13px; }
+.logo-text { font-size: 18px; font-weight: 700; color: #2A2A2A; }
+.main-nav { display: flex; align-items: center; gap: 20px; }
+.nav-text { font-size: 14px; color: #666; }
+.nav-link { text-decoration: none; color: #2A2A2A; font-size: 14px; font-weight: 600; }
+.btn-signup { background: #FFD300; border: none; padding: 8px 18px; font-size: 14px; font-weight: 700; border-radius: 4px; cursor: pointer; transition: background 0.2s; color: #2A2A2A; }
+.btn-signup:hover { background: #F4CA00; }
 
-.register-card {
-  width: 100%;
-  max-width: 900px;
-  background: white;
-  border-radius: 20px;
-  padding: 50px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  animation: fadeInUp 0.6s ease-out;
-}
+/* Auth Card Styles */
+.auth-main { display: flex; justify-content: center; align-items: flex-start; padding: 60px 20px; background-color: #fff; }
+.auth-card { background-color: #fff; border: 1px solid #E8E8E8; border-radius: 12px; padding: 40px; width: 100%; max-width: 600px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+.auth-title { font-size: 28px; font-weight: 700; text-align: center; color: #2A2A2A; margin: 0 0 8px; }
+.auth-subtitle { font-size: 16px; text-align: center; color: #666; margin-bottom: 32px; }
 
-.register-header {
-  text-align: center;
-  margin-bottom: 40px;
-  
-  h2 {
-    font-size: 32px;
-    color: #333;
-    margin: 20px 0 10px;
-  }
-  
-  p {
-    color: #666;
-  }
-}
+/* Role Selector */
+.role-selector { display: flex; justify-content: center; margin-bottom: 32px; background-color: #f0f0f0; border-radius: 6px; padding: 4px; }
+.role-btn { flex: 1; padding: 10px; border: none; background-color: transparent; border-radius: 4px; font-size: 14px; font-weight: 600; color: #666; cursor: pointer; transition: all 0.2s ease-in-out; }
+.role-btn.active { background-color: #fff; color: #2A2A2A; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 
-.register-steps {
-  margin-bottom: 50px;
-}
+/* Form Styles */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 24px; }
+.form-group { display: flex; flex-direction: column; }
+.form-group label { font-size: 13px; font-weight: 600; color: #333; margin-bottom: 6px; }
+.form-group input, .form-group select { width: 100%; padding: 12px; font-size: 14px; border: 1px solid #E8E8E8; border-radius: 4px; background-color: #FAFAFA; box-sizing: border-box; }
+.form-group input:focus, .form-group select:focus { outline: none; border-color: #FFD300; background-color: #fff; box-shadow: 0 0 0 2px rgba(255, 211, 0, 0.3); }
 
-.step-content {
-  min-height: 400px;
-  
-  h3 {
-    font-size: 24px;
-    color: #333;
-    margin-bottom: 30px;
-    text-align: center;
-  }
-}
+.gender-options { display: flex; align-items: center; gap: 24px; height: 45px; }
+.gender-options label { display: flex; align-items: center; gap: 6px; font-weight: normal; }
 
-.role-cards {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  margin-bottom: 40px;
-}
+.btn-submit { width: 100%; background: #FFD300; border: none; padding: 14px; font-size: 16px; font-weight: 700; border-radius: 4px; cursor: pointer; transition: background 0.2s; color: #2A2A2A; margin-top: 32px; }
+.btn-submit:hover { background: #F4CA00; }
+.btn-submit:disabled { background-color: #ccc; cursor: not-allowed; }
 
-.role-card {
-  padding: 40px 20px;
-  border: 2px solid #e0e0e0;
-  border-radius: 12px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  
-  &:hover {
-    border-color: #667eea;
-    background: #f5f7ff;
-    transform: translateY(-5px);
-  }
-  
-  &.active {
-    border-color: #667eea;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-  }
-  
-  h4 {
-    font-size: 20px;
-    margin: 20px 0 10px;
-  }
-  
-  p {
-    font-size: 14px;
-    opacity: 0.8;
-  }
-}
+.auth-footer { text-align: center; margin-top: 24px; font-size: 12px; color: #888; }
+.auth-footer a { color: #555; text-decoration: none; font-weight: 600; }
+.auth-footer a:hover { text-decoration: underline; }
 
-.register-form {
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-.success-content {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-@media (max-width: 768px) {
-  .register-card {
-    padding: 30px 20px;
-  }
-  
-  .role-cards {
-    grid-template-columns: 1fr;
-  }
+@media (max-width: 600px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .auth-card { padding: 30px 25px; }
 }
 </style>

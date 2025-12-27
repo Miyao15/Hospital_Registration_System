@@ -1,0 +1,276 @@
+/* frontend/src/styles/auth.scss */
+
+/* 全局字体和颜色变量，确保与主项目一致 */
+:root {
+  --primary-color: #FFD300;
+  --primary-hover-color: #F4CA00;
+  --text-primary-color: #2A2A2A;
+  --text-secondary-color: #666;
+  --bg-color: #FFF9E5;
+  --white-color: #fff;
+  --border-color: #e0e0e0;
+  --border-focus-color: rgba(255, 211, 0, 0.5);
+}
+
+/* 认证页面的整体布局 */
+.auth-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: var(--bg-color);
+  font-family: "Microsoft YaHei", "Heiti SC", sans-serif;
+}
+
+/* 统一的页眉 */
+.auth-header {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  background-color: var(--white-color);
+  border-bottom: 1px solid #eee;
+  flex-shrink: 0;
+  padding: 0 20px;
+}
+
+.auth-nav-container {
+  max-width: 1080px;
+  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.auth-logo-area {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.auth-logo-box {
+  background: var(--primary-color);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  border-radius: 4px 0 4px 0;
+  color: #000;
+  font-size: 16px;
+}
+
+.auth-logo-text {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary-color);
+}
+
+.auth-header-nav {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.nav-prompt {
+  font-size: 14px;
+  color: var(--text-secondary-color);
+}
+
+.btn-nav {
+  background-color: transparent;
+  border: 1px solid var(--text-primary-color);
+  padding: 8px 18px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary-color);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-nav:hover {
+  background-color: var(--text-primary-color);
+  color: var(--white-color);
+}
+
+
+/* 中间内容区域 */
+.auth-content {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 440px; /* 稍微加宽一点 */
+  background: var(--white-color);
+  padding: 48px; /* 增加内边距 */
+  border-radius: 12px; /* 更大的圆角 */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
+  animation: fadeInUp 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(25px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.auth-title {
+  font-size: 28px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--text-primary-color);
+  margin-bottom: 12px;
+}
+
+.auth-subtitle {
+  font-size: 15px;
+  color: var(--text-secondary-color);
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+/* 角色选择器 */
+.role-selector {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 使用 grid 布局 */
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.role-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 10px;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  color: var(--text-secondary-color);
+  background-color: #fafafa;
+}
+
+.role-option:hover {
+  border-color: var(--primary-color);
+  color: var(--text-primary-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.role-option.active {
+  border-color: var(--primary-color);
+  background-color: var(--bg-color);
+  color: var(--text-primary-color);
+  font-weight: 700;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.role-icon {
+  width: 28px;
+  height: 28px;
+  margin-bottom: 10px;
+}
+
+.role-option span {
+  font-size: 14px;
+}
+
+
+/* 表单通用样式 */
+.auth-form .form-group {
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.auth-form label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.auth-form input[type='text'],
+.auth-form input[type='password'],
+.auth-form input[type='email'] {
+  width: 100%;
+  padding: 14px 16px; /* 增加输入框内边距，使其更高 */
+  font-size: 15px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  background-color: #fdfdfd;
+}
+
+.auth-form input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--border-focus-color);
+}
+
+.form-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  margin-bottom: 32px;
+  color: var(--text-secondary-color);
+}
+
+.checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.checkbox-wrapper input {
+  accent-color: var(--primary-color);
+}
+
+.link-text {
+  color: var(--text-primary-color);
+  text-decoration: none;
+  font-weight: 600;
+}
+.link-text:hover {
+  text-decoration: underline;
+}
+
+/* 主操作按钮 */
+.btn-primary-auth {
+  width: 100%;
+  padding: 14px;
+  background-color: var(--primary-color);
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary-color);
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+.btn-primary-auth:hover {
+  background-color: var(--primary-hover-color);
+  transform: translateY(-2px);
+}
+
+.btn-primary-auth:disabled {
+  background-color: #e0e0e0;
+  cursor: not-allowed;
+  transform: none;
+}

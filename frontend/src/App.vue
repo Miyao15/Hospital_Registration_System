@@ -12,10 +12,10 @@ onMounted(() => {
 })
 </script>
 
-<style lang="scss">
+<style>
 #app {
   width: 100%;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #fffef6; /* light warm background to match yellow/white theme */
 }
 </style>

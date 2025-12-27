@@ -8,17 +8,23 @@ import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 
 import App from './App.vue'
 import router from './router'
+import { useUserStore } from './stores/user'
 import './styles/global.scss'
 
 const app = createApp(App)
 const pinia = createPinia()
+
+app.use(pinia)
+
+// 初始化 Pinia store 并加载本地存储的用户信息
+const userStore = useUserStore()
+userStore.initUserInfo()
 
 // 注册所有图标
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)
 }
 
-app.use(pinia)
 app.use(router)
 app.use(ElementPlus, {
   locale: zhCn,

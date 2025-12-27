@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Hero SVG: simplified doctor illustration pointing left toward search card -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 360" width="720" height="360" preserveAspectRatio="xMidYMid meet">
+  <defs>
+    <style>
+      .skin{fill:#ffd7b0}
+      .coat{fill:#ffffff}
+      .accent{fill:#6bd3a8}
+      .detail{fill:#ffb07a}
+    </style>
+  </defs>
+  <rect width="720" height="360" fill="none" />
+  <!-- phone-like card near doctor hand -->
+  <g transform="translate(420,80)">
+    <rect x="0" y="40" rx="10" ry="10" width="180" height="100" fill="#ffffff" stroke="#e9e6e0"/>
+    <rect x="14" y="66" rx="6" ry="6" width="152" height="10" fill="#2eb872"/>
+  </g>
+
+  <!-- simple doctor on right pointing left -->
+  <g transform="translate(560,40)">
+    <!-- head -->
+    <circle cx="-60" cy="60" r="30" class="skin" />
+    <!-- body / coat -->
+    <rect x="-110" y="90" width="80" height="120" rx="12" ry="12" class="coat" stroke="#efece6"/>
+    <!-- left arm (pointing) -->
+    <path d="M-35 120 q40 -10 80 10 q-10 20 -40 20 q-5 -20 -40 -40" class="skin"/>
+    <!-- accent oval under -->
+    <ellipse cx="-30" cy="220" rx="48" ry="70" class="accent"/>
+  </g>
+
+  <!-- small decorative shape left of doctor -->
+  <path d="M320 40 q60 0 90 30 q-30 30 -90 30z" class="detail" opacity="0.95"/>
+</svg>

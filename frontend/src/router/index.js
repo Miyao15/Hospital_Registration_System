@@ -4,7 +4,13 @@ import { useUserStore } from '@/stores/user'
 const routes = [
   {
     path: '/',
-    redirect: '/login'
+    redirect: '/landing'
+  },
+  {
+    path: '/landing',
+    name: 'Landing',
+    component: () => import('@/views/Landing.vue'),
+    meta: { title: '首页' }
   },
   {
     path: '/login',
