@@ -16,9 +16,8 @@ const pinia = createPinia()
 
 app.use(pinia)
 
-// 初始化 Pinia store 并加载本地存储的用户信息
-const userStore = useUserStore()
-userStore.initUserInfo()
+// 初始化 Pinia store
+const userStore = useUserStore();
 
 // 注册所有图标
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {

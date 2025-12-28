@@ -269,7 +269,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { api } from '@/api/auth';
+import request from '@/utils/request';
 
 const router = useRouter();
 const goLogin = () => router.push('/login');
@@ -282,27 +282,27 @@ const specialties = ref([]);
 
 const fetchLandingData = async () => {
   try {
-    // 使用 allSettled 确保单个接口失败（如 500 或 403）不影响其他部分渲染
+    // Use allSettled to ensure single interface failure doesn't affect others
     const results = await Promise.allSettled([
-      api.get('/doctors/top', { params: { limit: 10 } }),
-      api.get('/doctors/specialty/DENTIST'),
-      api.get('/specialties')
+      request.get('/doctors/top', { params: { limit: 10 } }),
+      request.get('/doctors/specialty/DENTIST'),
+      request.get('/departments')
     ]);
     
-    // 后端使用 ApiResponse 包装，需访问 .data.data
-    // 增加更严谨的判断，防止 data 为空时报错
-    topDoctors.value = (results[0].status === 'fulfilled' && results[0].value.data?.data) ? results[0].value.data.data : [];
-    dentists.value = (results[1].status === 'fulfilled' && results[1].value.data?.data) ? results[1].value.data.data : [];
-    specialties.value = (results[2].status === 'fulfilled' && results[2].value.data?.data) ? results[2].value.data.data : [];
+    // The interceptor in `request` already unwraps the .data property from the response.
+    // The value of a fulfilled promise is the data itself.
+    topDoctors.value = (results[0].status === 'fulfilled' && results[0].value) ? results[0].value : [];
+    dentists.value = (results[1].status === 'fulfilled' && results[1].value) ? results[1].value : [];
+    specialties.value = (results[2].status === 'fulfilled' && results[2].value) ? results[2].value : [];
 
     results.forEach((res, i) => {
       if (res.status === 'rejected') {
-        console.error(`接口 ${i} 加载失败，状态码: ${res.reason.response?.status}`);
-        console.error('后端返回错误信息:', res.reason.response?.data);
+        // The error message is now in res.reason.message due to the interceptor
+        console.error(`API ${i} failed:`, res.reason.message);
       }
     });
   } catch (error) {
-    console.error('获取首页数据失败:', error);
+    console.error('Failed to fetch landing page data:', error);
   }
 };
 

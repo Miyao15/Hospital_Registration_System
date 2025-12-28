@@ -105,10 +105,10 @@
               <label for="doctor-title">职称</label>
               <select id="doctor-title" v-model="doctorForm.title" required>
                 <option disabled value="">请选择您的职称</option>
-                <option value="ATTENDING_PHYSICIAN">主治医师</option>
+                <option value="RESIDENT">住院医师</option>
+                <option value="ATTENDING">主治医师</option>
                 <option value="DEPUTY_CHIEF_PHYSICIAN">副主任医师</option>
-                <option value="CHIEF_PHYSICIAN">主任医师</option>
-                <option value="OTHER">其他</option>
+                <option value="CHIEF">主任医师</option>
               </select>
             </div>
              <div class="form-group">
@@ -153,9 +153,11 @@
 <script setup>
 import { ref, reactive } from 'vue';
 import { useRouter } from 'vue-router';
-import { registerPatient, registerDoctor, registerAdmin } from '@/api/auth'; 
+import { useUserStore } from '@/stores/user';
+import { ElMessage } from 'element-plus';
 
 const router = useRouter();
+const userStore = useUserStore();
 const role = ref('patient'); // 'patient' or 'doctor'
 const loading = ref(false);
 
@@ -176,6 +178,8 @@ const doctorForm = reactive({
   title: '',
   departmentId: '',
   licenseNumber: '',
+  specialty: 'General', // Add default for fields not in form
+  introduction: 'N/A',   // Add default for fields not in form
 });
 
 const adminForm = reactive({
@@ -189,21 +193,30 @@ const goLogin = () => router.push('/login');
 const handleRegister = async () => {
   loading.value = true;
   try {
+    let success = false;
     if (role.value === 'patient') {
-      await registerPatient(patientForm);
-      alert('患者注册成功！'); // Placeholder
+      success = await userStore.register(patientForm, 'patient');
+    } else if (role.value === 'doctor') {
+      // Ensure required fields for doctor registration are not empty
+      if (!doctorForm.title) {
+        ElMessage.error('请选择您的职称');
+        loading.value = false;
+        return;
+      }
+      success = await userStore.register(doctorForm, 'doctor');
     } else if (role.value === 'admin') {
-      await registerAdmin(adminForm);
-      alert('管理员注册成功！');
-    } else {
-      await registerDoctor(doctorForm);
-      alert('医生注册申请已提交，请等待管理员审核。'); // Placeholder
+      ElMessage.warning('管理员注册功能暂未开放。');
+      loading.value = false;
+      return;
     }
-    router.push('/login');
+
+    if (success) {
+      router.push('/login');
+    }
   } catch (error) {
-    console.error('Registration failed:', error);
-    const errorMsg = error.response?.data?.message || '注册失败，请检查网络或输入信息。';
-    alert(errorMsg);
+    // Store action already displays the error message.
+    // This block is for any additional component-specific logic.
+    console.error('Registration failed in component:', error);
   } finally {
     loading.value = false;
   }

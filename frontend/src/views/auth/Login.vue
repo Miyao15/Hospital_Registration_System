@@ -75,10 +75,12 @@
 <script setup>
 import { ref, reactive } from 'vue';
 import { useRouter } from 'vue-router';
-import { login } from '@/api/auth';
+import { useUserStore } from '@/stores/user';
+import { ElMessage } from 'element-plus';
 
 const router = useRouter();
-const role = ref('patient');
+const userStore = useUserStore();
+const role = ref('patient'); // Default role for UI selection, not sent to backend
 const loading = ref(false);
 
 const loginForm = reactive({
@@ -91,23 +93,24 @@ const goHome = () => router.push('/');
 const goRegister = () => router.push('/register');
 
 const handleLogin = async () => {
+  if (!loginForm.identifier || !loginForm.password) {
+    ElMessage.error('请输入手机号/用户名和密码');
+    return;
+  }
+  
   loading.value = true;
   try {
-    const res = await login({
+    const loginPayload = {
       identifier: loginForm.identifier,
       password: loginForm.password,
-      role: role.value.toUpperCase()
-    });
-
-    // 存储 JWT Token 和基本用户信息
-    localStorage.setItem('token', res.data.token);
-    localStorage.setItem('userRole', role.value);
-    
-    alert('登录成功！');
-    router.push('/');
+    };
+    // Call the store action. The store now handles success/error messages,
+    // state management, and redirection.
+    await userStore.login(loginPayload);
   } catch (error) {
-    const errorMsg = error.response?.data?.message || '登录失败，请检查您的凭据。';
-    alert(errorMsg);
+    // The store's login action already shows an error message.
+    // This catch block can be used for component-specific error logic if needed.
+    console.error('Login component caught error:', error);
   } finally {
     loading.value = false;
   }
