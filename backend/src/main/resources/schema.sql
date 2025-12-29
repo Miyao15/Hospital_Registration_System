@@ -176,3 +176,20 @@ CREATE TABLE IF NOT EXISTS notifications (
     INDEX idx_notifications_read (is_read),
     INDEX idx_notifications_type (type)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='消息通知表';
+
+
+-- 检查项目表
+CREATE TABLE IF NOT EXISTS examination_items (
+    id VARCHAR(36) PRIMARY KEY COMMENT '检查项目ID (UUID)',
+    name VARCHAR(100) NOT NULL UNIQUE COMMENT '项目名称',
+    description TEXT COMMENT '项目描述',
+    price DECIMAL(10, 2) NOT NULL COMMENT '项目价格',
+    category VARCHAR(50) NOT NULL COMMENT '项目类别 (如: 常规检查, 血液检查, 影像检查)',
+    department_id VARCHAR(36) NULL COMMENT '关联科室ID (可选)',
+    enabled BOOLEAN DEFAULT TRUE COMMENT '是否启用',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE SET NULL,
+    INDEX idx_examination_items_category (category),
+    INDEX idx_examination_items_enabled (enabled)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='检查项目表';

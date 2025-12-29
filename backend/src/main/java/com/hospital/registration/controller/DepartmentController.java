@@ -42,4 +42,14 @@ public class DepartmentController {
     public ApiResponse<List<DepartmentDTO>> getDepartmentsByCategory(@PathVariable String category) {
         return ApiResponse.success(departmentService.getDepartmentsByCategory(category));
     }
+
+    @GetMapping("/test-encoding")
+    public ApiResponse<String> testEncoding() {
+        // This is a test endpoint to check character encoding.
+        // It returns a hardcoded Chinese string.
+        // If this string displays correctly in the browser,
+        // it proves the web layer (Spring/Tomcat/Frontend) is fine,
+        // and the issue is with the data in the database.
+        return ApiResponse.success("编码测试：如果这句话正常显示，说明Web层没有问题。");
+    }
 }

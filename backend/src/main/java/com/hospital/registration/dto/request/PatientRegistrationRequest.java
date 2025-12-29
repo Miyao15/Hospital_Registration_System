@@ -1,5 +1,6 @@
 package com.hospital.registration.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.hospital.registration.enums.Gender;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -28,6 +29,7 @@ public class PatientRegistrationRequest {
     private Gender gender;
 
     @NotNull(message = "出生日期不能为空")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate birthDate;
 
     private String medicalHistory;

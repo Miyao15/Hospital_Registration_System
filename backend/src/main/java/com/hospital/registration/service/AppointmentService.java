@@ -20,6 +20,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 @RequiredArgsConstructor
+@lombok.extern.slf4j.Slf4j
 public class AppointmentService {
     
     private final AppointmentRepository appointmentRepository;
@@ -30,10 +31,18 @@ public class AppointmentService {
     private final PatientRepository patientRepository;
     
     @Transactional
-    public AppointmentDetailDTO createAppointment(String patientId, CreateAppointmentDTO dto) {
-        // 验证患者
-        Patient patient = patientRepository.findById(patientId)
-                .orElseThrow(() -> new BusinessException("患者信息不存在"));
+    public AppointmentDetailDTO createAppointment(String userId, CreateAppointmentDTO dto) {
+        log.info("创建预约 - userId: {}, doctorId: {}, timeSlotId: {}", userId, dto.getDoctorId(), dto.getTimeSlotId());
+        
+        // 通过 userId 查找患者信息
+        Patient patient = patientRepository.findByUserId(userId).orElse(null);
+        if (patient == null) {
+            log.error("找不到患者信息 - userId: {}", userId);
+            throw new BusinessException("患者信息不存在，请先在个人中心完善资料");
+        }
+        log.info("找到患者 - patientId: {}, name: {}", patient.getId(), patient.getName());
+        
+        String patientId = patient.getId();
         
         // 验证医生
         Doctor doctor = doctorRepository.findById(dto.getDoctorId())
@@ -91,7 +100,14 @@ public class AppointmentService {
         return convertToDetailDTO(appointment);
     }
     
-    public Page<AppointmentDetailDTO> getMyAppointments(String patientId, String status, int page, int size) {
+    public Page<AppointmentDetailDTO> getMyAppointments(String userId, String status, int page, int size) {
+        // 通过 userId 查找患者信息
+        Patient patient = patientRepository.findByUserId(userId).orElse(null);
+        if (patient == null) {
+            return Page.empty(PageRequest.of(page, size));
+        }
+        
+        String patientId = patient.getId();
         Pageable pageable = PageRequest.of(page, size);
         Page<Appointment> appointments;
         
@@ -111,11 +127,15 @@ public class AppointmentService {
     }
     
     @Transactional
-    public void cancelAppointment(String appointmentId, String patientId, String reason) {
+    public void cancelAppointment(String appointmentId, String userId, String reason) {
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new BusinessException("预约记录不存在"));
         
-        if (!appointment.getPatientId().equals(patientId)) {
+        // 通过 userId 查找患者信息
+        Patient patient = patientRepository.findByUserId(userId)
+                .orElseThrow(() -> new BusinessException("患者信息不存在"));
+        
+        if (!appointment.getPatientId().equals(patient.getId())) {
             throw new BusinessException("无权取消此预约");
         }
         
@@ -139,11 +159,15 @@ public class AppointmentService {
     }
     
     @Transactional
-    public AppointmentDetailDTO rescheduleAppointment(String appointmentId, String patientId, String newTimeSlotId, String reason) {
+    public AppointmentDetailDTO rescheduleAppointment(String appointmentId, String userId, String newTimeSlotId, String reason) {
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new BusinessException("预约记录不存在"));
         
-        if (!appointment.getPatientId().equals(patientId)) {
+        // 通过 userId 查找患者信息
+        Patient patient = patientRepository.findByUserId(userId)
+                .orElseThrow(() -> new BusinessException("患者信息不存在"));
+        
+        if (!appointment.getPatientId().equals(patient.getId())) {
             throw new BusinessException("无权修改此预约");
         }
         

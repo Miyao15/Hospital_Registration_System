@@ -7,7 +7,9 @@ import com.hospital.registration.enums.Gender;
 import com.hospital.registration.enums.UserRole;
 import com.hospital.registration.enums.UserStatus;
 import com.hospital.registration.exception.BusinessException;
+import com.hospital.registration.repository.DepartmentRepository;
 import com.hospital.registration.repository.DoctorRepository;
+import com.hospital.registration.repository.AdminRepository;
 import com.hospital.registration.repository.PatientRepository;
 import com.hospital.registration.repository.UserRepository;
 import com.hospital.registration.security.JwtService;
@@ -33,6 +35,8 @@ class PatientRegistrationPropertyTest {
     private UserRepository userRepository;
     private PatientRepository patientRepository;
     private DoctorRepository doctorRepository;
+    private AdminRepository adminRepository;
+    private DepartmentRepository departmentRepository;
     private JwtService jwtService;
     private StringRedisTemplate redisTemplate;
     private PasswordEncoder passwordEncoder;
@@ -43,6 +47,8 @@ class PatientRegistrationPropertyTest {
         userRepository = Mockito.mock(UserRepository.class);
         patientRepository = Mockito.mock(PatientRepository.class);
         doctorRepository = Mockito.mock(DoctorRepository.class);
+        adminRepository = Mockito.mock(AdminRepository.class);
+        departmentRepository = Mockito.mock(DepartmentRepository.class);
         jwtService = Mockito.mock(JwtService.class);
         redisTemplate = Mockito.mock(StringRedisTemplate.class);
         passwordEncoder = new BCryptPasswordEncoder();
@@ -51,6 +57,8 @@ class PatientRegistrationPropertyTest {
                 userRepository, 
                 patientRepository, 
                 doctorRepository, 
+                adminRepository,
+                departmentRepository,
                 passwordEncoder, 
                 jwtService, 
                 redisTemplate

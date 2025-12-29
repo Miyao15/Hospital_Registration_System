@@ -1,6 +1,7 @@
 package com.hospital.registration.controller;
 
 import com.hospital.registration.dto.request.DoctorRegistrationRequest;
+import com.hospital.registration.dto.request.AdminRegistrationRequest;
 import com.hospital.registration.dto.request.LoginRequest;
 import com.hospital.registration.dto.request.PatientRegistrationRequest;
 import com.hospital.registration.dto.request.ResetPasswordRequest;
@@ -36,6 +37,14 @@ public class AuthController {
         String userId = authService.registerDoctor(request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(Map.of("userId", userId, "message", "医师注册成功，请等待管理员审批")));
+    }
+
+    @PostMapping("/register/admin")
+    public ResponseEntity<ApiResponse<Map<String, String>>> registerAdmin(
+            @Valid @RequestBody AdminRegistrationRequest request) {
+        String userId = authService.registerAdmin(request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(Map.of("userId", userId, "message", "管理员注册成功")));
     }
 
     @PostMapping("/login")

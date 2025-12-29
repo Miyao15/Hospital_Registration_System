@@ -59,6 +59,10 @@ public class BusinessException extends RuntimeException {
         return new BusinessException("AUTH_007", "权限不足", HttpStatus.FORBIDDEN);
     }
 
+    public static BusinessException invalidAdminKey() {
+        return new BusinessException("AUTH_008", "无效的管理员注册密钥", HttpStatus.FORBIDDEN);
+    }
+
     // 注册错误
     public static BusinessException invalidPhone() {
         return new BusinessException("REG_001", "手机号格式无效", HttpStatus.BAD_REQUEST);
@@ -82,6 +86,14 @@ public class BusinessException extends RuntimeException {
 
     public static BusinessException employeeIdExists() {
         return new BusinessException("REG_006", "工号已注册", HttpStatus.CONFLICT);
+    }
+    
+    public static BusinessException licenseNumberExists() {
+        return new BusinessException("REG_007", "医师资格证号已注册", HttpStatus.CONFLICT);
+    }
+    
+    public static BusinessException departmentNotFound() {
+        return new BusinessException("REG_008", "科室不存在", HttpStatus.BAD_REQUEST);
     }
 
     public static BusinessException missingFields(String fields) {

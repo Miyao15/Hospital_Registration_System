@@ -7,7 +7,9 @@ import com.hospital.registration.enums.DoctorTitle;
 import com.hospital.registration.enums.UserRole;
 import com.hospital.registration.enums.UserStatus;
 import com.hospital.registration.exception.BusinessException;
+import com.hospital.registration.repository.DepartmentRepository;
 import com.hospital.registration.repository.DoctorRepository;
+import com.hospital.registration.repository.AdminRepository;
 import com.hospital.registration.repository.PatientRepository;
 import com.hospital.registration.repository.UserRepository;
 import com.hospital.registration.security.JwtService;
@@ -31,6 +33,8 @@ class DoctorRegistrationPropertyTest {
     private UserRepository userRepository;
     private PatientRepository patientRepository;
     private DoctorRepository doctorRepository;
+    private AdminRepository adminRepository;
+    private DepartmentRepository departmentRepository;
     private JwtService jwtService;
     private StringRedisTemplate redisTemplate;
     private PasswordEncoder passwordEncoder;
@@ -41,6 +45,8 @@ class DoctorRegistrationPropertyTest {
         userRepository = Mockito.mock(UserRepository.class);
         patientRepository = Mockito.mock(PatientRepository.class);
         doctorRepository = Mockito.mock(DoctorRepository.class);
+        adminRepository = Mockito.mock(AdminRepository.class);
+        departmentRepository = Mockito.mock(DepartmentRepository.class);
         jwtService = Mockito.mock(JwtService.class);
         redisTemplate = Mockito.mock(StringRedisTemplate.class);
         passwordEncoder = new BCryptPasswordEncoder();
@@ -49,6 +55,8 @@ class DoctorRegistrationPropertyTest {
                 userRepository,
                 patientRepository,
                 doctorRepository,
+                adminRepository,
+                departmentRepository,
                 passwordEncoder,
                 jwtService,
                 redisTemplate
@@ -79,6 +87,7 @@ class DoctorRegistrationPropertyTest {
 
         when(userRepository.existsByPhone(anyString())).thenReturn(false);
         when(doctorRepository.existsByEmployeeId(anyString())).thenReturn(false);
+        when(departmentRepository.existsById(anyString())).thenReturn(true); // 模拟科室存在
 
         String userId = authService.registerDoctor(request);
 

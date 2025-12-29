@@ -4,6 +4,7 @@ import com.hospital.registration.dto.CreateDepartmentDTO;
 import com.hospital.registration.dto.CreateScheduleDTO;
 import com.hospital.registration.dto.DepartmentDTO;
 import com.hospital.registration.dto.DoctorLeaveDTO;
+import com.hospital.registration.dto.request.UpdateDoctorProfileRequest;
 import com.hospital.registration.dto.response.ApiResponse;
 import com.hospital.registration.entity.Schedule;
 import com.hospital.registration.entity.User;
@@ -51,6 +52,14 @@ public class AdminController {
         String adminId = (String) authentication.getPrincipal();
         adminService.approveDoctor(id, adminId);
         return ResponseEntity.ok(ApiResponse.success(Map.of("message", "医师审批通过")));
+    }
+
+    @PutMapping("/doctors/{id}/profile")
+    public ResponseEntity<ApiResponse<Map<String, String>>> updateDoctorProfile(
+            @PathVariable String id,
+            @RequestBody UpdateDoctorProfileRequest request) {
+        adminService.updateDoctorProfile(id, request);
+        return ResponseEntity.ok(ApiResponse.success(Map.of("message", "医师资料已更新")));
     }
 
     @PutMapping("/users/{id}/status")

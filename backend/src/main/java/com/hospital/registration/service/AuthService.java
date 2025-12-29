@@ -1,16 +1,20 @@
 package com.hospital.registration.service;
 
+import com.hospital.registration.dto.request.AdminRegistrationRequest;
 import com.hospital.registration.dto.request.DoctorRegistrationRequest;
 import com.hospital.registration.dto.request.LoginRequest;
 import com.hospital.registration.dto.request.PatientRegistrationRequest;
 import com.hospital.registration.dto.response.LoginResponse;
+import com.hospital.registration.entity.Admin;
 import com.hospital.registration.entity.Doctor;
 import com.hospital.registration.entity.Patient;
 import com.hospital.registration.entity.User;
 import com.hospital.registration.enums.UserRole;
 import com.hospital.registration.enums.UserStatus;
 import com.hospital.registration.exception.BusinessException;
+import com.hospital.registration.repository.AdminRepository;
 import com.hospital.registration.repository.DoctorRepository;
+import com.hospital.registration.repository.DepartmentRepository;
 import com.hospital.registration.repository.PatientRepository;
 import com.hospital.registration.repository.UserRepository;
 import com.hospital.registration.security.JwtService;
@@ -23,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -33,6 +38,8 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
+    private final AdminRepository adminRepository;
+    private final DepartmentRepository departmentRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final StringRedisTemplate redisTemplate;
@@ -45,6 +52,57 @@ public class AuthService {
 
     @Value("${app.security.verification-code-ttl}")
     private int verificationCodeTtl;
+
+    @Value("${app.security.admin-registration-key}")
+    private String adminRegistrationKey;
+
+    @Transactional
+    public String registerAdmin(AdminRegistrationRequest request) {
+        // 1. 验证管理员注册密钥
+        if (!Objects.equals(adminRegistrationKey, request.getAdminRegistrationKey())) {
+            throw BusinessException.invalidAdminKey();
+        }
+
+        // 2. 验证手机号格式
+        if (!ValidationUtils.isValidPhone(request.getPhone())) {
+            throw BusinessException.invalidPhone();
+        }
+
+        // 3. 验证密码强度
+        if (!ValidationUtils.isValidPassword(request.getPassword())) {
+            throw BusinessException.weakPassword();
+        }
+
+        // 4. 检查手机号是否已注册
+        if (userRepository.existsByPhone(request.getPhone())) {
+            throw BusinessException.phoneExists();
+        }
+
+        // 5. 检查工号是否已注册
+        if (adminRepository.findByEmployeeId(request.getEmployeeId()).isPresent()) {
+            throw BusinessException.employeeIdExists();
+        }
+
+        // 6. 创建用户
+        String userId = UUID.randomUUID().toString();
+        User user = new User();
+        user.setId(userId);
+        user.setPhone(request.getPhone());
+        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        user.setRole(UserRole.ADMIN);
+        user.setStatus(UserStatus.ACTIVE); // 管理员账户直接激活
+        userRepository.save(user);
+
+        // 7. 创建管理员信息
+        Admin admin = new Admin();
+        admin.setId(UUID.randomUUID().toString());
+        admin.setUserId(userId);
+        admin.setName(request.getName());
+        admin.setEmployeeId(request.getEmployeeId());
+        adminRepository.save(admin);
+
+        return userId;
+    }
 
     @Transactional
     public String registerPatient(PatientRegistrationRequest request) {
@@ -127,6 +185,16 @@ public class AuthService {
             throw BusinessException.employeeIdExists();
         }
 
+        // 检查医师资格证号是否已注册
+        if (doctorRepository.existsByLicenseNumber(request.getLicenseNumber())) {
+            throw BusinessException.licenseNumberExists();
+        }
+
+        // 检查科室是否存在
+        if (!departmentRepository.existsById(request.getDepartmentId())) {
+            throw BusinessException.departmentNotFound();
+        }
+
         // 创建用户（状态为待审批）
         String userId = UUID.randomUUID().toString();
         User user = new User();
@@ -154,15 +222,17 @@ public class AuthService {
     }
 
     public LoginResponse login(LoginRequest request) {
-        // 查找用户（通过手机号或工号）
+        // 查找用户（通过手机号、医生工号或管理员公号）
         User user = userRepository.findByPhone(request.getIdentifier())
-                .orElseGet(() -> {
-                    Doctor doctor = doctorRepository.findByEmployeeId(request.getIdentifier()).orElse(null);
-                    if (doctor != null) {
-                        return userRepository.findById(doctor.getUserId()).orElse(null);
-                    }
-                    return null;
-                });
+                .orElseGet(() -> 
+                    doctorRepository.findByEmployeeId(request.getIdentifier())
+                        .map(doctor -> userRepository.findById(doctor.getUserId()).orElse(null))
+                        .orElseGet(() -> 
+                            adminRepository.findByEmployeeId(request.getIdentifier())
+                                .map(admin -> userRepository.findById(admin.getUserId()).orElse(null))
+                                .orElse(null)
+                        )
+                );
 
         if (user == null) {
             throw BusinessException.invalidCredentials();
