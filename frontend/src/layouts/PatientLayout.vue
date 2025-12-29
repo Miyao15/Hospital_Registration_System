@@ -1,39 +1,6 @@
 <template>
   <el-container class="patient-layout">
-    <!-- 侧边栏 -->
-    <el-aside width="250px" class="sidebar">
-      <div class="logo">
-        <el-icon :size="40" color="#667eea"><UserFilled /></el-icon>
-        <h3>患者中心</h3>
-      </div>
-      
-      <el-menu
-        :default-active="activeMenu"
-        class="sidebar-menu"
-        router
-      >
-        <el-menu-item index="/patient/home">
-          <el-icon><HomeFilled /></el-icon>
-          <span>首页</span>
-        </el-menu-item>
-        <el-menu-item index="/patient/profile">
-          <el-icon><User /></el-icon>
-          <span>个人信息</span>
-        </el-menu-item>
-        <el-menu-item index="/patient/appointments">
-          <el-icon><Calendar /></el-icon>
-          <span>我的预约</span>
-        </el-menu-item>
-        <el-menu-item index="/patient/doctors">
-          <el-icon><Avatar /></el-icon>
-          <span>查找医生</span>
-        </el-menu-item>
-        <el-menu-item index="/patient/records">
-          <el-icon><Document /></el-icon>
-          <span>就诊记录</span>
-        </el-menu-item>
-      </el-menu>
-    </el-aside>
+
 
     <!-- 主体内容 -->
     <el-container>
@@ -56,10 +23,22 @@
             </div>
             <template #dropdown>
               <el-dropdown-menu>
+                <el-dropdown-item command="home">
+                  <el-icon><HomeFilled /></el-icon>首页
+                </el-dropdown-item>
                 <el-dropdown-item command="profile">
                   <el-icon><User /></el-icon>个人信息
                 </el-dropdown-item>
-                <el-dropdown-item command="settings">
+                <el-dropdown-item command="appointments">
+                  <el-icon><Calendar /></el-icon>我的预约
+                </el-dropdown-item>
+                <el-dropdown-item command="doctors">
+                  <el-icon><Avatar /></el-icon>查找医生
+                </el-dropdown-item>
+                <el-dropdown-item command="records">
+                  <el-icon><Document /></el-icon>就诊记录
+                </el-dropdown-item>
+                <el-dropdown-item command="settings" divided>
                   <el-icon><Setting /></el-icon>设置
                 </el-dropdown-item>
                 <el-dropdown-item divided command="logout">
@@ -94,8 +73,20 @@ const pageTitle = computed(() => route.meta.title || '患者中心')
 
 const handleCommand = (command) => {
   switch (command) {
+    case 'home':
+      router.push('/patient/home')
+      break
     case 'profile':
       router.push('/patient/profile')
+      break
+    case 'appointments':
+      router.push('/patient/appointments')
+      break
+    case 'doctors':
+      router.push('/patient/doctors')
+      break
+    case 'records':
+      router.push('/patient/records')
       break
     case 'settings':
       // TODO: 跳转到设置页面
@@ -118,31 +109,6 @@ const handleCommand = (command) => {
 .patient-layout {
   height: 100vh;
   background: #f5f7fa;
-}
-
-.sidebar {
-  background: white;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
-}
-
-.logo {
-  height: 80px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  border-bottom: 1px solid #f0f0f0;
-  
-  h3 {
-    font-size: 20px;
-    color: #333;
-    margin: 0;
-  }
-}
-
-.sidebar-menu {
-  border: none;
-  padding: 20px 10px;
 }
 
 .header {

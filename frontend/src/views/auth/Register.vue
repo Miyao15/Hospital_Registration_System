@@ -129,12 +129,24 @@
         <form v-if="role === 'admin'" @submit.prevent="handleRegister">
           <div class="form-grid">
             <div class="form-group">
-              <label for="admin-username">用户名</label>
-              <input type="text" id="admin-username" v-model="adminForm.username" placeholder="用于后台登录" required>
+              <label for="admin-name">姓名</label>
+              <input type="text" id="admin-name" v-model="adminForm.name" placeholder="请输入您的真实姓名" required>
+            </div>
+            <div class="form-group">
+              <label for="admin-employeeId">工号</label>
+              <input type="text" id="admin-employeeId" v-model="adminForm.employeeId" placeholder="请输入您的工号" required>
+            </div>
+            <div class="form-group">
+              <label for="admin-phone">手机号</label>
+              <input type="tel" id="admin-phone" v-model="adminForm.phone" placeholder="用于登录和接收通知" required>
             </div>
             <div class="form-group">
               <label for="admin-password">设置密码</label>
               <input type="password" id="admin-password" v-model="adminForm.password" placeholder="请确保密码强度" required>
+            </div>
+            <div class="form-group" style="grid-column: span 2;">
+              <label for="admin-key">管理员注册密钥</label>
+              <input type="password" id="admin-key" v-model="adminForm.adminRegistrationKey" placeholder="请输入管理员注册密钥" required>
             </div>
           </div>
           <button type="submit" class="btn-submit" :disabled="loading">
@@ -158,7 +170,7 @@ import { ElMessage } from 'element-plus';
 
 const router = useRouter();
 const userStore = useUserStore();
-const role = ref('patient'); // 'patient' or 'doctor'
+const role = ref('patient'); // 'patient' or 'doctor' or 'admin'
 const loading = ref(false);
 
 const patientForm = reactive({
@@ -183,8 +195,11 @@ const doctorForm = reactive({
 });
 
 const adminForm = reactive({
-  username: '',
+  name: '',
+  phone: '',
   password: '',
+  employeeId: '',
+  adminRegistrationKey: ''
 });
 
 const goHome = () => router.push('/');
@@ -197,7 +212,6 @@ const handleRegister = async () => {
     if (role.value === 'patient') {
       success = await userStore.register(patientForm, 'patient');
     } else if (role.value === 'doctor') {
-      // Ensure required fields for doctor registration are not empty
       if (!doctorForm.title) {
         ElMessage.error('请选择您的职称');
         loading.value = false;
@@ -205,9 +219,7 @@ const handleRegister = async () => {
       }
       success = await userStore.register(doctorForm, 'doctor');
     } else if (role.value === 'admin') {
-      ElMessage.warning('管理员注册功能暂未开放。');
-      loading.value = false;
-      return;
+      success = await userStore.register(adminForm, 'admin');
     }
 
     if (success) {
@@ -215,7 +227,6 @@ const handleRegister = async () => {
     }
   } catch (error) {
     // Store action already displays the error message.
-    // This block is for any additional component-specific logic.
     console.error('Registration failed in component:', error);
   } finally {
     loading.value = false;

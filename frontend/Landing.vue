@@ -269,7 +269,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { api } from '@/api/auth';
+import api from '@/utils/request';
 
 const router = useRouter();
 const goLogin = () => router.push('/login');
@@ -284,9 +284,9 @@ const fetchLandingData = async () => {
   try {
     // 使用 allSettled 确保单个接口失败不影响全局
     const results = await Promise.allSettled([
-      api.get('/doctors/top'),
-      api.get('/doctors/specialty/DENTIST'),
-      api.get('/specialties')
+      api.get('/api/doctors/top'),
+      api.get('/api/doctors/specialty/DENTIST'),
+      api.get('/api/departments')
     ]);
     
     if (results[0].status === 'fulfilled') topDoctors.value = results[0].value.data;

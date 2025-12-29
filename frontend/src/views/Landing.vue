@@ -43,7 +43,7 @@
                 </div>
                 <div class="text-area">
                   <label>搜索</label>
-                  <input type="text" placeholder="科室、医生或疾病..." />
+                  <input type="text" v-model="searchKeyword" placeholder="科室、医生或疾病..." />
                 </div>
               </div>
               <div class="line"></div>
@@ -53,7 +53,7 @@
                 </div>
                 <div class="text-area">
                   <label>地区</label>
-                  <input type="text" placeholder="例如：北京市" />
+                  <input type="text" v-model="searchLocation" placeholder="例如：北京市" />
                 </div>
               </div>
               <button class="btn-search" @click="findCare">
@@ -100,7 +100,7 @@
               </div>
               <div class="availability">最早可约: <strong>{{ doc.nextSlot }}</strong></div>
             </div>
-            <button class="btn-book">在线预约</button>
+            <button class="btn-book" @click="findCare">在线预约</button>
           </div>
           
           <div class="see-more-card">
@@ -146,7 +146,7 @@
               </div>
               <div class="availability">最早可约: <strong>{{ doc.nextSlot }}</strong></div>
             </div>
-            <button class="btn-book">在线预约</button>
+            <button class="btn-book" @click="findCare">在线预约</button>
           </div>
           
           <div class="see-more-card">
@@ -218,8 +218,8 @@
              </svg>
           </div>
           <div class="store-buttons">
-            <button class="store-btn">App Store</button>
-            <button class="store-btn">Google Play</button>
+            <button class="store-btn">下载 App</button>
+            <button class="store-btn">安卓版下载</button>
           </div>
         </div>
         <div class="phone-mockup-container">
@@ -272,9 +272,21 @@ import { useRouter } from 'vue-router';
 import request from '@/utils/request';
 
 const router = useRouter();
+const searchKeyword = ref('');
+const searchLocation = ref('');
+
 const goLogin = () => router.push('/login');
 const goRegister = () => router.push('/register');
-const findCare = () => console.log('Searching...');
+const findCare = () => {
+  const query = {};
+  if (searchKeyword.value) {
+    query.keyword = searchKeyword.value;
+  }
+  if (searchLocation.value) {
+    query.location = searchLocation.value;
+  }
+  router.push({ path: '/search-triage', query });
+};
 
 const topDoctors = ref([]);
 const dentists = ref([]);
@@ -284,9 +296,9 @@ const fetchLandingData = async () => {
   try {
     // Use allSettled to ensure single interface failure doesn't affect others
     const results = await Promise.allSettled([
-      request.get('/doctors/top', { params: { limit: 10 } }),
-      request.get('/doctors/specialty/DENTIST'),
-      request.get('/departments')
+      request.get('/api/doctors/top', { params: { limit: 10 } }),
+      request.get('/api/doctors/specialty/DENTIST'),
+      request.get('/api/departments')
     ]);
     
     // The interceptor in `request` already unwraps the .data property from the response.

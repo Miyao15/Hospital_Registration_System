@@ -13,10 +13,34 @@ const routes = [
     meta: { title: '首页' }
   },
   {
+    path: '/search-triage',
+    name: 'SearchTriage',
+    component: () => import('@/views/SearchTriage.vue'),
+    meta: { title: '分诊' }
+  },
+  {
+    path: '/search-results',
+    name: 'SearchResults',
+    component: () => import('@/views/SearchResults.vue'),
+    meta: { title: '搜索结果' }
+  },
+  {
     path: '/login',
     name: 'Login',
     component: () => import('@/views/auth/Login.vue'),
     meta: { title: '登录' }
+  },
+  {
+    path: '/booking/info',
+    name: 'BookingInfo',
+    component: () => import('@/views/patient/BookingInfo.vue'),
+    meta: { title: '预约信息' }
+  },
+  {
+    path: '/department-doctors',
+    name: 'DepartmentDoctors',
+    component: () => import('@/views/patient/DepartmentDoctors.vue'),
+    meta: { title: '选择医生' }
   },
   {
     path: '/register',
@@ -28,7 +52,7 @@ const routes = [
     path: '/patient',
     name: 'PatientLayout',
     component: () => import('@/layouts/PatientLayout.vue'),
-    meta: { requiresAuth: true, role: 'patient' },
+    meta: { requiresAuth: true, role: 'PATIENT' },
     children: [
       {
         path: 'home',
@@ -48,7 +72,7 @@ const routes = [
     path: '/doctor',
     name: 'DoctorLayout',
     component: () => import('@/layouts/DoctorLayout.vue'),
-    meta: { requiresAuth: true, role: 'doctor' },
+    meta: { requiresAuth: true, role: 'DOCTOR' },
     children: [
       {
         path: 'home',
@@ -68,7 +92,7 @@ const routes = [
     path: '/admin',
     name: 'AdminLayout',
     component: () => import('@/layouts/AdminLayout.vue'),
-    meta: { requiresAuth: true, role: 'admin' },
+    meta: { requiresAuth: true, role: 'ADMIN' },
     children: [
       {
         path: 'home',
@@ -94,6 +118,12 @@ const router = createRouter({
 // 路由守卫
 router.beforeEach((to, from, next) => {
   const userStore = useUserStore()
+
+  // Explicitly handle unauthenticated access to patient home as per instruction
+  if (to.path === '/patient/home' && !userStore.isLoggedIn) {
+    next('/login');
+    return; // Important to return after next()
+  }
   
   if (to.meta.title) {
     document.title = `${to.meta.title} - 医院门诊预约挂号系统`
@@ -101,8 +131,14 @@ router.beforeEach((to, from, next) => {
   
   if (to.meta.requiresAuth && !userStore.token) {
     next('/login')
-  } else if (to.meta.role && userStore.userInfo?.role !== to.meta.role) {
-    next('/')
+  } else if (to.meta.role && userStore.userRole !== to.meta.role) {
+    // Role check fails, redirect to a safe page (e.g., landing)
+    // Avoid redirecting to login if they are already logged in but have the wrong role
+    if (userStore.isLoggedIn) {
+      next('/landing'); 
+    } else {
+      next('/login');
+    }
   } else {
     next()
   }

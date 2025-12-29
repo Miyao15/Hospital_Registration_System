@@ -1,325 +1,402 @@
 <template>
-  <div class="patient-home">
-    <el-row :gutter="20">
-      <!-- 欢迎卡片 -->
-      <el-col :span="24">
-        <el-card class="welcome-card card-shadow">
-          <div class="welcome-content">
-            <div class="welcome-left">
-              <h2>欢迎回来，{{ userStore.userInfo?.realName }}！</h2>
-              <p>今天是 {{ currentDate }}，祝您身体健康</p>
+  <div class="dashboard-page">
+    
+    <section class="dashboard-hero">
+      <div class="container hero-container">
+        <p class="hero-subtitle">Find and book appointments with local doctors.</p>        
+        <div class="search-bar-wrapper">
+          <div class="search-bar">
+            <div class="input-group">
+              <el-icon class="input-icon"><Search /></el-icon>
+              <input type="text" v-model="searchForm.specialty" placeholder="病情、治疗或医生姓名..." />
             </div>
-            <div class="welcome-right">
-              <el-button type="primary" size="large" @click="goToAppointment">
-                <el-icon><Calendar /></el-icon>
-                立即预约
-              </el-button>
+            <div class="divider"></div>
+            <div class="input-group">
+              <el-icon class="input-icon"><MapLocation /></el-icon>
+              <input type="text" v-model="searchForm.location" placeholder="城市、街道或邮编" />
+            </div>
+            <div class="divider"></div>
+
+            <button class="btn-search-submit" @click="goToSearch">
+              <el-icon><Search /></el-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="container main-content">
+      
+      <div class="left-col">
+        <MedicalItems />
+      </div>
+
+      <div class="right-col">
+        <div class="sidebar-card">
+          <h3 class="sidebar-title">您的医疗团队</h3>
+          <div class="care-list">
+            <div class="care-item">
+              <div class="avatar-placeholder">
+                <el-icon><User /></el-icon>
+              </div>
+              <div class="care-info">
+                <span>寻找家庭医生</span>
+                <small>Primary Care</small>
+              </div>
+              <button class="btn-xs-outline">添加</button>
+            </div>
+            <div class="care-divider"></div>
+            <div class="care-item">
+              <div class="avatar-placeholder">
+                <el-icon><FirstAidKit /></el-icon>
+              </div>
+              <div class="care-info">
+                <span>寻找牙医</span>
+                <small>Dentist</small>
+              </div>
+              <button class="btn-xs-outline">添加</button>
             </div>
           </div>
-        </el-card>
-      </el-col>
+        </div>
 
-      <!-- 快捷入口 -->
-      <el-col :span="24" style="margin-top: 20px;">
-        <el-card class="card-shadow">
-          <template #header>
-            <span class="card-title">快捷入口</span>
-          </template>
-          <el-row :gutter="20">
-            <el-col :span="6" v-for="item in quickLinks" :key="item.title">
-              <div class="quick-link-item" @click="handleQuickLink(item.path)">
-                <el-icon :size="40" :color="item.color">
-                  <component :is="item.icon" />
-                </el-icon>
-                <h4>{{ item.title }}</h4>
-                <p>{{ item.desc }}</p>
-              </div>
-            </el-col>
-          </el-row>
-        </el-card>
-      </el-col>
 
-      <!-- 待就诊预约 -->
-      <el-col :span="16" style="margin-top: 20px;">
-        <el-card class="card-shadow">
-          <template #header>
-            <div class="card-header">
-              <span class="card-title">待就诊预约</span>
-              <el-link type="primary" @click="router.push('/patient/appointments')">查看全部</el-link>
-            </div>
-          </template>
-          <el-empty v-if="appointments.length === 0" description="暂无待就诊预约" />
-          <div v-else class="appointment-list">
-            <div 
-              v-for="item in appointments" 
-              :key="item.id"
-              class="appointment-item"
-            >
-              <div class="appointment-time">
-                <span class="date">{{ item.date }}</span>
-                <span class="time">{{ item.time }}</span>
-              </div>
-              <div class="appointment-info">
-                <h4>{{ item.doctorName }} - {{ item.title }}</h4>
-                <p>{{ item.department }} | {{ item.location }}</p>
-              </div>
-              <div class="appointment-actions">
-                <el-tag :type="getStatusType(item.status)">{{ item.status }}</el-tag>
-                <el-button text type="primary">详情</el-button>
-              </div>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
+      </div>
 
-      <!-- 健康提示 -->
-      <el-col :span="8" style="margin-top: 20px;">
-        <el-card class="card-shadow health-tips">
-          <template #header>
-            <span class="card-title">健康提示</span>
-          </template>
-          <div class="tips-content">
-            <el-icon :size="60" color="#67C23A"><SuccessFilled /></el-icon>
-            <h3>保持健康生活方式</h3>
-            <ul class="tips-list">
-              <li>✓ 规律作息，充足睡眠</li>
-              <li>✓ 均衡饮食，适量运动</li>
-              <li>✓ 定期体检，关注健康</li>
-              <li>✓ 及时就医，遵医嘱用药</li>
-            </ul>
-          </div>
-        </el-card>
-      </el-col>
-    </el-row>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useUserStore } from '@/stores/user'
+import { Search, MapLocation, User, FirstAidKit } from '@element-plus/icons-vue';
+import MedicalItems from '@/views/patient/MedicalItems.vue';
 
 const router = useRouter()
-const userStore = useUserStore()
 
-const currentDate = computed(() => {
-  const date = new Date()
-  const days = ['日', '一', '二', '三', '四', '五', '六']
-  return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日 星期${days[date.getDay()]}`
-})
+const searchForm = ref({
+  specialty: '',
+  location: ''
+});
 
-const quickLinks = [
-  {
-    title: '预约挂号',
-    desc: '在线预约专家',
-    icon: 'Calendar',
-    color: '#409EFF',
-    path: '/patient/appointment'
-  },
-  {
-    title: '查找医生',
-    desc: '查看医生信息',
-    icon: 'Avatar',
-    color: '#67C23A',
-    path: '/patient/doctors'
-  },
-  {
-    title: '我的预约',
-    desc: '查看预约记录',
-    icon: 'Document',
-    color: '#E6A23C',
-    path: '/patient/appointments'
-  },
-  {
-    title: '就诊记录',
-    desc: '历史就诊信息',
-    icon: 'Notebook',
-    color: '#F56C6C',
-    path: '/patient/records'
-  }
-]
-
-const appointments = ref([
-  {
-    id: 1,
-    date: '2025-12-15',
-    time: '09:00',
-    doctorName: '张医生',
-    title: '主任医师',
-    department: '内科',
-    location: '门诊楼3楼',
-    status: '待就诊'
-  }
-])
-
-const getStatusType = (status) => {
-  const typeMap = {
-    '待就诊': 'warning',
-    '就诊中': 'primary',
-    '已完成': 'success',
-    '已取消': 'info'
-  }
-  return typeMap[status] || 'info'
-}
-
-const goToAppointment = () => {
-  router.push('/patient/appointment')
-}
-
-const handleQuickLink = (path) => {
-  router.push(path)
-}
+const goToSearch = () => {
+  router.push({
+    path: '/search-results',
+    query: { ...searchForm.value }
+  });
+};
 </script>
 
-<style lang="scss" scoped>
-.patient-home {
-  .welcome-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    
-    :deep(.el-card__body) {
-      padding: 40px;
-    }
-  }
+<style scoped>
+/* === 全局容器与字体 === */
+.dashboard-page {
+  background-color: #FAFAFA; /* 浅灰底色，突出白色卡片 */
+  min-height: 100vh;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: #2A2A2A;
+}
 
-  .welcome-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    
-    h2 {
-      font-size: 28px;
-      margin-bottom: 10px;
-    }
-    
-    p {
-      font-size: 16px;
-      opacity: 0.9;
-    }
-  }
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
 
-  .card-title {
-    font-size: 18px;
-    font-weight: 600;
-    color: #333;
-  }
+/* === 1. Hero 区域 (米黄色背景) === */
+.dashboard-hero {
+  background-color: #FFF9E5; /* Zocdoc 标志性米黄 */
+  padding: 60px 0 80px;
+  text-align: center;
+}
 
-  .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
+.hero-title {
+  font-size: 36px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #2A2A2A;
+}
 
-  .quick-link-item {
-    text-align: center;
-    padding: 30px 20px;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    
-    &:hover {
-      background: #f5f7fa;
-      transform: translateY(-5px);
-    }
-    
-    h4 {
-      margin: 15px 0 5px;
-      font-size: 16px;
-      color: #333;
-    }
-    
-    p {
-      font-size: 14px;
-      color: #999;
-    }
-  }
+.hero-subtitle {
+  font-size: 18px;
+  color: #555;
+  margin-bottom: 40px;
+}
 
-  .appointment-list {
-    .appointment-item {
-      display: flex;
-      align-items: center;
-      padding: 20px;
-      margin-bottom: 15px;
-      background: #f5f7fa;
-      border-radius: 8px;
-      transition: all 0.3s ease;
-      
-      &:hover {
-        background: #e8f4ff;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      }
-      
-      &:last-child {
-        margin-bottom: 0;
-      }
-    }
+/* 搜索栏样式优化 */
+.search-bar-wrapper {
+  display: flex;
+  justify-content: center;
+}
 
-    .appointment-time {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding-right: 20px;
-      border-right: 2px solid #ddd;
-      min-width: 100px;
-      
-      .date {
-        font-size: 16px;
-        font-weight: 600;
-        color: #333;
-      }
-      
-      .time {
-        font-size: 14px;
-        color: #666;
-        margin-top: 5px;
-      }
-    }
+.search-bar {
+  background: #fff;
+  border-radius: 50px; /* 大圆角 */
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08); /* 柔和阴影 */
+  display: flex;
+  align-items: center;
+  padding: 6px;
+  width: 100%;
+  max-width: 900px;
+  height: 60px;
+  box-sizing: border-box;
+}
 
-    .appointment-info {
-      flex: 1;
-      padding-left: 20px;
-      
-      h4 {
-        font-size: 16px;
-        color: #333;
-        margin-bottom: 8px;
-      }
-      
-      p {
-        font-size: 14px;
-        color: #666;
-      }
-    }
+.input-group {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  height: 100%;
+}
 
-    .appointment-actions {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
-  }
+.input-icon {
+  font-size: 18px;
+  color: #999;
+  margin-right: 10px;
+}
 
-  .health-tips {
-    .tips-content {
-      text-align: center;
-      padding: 20px 0;
-      
-      h3 {
-        margin: 20px 0;
-        color: #333;
-      }
-    }
+.input-group input {
+  border: none;
+  outline: none;
+  width: 100%;
+  font-size: 15px;
+  color: #333;
+  background: transparent;
+}
 
-    .tips-list {
-      text-align: left;
-      list-style: none;
-      padding: 0;
-      
-      li {
-        padding: 10px 0;
-        font-size: 14px;
-        color: #666;
-      }
-    }
-  }
+.divider {
+  width: 1px;
+  height: 30px;
+  background-color: #E0E0E0;
+}
+
+.btn-search-submit {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: #FFD300; /* Zocdoc 黄 */
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 20px;
+  color: #000;
+  flex-shrink: 0;
+}
+
+.btn-search-submit:hover {
+  background-color: #F4CA00;
+}
+
+/* === 2. 主体分栏布局 === */
+.main-content {
+  display: flex;
+  gap: 40px;
+  margin-top: -30px; /* 稍微上移，压在 Hero 区域上一点点（可选） */
+  padding-bottom: 60px;
+}
+
+.left-col { flex: 65%; }
+.right-col { flex: 35%; }
+
+/* 左侧 Header */
+.section-header { margin-bottom: 24px; }
+.section-header h2 { font-size: 24px; font-weight: 700; margin: 0 0 4px; }
+.subtitle { font-size: 14px; color: #666; }
+
+/* 进度条 */
+.progress-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 30px;
+}
+.progress-track {
+  flex-grow: 1;
+  height: 8px;
+  background-color: #E0E0E0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background-color: #2A2A2A;
+  border-radius: 4px;
+}
+.progress-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #666;
+  white-space: nowrap;
+}
+
+/* 任务卡片 (核心样式) */
+.task-card {
+  background: #fff;
+  border: 1px solid #E5E5E5;
+  border-radius: 8px; /* 卡片圆角 */
+  padding: 24px;
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  margin-bottom: 16px;
+  transition: box-shadow 0.2s;
+}
+
+.task-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.task-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  background-color: #FFF9E5; /* 浅黄背景 */
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.task-content { flex: 1; }
+
+.task-badges { margin-bottom: 6px; }
+.badge-due {
+  background-color: #FDECEA;
+  color: #D93025;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+
+.task-content h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.task-content p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #555;
+}
+
+.task-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+  min-width: 100px;
+}
+
+.btn-text {
+  background: none;
+  border: none;
+  font-size: 13px;
+  color: #2A2A2A;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+}
+
+.btn-outline {
+  background: #fff;
+  border: 1px solid #CCC;
+  border-radius: 4px;
+  padding: 8px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2A2A2A;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.btn-outline:hover {
+  border-color: #2A2A2A;
+  background-color: #F8F8F8;
+}
+
+/* 右侧边栏 */
+.sidebar-card {
+  background: #fff;
+  border: 1px solid #E5E5E5;
+  border-radius: 8px;
+  padding: 24px;
+}
+
+.sidebar-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 20px;
+}
+
+.care-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.avatar-placeholder {
+  width: 40px;
+  height: 40px;
+  background-color: #F0F0F0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  font-size: 20px;
+}
+
+.care-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.care-info span {
+  font-size: 14px;
+  font-weight: 500;
+  color: #2A2A2A;
+}
+
+.care-info small {
+  font-size: 12px;
+  color: #777;
+}
+
+.text-blue { color: #0065D6 !important; cursor: pointer; }
+
+.btn-xs-outline {
+  background: #fff;
+  border: 1px solid #DDD;
+  border-radius: 4px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-xs-outline:hover { border-color: #999; }
+
+.care-divider {
+  height: 1px;
+  background-color: #EEE;
+  margin: 12px 0;
+}
+
+/* 响应式适配 */
+@media (max-width: 900px) {
+  .main-content { flex-direction: column; }
+  .search-bar { flex-direction: column; height: auto; border-radius: 12px; padding: 12px; }
+  .input-group { width: 100%; border-bottom: 1px solid #EEE; padding: 12px 0; }
+  .divider { display: none; }
+  .btn-search-submit { width: 100%; border-radius: 8px; margin-top: 10px; }
 }
 </style>

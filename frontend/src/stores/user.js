@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import { login as apiLogin, registerPatient, registerDoctor } from '@/api/auth';
+import { login as apiLogin, registerPatient, registerDoctor, registerAdmin } from '@/api/auth';
 import { ElMessage } from 'element-plus';
 import router from '@/router';
 
@@ -8,6 +8,7 @@ export const useUserStore = defineStore('user', () => {
   // State
   const token = ref(localStorage.getItem('token') || '');
   const userRole = ref(localStorage.getItem('userRole') || '');
+  const userInfo = ref(null); // Add userInfo ref
 
   // Getters
   const isLoggedIn = computed(() => !!token.value);
@@ -55,7 +56,7 @@ export const useUserStore = defineStore('user', () => {
   /**
    * Handles user registration.
    * @param {object} formData - The user's registration data.
-   * @param {string} role - The role of the user to register ('patient' or 'doctor').
+   * @param {string} role - The role of the user to register ('patient', 'doctor', or 'admin').
    */
   const register = async (formData, role) => {
     try {
@@ -66,6 +67,9 @@ export const useUserStore = defineStore('user', () => {
       } else if (role === 'doctor') {
         await registerDoctor(formData);
         message = '医生注册申请已提交，请等待管理员审核。';
+      } else if (role === 'admin') {
+        await registerAdmin(formData);
+        message = '管理员注册成功！';
       } else {
         throw new Error('不支持的注册类型');
       }
