@@ -1,9 +1,17 @@
 <template>
   <div class="admin-home">
-    <!-- 页面标题 -->
-    <div class="page-header">
-      <h1 class="page-title">工作台</h1>
-      <p class="page-subtitle">欢迎回来，{{ adminName }}</p>
+    <!-- Hero区域 - Oatmeal风格 -->
+    <div class="hero-section">
+      <div class="hero-content">
+        <div class="hero-text">
+          <h1 class="hero-title">欢迎回来，{{ adminName }}</h1>
+          <p class="hero-subtitle">管理系统概览 · 一切尽在掌握</p>
+        </div>
+        <div class="hero-image">
+          <div class="hero-image-overlay"></div>
+          <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&h=400&fit=crop&q=80" alt="管理后台" />
+        </div>
+      </div>
     </div>
 
     <!-- 统计卡片 -->
@@ -163,58 +171,87 @@
       </div>
     </div>
 
-    <!-- 快捷操作 -->
-    <div class="content-section">
-      <div class="section-header">
-        <h2 class="section-title">快捷操作</h2>
-      </div>
-
-      <div class="actions-grid">
-        <div class="action-card" @click="$router.push('/admin/departments')">
-          <div class="action-icon" style="background: #E3F2FD;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#1976D2" stroke-width="2" width="24" height="24">
+    <!-- 功能卡片区域 - Oatmeal风格 -->
+    <div class="features-section">
+      <h2 class="section-title">核心功能</h2>
+      <div class="features-grid">
+        <div class="feature-card" @click="$router.push('/admin/departments')">
+          <div class="feature-icon" style="background: #E3F2FD;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
               <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path>
               <polyline points="9 22 9 12 15 12 15 22"></polyline>
             </svg>
           </div>
-          <div class="action-title">科室管理</div>
-          <div class="action-desc">管理医院科室信息</div>
+          <h3 class="feature-title">科室管理</h3>
+          <p class="feature-desc">管理医院科室信息，维护科室数据</p>
+          <div class="feature-link">查看详情 →</div>
         </div>
 
-        <div class="action-card" @click="$router.push('/admin/schedules')">
-          <div class="action-icon" style="background: #E8F5E9;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#388E3C" stroke-width="2" width="24" height="24">
+        <div class="feature-card" @click="$router.push('/admin/schedules')">
+          <div class="feature-icon" style="background: #E8F5E9;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
               <line x1="16" y1="2" x2="16" y2="6"></line>
               <line x1="8" y1="2" x2="8" y2="6"></line>
               <line x1="3" y1="10" x2="21" y2="10"></line>
             </svg>
           </div>
-          <div class="action-title">排班管理</div>
-          <div class="action-desc">设置医生排班计划</div>
+          <h3 class="feature-title">排班管理</h3>
+          <p class="feature-desc">设置和管理医生排班计划</p>
+          <div class="feature-link">查看详情 →</div>
         </div>
 
-        <div class="action-card" @click="$router.push('/admin/users')">
-          <div class="action-icon" style="background: #FFF3E0;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#F57C00" stroke-width="2" width="24" height="24">
+        <div class="feature-card" @click="$router.push('/admin/users')">
+          <div class="feature-icon" style="background: #FFF9E5;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
               <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"></path>
               <circle cx="9" cy="7" r="4"></circle>
               <path d="M23 21v-2a4 4 0 00-3-3.87"></path>
               <path d="M16 3.13a4 4 0 010 7.75"></path>
             </svg>
           </div>
-          <div class="action-title">用户管理</div>
-          <div class="action-desc">查看和管理用户</div>
+          <h3 class="feature-title">用户管理</h3>
+          <p class="feature-desc">查看和管理系统用户信息</p>
+          <div class="feature-link">查看详情 →</div>
         </div>
 
-        <div class="action-card" @click="$router.push('/admin/doctors')">
-          <div class="action-icon" style="background: #FCE4EC;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#C2185B" stroke-width="2" width="24" height="24">
+        <div class="feature-card" @click="$router.push('/admin/doctors')">
+          <div class="feature-icon" style="background: #FFF8E1;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
               <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
             </svg>
           </div>
-          <div class="action-title">医生审批</div>
-          <div class="action-desc">审批医生注册申请</div>
+          <h3 class="feature-title">医生审批</h3>
+          <p class="feature-desc">审批和管理医生注册申请</p>
+          <div class="feature-link">查看详情 →</div>
+        </div>
+
+        <div class="feature-card" @click="$router.push('/admin/leaves')">
+          <div class="feature-icon" style="background: #FCE4EC;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+          </div>
+          <h3 class="feature-title">请假审批</h3>
+          <p class="feature-desc">审批和管理医生请假申请</p>
+          <div class="feature-link">查看详情 →</div>
+        </div>
+
+        <div class="feature-card" @click="$router.push('/admin/appointments')">
+          <div class="feature-icon" style="background: #E0F2F1;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+          </div>
+          <h3 class="feature-title">预约管理</h3>
+          <p class="feature-desc">查看和管理所有预约记录</p>
+          <div class="feature-link">查看详情 →</div>
         </div>
       </div>
     </div>
@@ -295,22 +332,88 @@ const loadStatistics = async () => {
   margin: 0 auto;
 }
 
-/* ========== 页面标题 ========== */
-.page-header {
-  margin-bottom: 32px;
+/* ========== Hero区域 ========== */
+.hero-section {
+  background: linear-gradient(135deg, #FFF9E5 0%, #FFFBF0 100%);
+  border-radius: 16px;
+  padding: 48px 40px;
+  margin-bottom: 40px;
+  position: relative;
+  overflow: hidden;
 }
 
-.page-title {
-  font-size: 28px;
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -10%;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(255, 211, 0, 0.1) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.hero-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+  gap: 40px;
+}
+
+.hero-text {
+  flex: 1;
+  max-width: 50%;
+  z-index: 2;
+}
+
+.hero-title {
+  font-size: 42px;
   font-weight: 700;
   color: #2A2A2A;
-  margin: 0 0 8px 0;
+  margin: 0 0 12px 0;
+  letter-spacing: -1px;
+  line-height: 1.2;
 }
 
-.page-subtitle {
-  font-size: 14px;
+.hero-subtitle {
+  font-size: 16px;
   color: #666;
   margin: 0;
+}
+
+.hero-image {
+  width: 50%;
+  min-width: 500px;
+  height: 300px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
+  position: relative;
+  background: linear-gradient(135deg, #FFF9E5 0%, #FFFBF0 100%);
+}
+
+.hero-image-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 249, 229, 0.85) 0%, rgba(255, 255, 255, 0.5) 100%);
+  z-index: 2;
+  pointer-events: none;
+  border-radius: 16px;
+}
+
+.hero-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.5;
+  filter: sepia(30%) brightness(1.15) contrast(0.9) saturate(0.8);
+  mix-blend-mode: multiply;
 }
 
 /* ========== 统计卡片 ========== */
@@ -446,54 +549,120 @@ const loadStatistics = async () => {
   color: #FFD300;
 }
 
-/* ========== 快捷操作 ========== */
-.actions-grid {
+/* ========== 功能卡片区域 ========== */
+.features-section {
+  margin-bottom: 40px;
+}
+
+.section-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #2A2A2A;
+  margin: 0 0 24px 0;
+  letter-spacing: -0.5px;
+}
+
+.features-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
 }
 
-.action-card {
+.feature-card {
   background: #fff;
+  border: 1px solid #E8E8E8;
   border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  padding: 32px;
   cursor: pointer;
-  transition: all 0.2s;
-  text-align: center;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
 }
 
-.action-card:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-  transform: translateY(-2px);
+.feature-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #FFD300, #FFF9E5);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
 }
 
-.action-icon {
+.feature-card:hover {
+  border-color: #FFD300;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  transform: translateY(-4px);
+}
+
+.feature-card:hover::before {
+  transform: scaleX(1);
+}
+
+.feature-icon {
   width: 64px;
   height: 64px;
-  border-radius: 16px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 16px;
-}
-
-.action-title {
-  font-size: 16px;
-  font-weight: 600;
+  margin-bottom: 20px;
   color: #2A2A2A;
-  margin-bottom: 8px;
 }
 
-.action-desc {
+.feature-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #2A2A2A;
+  margin: 0 0 12px 0;
+}
+
+.feature-desc {
   font-size: 14px;
   color: #666;
+  line-height: 1.6;
+  margin: 0 0 16px 0;
+}
+
+.feature-link {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2A2A2A;
+  transition: color 0.2s;
+}
+
+.feature-card:hover .feature-link {
+  color: #FFD300;
 }
 
 /* ========== 响应式 ========== */
+@media (max-width: 1024px) {
+  .hero-content {
+    flex-direction: column;
+    gap: 24px;
+  }
+  
+  .hero-image {
+    width: 100%;
+    min-width: 100%;
+    height: 250px;
+  }
+  
+  .features-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 @media (max-width: 768px) {
-  .page-title {
-    font-size: 24px;
+  .hero-section {
+    padding: 32px 24px;
+  }
+  
+  .hero-title {
+    font-size: 32px;
   }
   
   .stats-grid {
@@ -509,8 +678,11 @@ const loadStatistics = async () => {
     font-size: 24px;
   }
   
-  .tasks-grid,
-  .actions-grid {
+  .tasks-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .features-grid {
     grid-template-columns: 1fr;
   }
 }

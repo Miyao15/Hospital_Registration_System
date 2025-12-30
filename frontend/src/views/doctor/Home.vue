@@ -1,10 +1,16 @@
 <template>
   <div class="doctor-home">
-    <!-- 欢迎区域 - Zocdoc 风格 -->
-    <div class="welcome-section">
-      <div class="welcome-text">
-        <h1 class="greeting">早上好，{{ doctorName }} 医生</h1>
-        <p class="date-info">{{ todayDate }}</p>
+    <!-- Hero区域 - Oatmeal风格 -->
+    <div class="hero-section">
+      <div class="hero-content">
+        <div class="hero-text">
+          <h1 class="hero-title">早上好，{{ doctorName }} 医生</h1>
+          <p class="hero-subtitle">{{ todayDate }} · 今天又是充满希望的一天</p>
+        </div>
+        <div class="hero-image">
+          <div class="hero-image-overlay"></div>
+          <img src="https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=500&h=400&fit=crop&q=80" alt="医疗健康" />
+        </div>
       </div>
     </div>
 
@@ -135,45 +141,63 @@
       </div>
     </div>
 
-    <!-- 快捷操作和最近评价 -->
-    <div class="bottom-grid">
-      <!-- 快捷操作 -->
-      <div class="quick-actions-card">
-        <h3 class="card-title">快捷操作</h3>
-        <div class="actions-grid">
-          <div class="action-button" @click="$router.push('/doctor/appointments')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+    <!-- 功能卡片区域 - Oatmeal风格 -->
+    <div class="features-section">
+      <h2 class="section-title">核心功能</h2>
+      <div class="features-grid">
+        <div class="feature-card" @click="$router.push('/doctor/appointments')">
+          <div class="feature-icon" style="background: #FFF9E5;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
               <line x1="16" y1="2" x2="16" y2="6"></line>
               <line x1="8" y1="2" x2="8" y2="6"></line>
               <line x1="3" y1="10" x2="21" y2="10"></line>
             </svg>
-            <span>预约管理</span>
           </div>
-          <div class="action-button" @click="$router.push('/doctor/schedule')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+          <h3 class="feature-title">预约管理</h3>
+          <p class="feature-desc">查看和管理患者预约，处理就诊流程</p>
+          <div class="feature-link">查看详情 →</div>
+        </div>
+
+        <div class="feature-card" @click="$router.push('/doctor/schedule')">
+          <div class="feature-icon" style="background: #E8F5E9;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
               <circle cx="12" cy="12" r="10"></circle>
               <polyline points="12 6 12 12 16 14"></polyline>
             </svg>
-            <span>查看排班</span>
           </div>
-          <div class="action-button" @click="$router.push('/doctor/leaves')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+          <h3 class="feature-title">排班日历</h3>
+          <p class="feature-desc">设置和管理您的出诊时间安排</p>
+          <div class="feature-link">查看详情 →</div>
+        </div>
+
+        <div class="feature-card" @click="$router.push('/doctor/leaves')">
+          <div class="feature-icon" style="background: #E3F2FD;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
               <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path>
               <polyline points="14 2 14 8 20 8"></polyline>
             </svg>
-            <span>申请请假</span>
           </div>
-          <div class="action-button" @click="$router.push('/doctor/reviews')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+          <h3 class="feature-title">请假管理</h3>
+          <p class="feature-desc">申请和管理您的请假申请</p>
+          <div class="feature-link">查看详情 →</div>
+        </div>
+
+        <div class="feature-card" @click="$router.push('/doctor/reviews')">
+          <div class="feature-icon" style="background: #FFF8E1;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
             </svg>
-            <span>查看评价</span>
           </div>
+          <h3 class="feature-title">我的评价</h3>
+          <p class="feature-desc">查看患者对您的评价和反馈</p>
+          <div class="feature-link">查看详情 →</div>
         </div>
       </div>
+    </div>
 
-      <!-- 最近评价 -->
+    <!-- 最近评价 -->
+    <div class="reviews-section">
       <div class="reviews-card">
         <div class="card-header">
           <h3 class="card-title">最近评价</h3>
@@ -334,33 +358,95 @@ const handleNoShow = async (apt) => {
 </script>
 
 <style scoped>
-/* ========== Zocdoc 风格首页 ========== */
+/* ========== Oatmeal风格首页 ========== */
 .doctor-home {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
+  padding: 0 24px;
 }
 
-/* 欢迎区域 */
-.welcome-section {
-  margin-bottom: 32px;
+/* Hero区域 */
+.hero-section {
+  background: linear-gradient(135deg, #FFF9E5 0%, #FFFBF0 100%);
+  border-radius: 16px;
+  padding: 48px 40px;
+  margin-bottom: 40px;
+  position: relative;
+  overflow: hidden;
 }
 
-.welcome-text {
-  padding: 0;
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -10%;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(255, 211, 0, 0.1) 0%, transparent 70%);
+  border-radius: 50%;
 }
 
-.greeting {
-  font-size: 32px;
+.hero-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+  gap: 40px;
+}
+
+.hero-text {
+  flex: 1;
+  max-width: 50%;
+  z-index: 2;
+}
+
+.hero-title {
+  font-size: 42px;
   font-weight: 700;
   color: #2A2A2A;
-  margin: 0 0 8px 0;
-  letter-spacing: -0.5px;
+  margin: 0 0 12px 0;
+  letter-spacing: -1px;
+  line-height: 1.2;
 }
 
-.date-info {
-  font-size: 14px;
+.hero-subtitle {
+  font-size: 16px;
   color: #666;
   margin: 0;
+}
+
+.hero-image {
+  width: 50%;
+  min-width: 500px;
+  height: 300px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
+  position: relative;
+  background: linear-gradient(135deg, #FFF9E5 0%, #FFFBF0 100%);
+}
+
+.hero-image-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 249, 229, 0.85) 0%, rgba(255, 255, 255, 0.5) 100%);
+  z-index: 2;
+  pointer-events: none;
+  border-radius: 16px;
+}
+
+.hero-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.5;
+  filter: sepia(30%) brightness(1.15) contrast(0.9) saturate(0.8);
+  mix-blend-mode: multiply;
 }
 
 /* 统计卡片 - Zocdoc 风格 */
@@ -642,61 +728,93 @@ const handleNoShow = async (apt) => {
   background: #E8E8E8;
 }
 
-/* 底部网格 */
-.bottom-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
+/* 功能卡片区域 */
+.features-section {
+  margin-bottom: 40px;
 }
 
-/* 快捷操作卡片 */
-.quick-actions-card {
-  background: #fff;
-  border: 1px solid #E8E8E8;
-  border-radius: 8px;
-  padding: 24px;
-}
-
-.card-title {
-  font-size: 16px;
+.section-title {
+  font-size: 28px;
   font-weight: 700;
   color: #2A2A2A;
+  margin: 0 0 24px 0;
+  letter-spacing: -0.5px;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.feature-card {
+  background: #fff;
+  border: 1px solid #E8E8E8;
+  border-radius: 12px;
+  padding: 32px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #FFD300, #FFF9E5);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.feature-card:hover {
+  border-color: #FFD300;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  transform: translateY(-4px);
+}
+
+.feature-card:hover::before {
+  transform: scaleX(1);
+}
+
+.feature-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  color: #2A2A2A;
+}
+
+.feature-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #2A2A2A;
+  margin: 0 0 12px 0;
+}
+
+.feature-desc {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.6;
   margin: 0 0 16px 0;
 }
 
-.actions-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-}
-
-.action-button {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  padding: 20px 16px;
-  background: #FAFAFA;
-  border: 1px solid #F0F0F0;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.action-button:hover {
-  background: #F5F5F5;
-  border-color: #FFD300;
-  transform: translateY(-2px);
-}
-
-.action-button svg {
-  color: #666;
-}
-
-.action-button span {
-  font-size: 13px;
-  font-weight: 500;
+.feature-link {
+  font-size: 14px;
+  font-weight: 600;
   color: #2A2A2A;
+  transition: color 0.2s;
+}
+
+.feature-card:hover .feature-link {
+  color: #FFD300;
 }
 
 /* 评价卡片 */
@@ -766,21 +884,36 @@ const handleNoShow = async (apt) => {
     grid-template-columns: repeat(2, 1fr);
   }
   
-  .bottom-grid {
-    grid-template-columns: 1fr;
+  .hero-content {
+    flex-direction: column;
+    gap: 24px;
+  }
+  
+  .hero-image {
+    width: 100%;
+    min-width: 100%;
+    height: 250px;
+  }
+  
+  .features-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
+  .hero-section {
+    padding: 32px 24px;
+  }
+  
+  .hero-title {
+    font-size: 32px;
+  }
+  
   .stats-grid {
     grid-template-columns: 1fr;
   }
   
-  .greeting {
-    font-size: 24px;
-  }
-  
-  .actions-grid {
+  .features-grid {
     grid-template-columns: 1fr;
   }
 }

@@ -580,7 +580,7 @@ const selectSearchSuggestion = (suggestion) => {
 };
 
 onMounted(async () => {
-  const { specialty, departmentId, medicalItemId } = route.query;
+  const { specialty, departmentId, medicalItemId, minRating, priorityDoctorId } = route.query;
   preselectedMedicalItemId.value = medicalItemId;
 
   const params = {};
@@ -595,6 +595,13 @@ onMounted(async () => {
   // 重要：如果有 medicalItemId，必须传递到搜索参数中
   if (medicalItemId) {
     params.medicalItemId = medicalItemId;
+  }
+  // 保存评分筛选和优先医生ID（用于前端筛选和排序）
+  if (minRating) {
+    params.minRating = minRating;
+  }
+  if (priorityDoctorId) {
+    params.priorityDoctorId = priorityDoctorId;
   }
 
   // 如果有任何搜索条件（包括 medicalItemId），使用 fetchDoctors
@@ -952,7 +959,31 @@ const fetchDoctors = async (params) => {
 };
 
 const processDoctorsData = async (fetchedDoctors) => {
-  doctors.value = fetchedDoctors.map(doc => ({ ...doc, availabilityMap: {} }));
+  // 从路由参数获取筛选条件
+  const minRating = route.query.minRating ? parseFloat(route.query.minRating) : null;
+  const priorityDoctorId = route.query.priorityDoctorId;
+  
+  let processedDoctors = fetchedDoctors.map(doc => ({ ...doc, availabilityMap: {} }));
+  
+  // 按评分筛选
+  if (minRating !== null) {
+    processedDoctors = processedDoctors.filter(doc => {
+      const rating = doc.rating || 0;
+      return rating >= minRating;
+    });
+  }
+  
+  // 优先显示指定医生
+  if (priorityDoctorId) {
+    const priorityDoctor = processedDoctors.find(doc => doc.id === priorityDoctorId);
+    if (priorityDoctor) {
+      // 将优先医生移到第一位
+      processedDoctors = processedDoctors.filter(doc => doc.id !== priorityDoctorId);
+      processedDoctors.unshift(priorityDoctor);
+    }
+  }
+  
+  doctors.value = processedDoctors;
   for (const doctor of doctors.value) { await fetchSlotsForVisibleDays(doctor); }
 };
 

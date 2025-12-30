@@ -32,6 +32,17 @@
       </div>
 
       <div class="right-col">
+        <div class="sidebar-card medical-card">
+          <div class="medical-card-image">
+            <img src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=400&h=300&fit=crop" alt="医疗健康" />
+          </div>
+          <div class="medical-card-content">
+            <h3 class="sidebar-title">您的健康档案</h3>
+            <p class="medical-card-desc">管理您的医疗记录，随时查看就诊历史</p>
+            <button class="btn-medical-card" @click="$router.push('/patient/medical-records')">查看档案</button>
+          </div>
+        </div>
+
         <div class="sidebar-card">
           <h3 class="sidebar-title">您的医疗团队</h3>
           <div class="care-list">
@@ -58,8 +69,6 @@
             </div>
           </div>
         </div>
-
-
       </div>
 
     </div>
@@ -389,6 +398,58 @@ const goToSearch = () => {
   height: 1px;
   background-color: #EEE;
   margin: 12px 0;
+}
+
+/* 医疗卡片 */
+.medical-card {
+  padding: 0;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.medical-card-image {
+  width: 100%;
+  height: 180px;
+  overflow: hidden;
+}
+
+.medical-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.medical-card:hover .medical-card-image img {
+  transform: scale(1.05);
+}
+
+.medical-card-content {
+  padding: 20px;
+}
+
+.medical-card-desc {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.5;
+  margin: 8px 0 16px 0;
+}
+
+.btn-medical-card {
+  width: 100%;
+  background-color: #FFD300;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #2A2A2A;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-medical-card:hover {
+  background-color: #F4CA00;
 }
 
 /* 响应式适配 */

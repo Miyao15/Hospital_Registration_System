@@ -96,7 +96,7 @@
                 {{ doc.departmentName || '暂无地址' }}
               </div>
             </div>
-            <button class="btn-book" @click="findCare">在线预约</button>
+            <button class="btn-book" @click="() => bookDoctor(doc)">在线预约</button>
           </div>
           
           <div class="see-more-card">
@@ -116,9 +116,9 @@
           <h2 class="section-title">热门搜索科室</h2>
         </div>
         <div class="scroll-container">
-          <div class="specialty-card" v-for="(item, index) in specialties" :key="index">
+          <div class="specialty-card" v-for="(item, index) in specialties" :key="index" @click="goToDepartment(item.id)">
             <div class="specialty-icon-circle">
-              <svg class="spec-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" v-html="item.svgPath"></svg>
+              <component :is="getDepartmentIconComponent(item.name)" />
             </div>
             <span class="specialty-name">{{ item.name }}</span>
           </div>
@@ -161,18 +161,21 @@
         <div class="app-text-content">
           <h2 class="app-title">数千名医生，一个应用搞定</h2>
           <p class="app-subtitle">优医 App 是预约医生、管理健康档案最快、最简单的方式。</p>
-          <div class="arrow-container">
-             <svg width="100" height="50" viewBox="0 0 120 60" fill="none" stroke="#2A2A2A" stroke-width="2" stroke-linecap="round">
-                <path d="M10 40 Q 40 10, 80 20 T 110 50" />
-                <path d="M100 50 L 110 50 L 105 40" />
-             </svg>
-          </div>
           <div class="store-buttons">
             <button class="store-btn">下载 App</button>
             <button class="store-btn">安卓版下载</button>
           </div>
         </div>
         <div class="phone-mockup-container">
+          <!-- 手绘风格箭头 - 从文字区域指向手机 -->
+          <div class="arrow-hand-drawn">
+            <svg width="350" height="250" viewBox="0 0 350 250" fill="none" stroke="#2A2A2A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <!-- 箭头从左侧文字区域指向手机左上角 -->
+              <path d="M15 50 Q 70 40, 125 45 Q 180 50, 235 60 Q 270 70, 295 85 Q 315 100, 330 120" 
+                    style="stroke-dasharray: 6,4; opacity: 0.8;" />
+              <path d="M327 118 L 337 123 L 332 113" />
+            </svg>
+          </div>
           <div class="phone-mockup">
             <div class="phone-notch"></div>
             <div class="phone-screen">
@@ -181,13 +184,17 @@
                 <div class="app-title-text">我的预约</div>
               </div>
               <div class="app-content">
-                <div class="app-card" v-for="i in 3" :key="i">
+                <div class="app-card" v-for="(appointment, index) in mockAppointments" :key="index">
                   <div class="app-card-row">
-                    <div class="app-avatar-placeholder"></div>
-                    <div class="app-info">
-                      <div class="bar-long"></div>
-                      <div class="bar-short"></div>
+                    <div class="app-avatar-placeholder">
+                      <img :src="appointment.avatar" :alt="appointment.doctor" />
                     </div>
+                    <div class="app-info">
+                      <div class="app-doctor-name">{{ appointment.doctor }}</div>
+                      <div class="app-time">{{ appointment.time }}</div>
+                      <div class="app-department">{{ appointment.department }}</div>
+                    </div>
+                    <div class="app-status" :class="appointment.status">{{ appointment.statusText }}</div>
                   </div>
                 </div>
               </div>
@@ -217,7 +224,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, h } from 'vue';
 import { useRouter } from 'vue-router';
 import request from '@/utils/request';
 
@@ -254,8 +261,222 @@ const goToSchedule = () => {
   router.push('/search-triage');
 };
 
+// 预约医生 - 跳转到搜索结果页面，筛选5星医生并优先显示选中的医生
+const bookDoctor = (doctor) => {
+  router.push({
+    path: '/search-results',
+    query: {
+      minRating: '5.0',
+      priorityDoctorId: doctor.id
+    }
+  });
+};
+
+const goToDepartment = (deptId) => {
+  router.push({
+    path: '/search-results',
+    query: { departmentId: deptId }
+  });
+};
+
+// 科室图标组件 - 使用SVG图标，确保所有科室都有图标
+const getDepartmentIconComponent = (name) => {
+  if (!name) {
+    return () => h('svg', { 
+      class: 'spec-svg',
+      viewBox: '0 0 24 24', 
+      fill: 'none', 
+      stroke: 'currentColor', 
+      'stroke-width': '1.5',
+      'stroke-linecap': 'round',
+      'stroke-linejoin': 'round'
+    }, [
+      h('path', { d: 'M12 2L2 7l10 5 10-5-10-5z' }),
+      h('path', { d: 'M2 17l10 5 10-5' }),
+      h('path', { d: 'M2 12l10 5 10-5' })
+    ]);
+  }
+  
+  const normalizedName = name.trim().replace(/\s+/g, '');
+  
+  // 心血管内科 - 红色心脏图标
+  if (normalizedName.includes('心血管')) {
+    return () => h('svg', { 
+      class: 'spec-svg',
+      viewBox: '0 0 24 24', 
+      fill: '#E91E63', 
+      stroke: '#C2185B', 
+      'stroke-width': '1.5',
+      'stroke-linecap': 'round',
+      'stroke-linejoin': 'round'
+    }, [
+      h('path', { d: 'M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z' })
+    ]);
+  }
+  
+  // 骨科 - 棕色骨头图标
+  if (normalizedName.includes('骨科')) {
+    return () => h('svg', { 
+      class: 'spec-svg',
+      viewBox: '0 0 24 24', 
+      fill: '#8D6E63', 
+      stroke: '#6D4C41', 
+      'stroke-width': '1.5',
+      'stroke-linecap': 'round',
+      'stroke-linejoin': 'round'
+    }, [
+      h('path', { d: 'M16.5 8.5l-5-5a2.5 2.5 0 0 0-3.54 0l-2 2a2.5 2.5 0 0 0 0 3.54l5 5a2.5 2.5 0 0 0 3.54 0l2-2a2.5 2.5 0 0 0 0-3.54z' }),
+      h('path', { d: 'M8.5 15.5l-5-5a2.5 2.5 0 0 0-3.54 0l-2 2a2.5 2.5 0 0 0 0 3.54l5 5a2.5 2.5 0 0 0 3.54 0l2-2a2.5 2.5 0 0 0 0-3.54z' })
+    ]);
+  }
+  
+  // 眼科 - 蓝色眼睛图标
+  if (normalizedName.includes('眼科')) {
+    return () => h('svg', { 
+      class: 'spec-svg',
+      viewBox: '0 0 24 24', 
+      fill: '#2196F3', 
+      stroke: '#1976D2', 
+      'stroke-width': '1.5',
+      'stroke-linecap': 'round',
+      'stroke-linejoin': 'round'
+    }, [
+      h('path', { d: 'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z' }),
+      h('circle', { cx: '12', cy: '12', r: '3', fill: '#1976D2' })
+    ]);
+  }
+  
+  // 妇科 - 粉色女性符号
+  if (normalizedName.includes('妇科')) {
+    return () => h('svg', { 
+      class: 'spec-svg',
+      viewBox: '0 0 24 24', 
+      fill: '#E91E63', 
+      stroke: '#C2185B', 
+      'stroke-width': '1.5',
+      'stroke-linecap': 'round',
+      'stroke-linejoin': 'round'
+    }, [
+      h('circle', { cx: '12', cy: '8', r: '5' }),
+      h('path', { d: 'M12 13v8' }),
+      h('path', { d: 'M8 17h8' })
+    ]);
+  }
+  
+  // 皮肤科 - 橙色毛囊图标
+  if (normalizedName.includes('皮肤科')) {
+    return () => h('svg', { 
+      class: 'spec-svg',
+      viewBox: '0 0 24 24', 
+      fill: '#FF9800', 
+      stroke: '#F57C00', 
+      'stroke-width': '1.5',
+      'stroke-linecap': 'round',
+      'stroke-linejoin': 'round'
+    }, [
+      h('circle', { cx: '12', cy: '8', r: '2' }),
+      h('path', { d: 'M12 10v12' }),
+      h('path', { d: 'M8 14h8' })
+    ]);
+  }
+  
+  // 儿科 - 橙色婴儿图标
+  if (normalizedName.includes('儿科')) {
+    return () => h('svg', { 
+      class: 'spec-svg',
+      viewBox: '0 0 24 24', 
+      fill: '#FF9800', 
+      stroke: '#F57C00', 
+      'stroke-width': '1.5',
+      'stroke-linecap': 'round',
+      'stroke-linejoin': 'round'
+    }, [
+      h('circle', { cx: '12', cy: '10', r: '4' }),
+      h('path', { d: 'M12 6v4' }),
+      h('path', { d: 'M12 14v4' }),
+      h('path', { d: 'M8 12h8' })
+    ]);
+  }
+  
+  // 口腔科 - 浅蓝色牙齿图标
+  if (normalizedName.includes('口腔科')) {
+    return () => h('svg', { 
+      class: 'spec-svg',
+      viewBox: '0 0 24 24', 
+      fill: '#4FC3F7', 
+      stroke: '#0288D1', 
+      'stroke-width': '1.5',
+      'stroke-linecap': 'round',
+      'stroke-linejoin': 'round'
+    }, [
+      h('rect', { x: '6', y: '8', width: '12', height: '12', rx: '2' }),
+      h('path', { d: 'M6 10h12' }),
+      h('path', { d: 'M9 14h6' })
+    ]);
+  }
+  
+  // 默认图标
+  return () => h('svg', { 
+    class: 'spec-svg',
+    viewBox: '0 0 24 24', 
+    fill: 'none', 
+    stroke: 'currentColor', 
+    'stroke-width': '1.5',
+    'stroke-linecap': 'round',
+    'stroke-linejoin': 'round'
+  }, [
+    h('path', { d: 'M12 2L2 7l10 5 10-5-10-5z' }),
+    h('path', { d: 'M2 17l10 5 10-5' }),
+    h('path', { d: 'M2 12l10 5 10-5' })
+  ]);
+};
+
 const topDoctors = ref([]);
 const specialties = ref([]);
+
+// 处理图标加载错误
+const handleIconError = (event) => {
+  // 如果图标加载失败，隐藏img标签，显示默认SVG
+  if (event.target) {
+    event.target.style.display = 'none';
+    // 查找同级的SVG元素
+    const parent = event.target.parentElement;
+    if (parent) {
+      const svg = parent.querySelector('.spec-svg');
+      if (svg) {
+        svg.style.display = 'block';
+      }
+    }
+  }
+};
+
+// 手机mockup中的预约数据
+const mockAppointments = ref([
+  {
+    doctor: '张医生',
+    time: '今天 14:00',
+    department: '内科',
+    status: 'pending',
+    statusText: '待就诊',
+    avatar: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=100&h=100&fit=crop'
+  },
+  {
+    doctor: '李医生',
+    time: '明天 10:30',
+    department: '外科',
+    status: 'confirmed',
+    statusText: '已确认',
+    avatar: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&h=100&fit=crop'
+  },
+  {
+    doctor: '王医生',
+    time: '后天 16:00',
+    department: '儿科',
+    status: 'pending',
+    statusText: '待就诊',
+    avatar: 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=100&h=100&fit=crop'
+  }
+]);
 
 const fetchLandingData = async () => {
   try {
@@ -448,8 +669,30 @@ body { margin: 0; padding: 0; background-color: #fff; font-family: "Microsoft Ya
 /* 科室卡片 */
 .specialty-card { min-width: 120px; height: 140px; background-color: #FFF9E5; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; scroll-snap-align: start; transition: transform 0.2s; }
 .specialty-card:hover { transform: translateY(-3px); }
-.specialty-icon-circle { width: 56px; height: 56px; background-color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.02); }
-.spec-svg { width: 28px; height: 28px; color: #2A2A2A; }
+.specialty-icon-circle { 
+  width: 56px; 
+  height: 56px; 
+  background-color: #fff; 
+  border-radius: 50%; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  margin-bottom: 12px; 
+  box-shadow: 0 4px 8px rgba(0,0,0,0.02); 
+  position: relative;
+}
+.spec-svg { 
+  width: 28px; 
+  height: 28px; 
+  color: #2A2A2A; 
+  display: block;
+}
+.specialty-icon-img { 
+  width: 36px; 
+  height: 36px; 
+  object-fit: contain; 
+  display: block;
+}
 .specialty-name { font-size: 13px; font-weight: 600; color: #2A2A2A; }
 
 /* --- 特性引导 --- */
@@ -472,10 +715,35 @@ body { margin: 0; padding: 0; background-color: #fff; font-family: "Microsoft Ya
 .app-text-content { max-width: 420px; }
 .app-title { font-size: 32px; font-weight: 700; margin-bottom: 16px; line-height: 1.1; }
 .app-subtitle { font-size: 16px; line-height: 1.5; margin-bottom: 24px; opacity: 0.9; }
-.store-buttons { display: flex; gap: 12px; }
+.store-buttons { display: flex; gap: 12px; margin-bottom: 20px; }
 .store-btn { display: flex; align-items: center; gap: 8px; background-color: #000; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 700; font-size: 13px; cursor: pointer; }
-.phone-mockup-container { padding-right: 30px; }
-.phone-mockup { width: 260px; height: 520px; background: #2A2A2A; border-radius: 36px; padding: 8px; box-shadow: 0 16px 40px rgba(0,0,0,0.15); position: relative; transform: rotate(-2deg); }
+.arrow-hand-drawn {
+  position: absolute;
+  top: 30px;
+  left: -200px;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.75;
+}
+
+.phone-mockup-container { 
+  padding-right: 30px; 
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+}
+.phone-mockup { 
+  width: 260px; 
+  height: 520px; 
+  background: #2A2A2A; 
+  border-radius: 36px; 
+  padding: 8px; 
+  box-shadow: 0 16px 40px rgba(0,0,0,0.15); 
+  position: relative; 
+  transform: rotate(-3deg);
+  z-index: 2;
+}
+
 .phone-notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 100px; height: 22px; background: #2A2A2A; border-bottom-left-radius: 10px; border-bottom-right-radius: 10px; z-index: 10; }
 .phone-screen { background: #FFF9E5; width: 100%; height: 100%; border-radius: 28px; overflow: hidden; display: flex; flex-direction: column; }
 .app-header { padding: 36px 16px 12px; background: #FFD300; display: flex; align-items: center; gap: 8px; }
@@ -483,11 +751,16 @@ body { margin: 0; padding: 0; background-color: #fff; font-family: "Microsoft Ya
 .app-title-text { font-weight: bold; font-size: 14px; flex: 1; text-align: center; }
 .app-content { flex: 1; padding: 12px; overflow-y: hidden; }
 .app-card { background: #fff; padding: 10px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-.app-card-row { display: flex; align-items: center; gap: 8px; }
-.app-avatar-placeholder { width: 36px; height: 36px; background: #EEE; border-radius: 50%; }
-.app-info { flex: 1; }
-.bar-long { width: 80%; height: 8px; background: #EEE; border-radius: 4px; margin-bottom: 4px; }
-.bar-short { width: 50%; height: 8px; background: #EEE; border-radius: 4px; }
+.app-card-row { display: flex; align-items: center; gap: 10px; }
+.app-avatar-placeholder { width: 40px; height: 40px; background: #EEE; border-radius: 50%; overflow: hidden; flex-shrink: 0; }
+.app-avatar-placeholder img { width: 100%; height: 100%; object-fit: cover; }
+.app-info { flex: 1; min-width: 0; }
+.app-doctor-name { font-size: 13px; font-weight: 600; color: #2A2A2A; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.app-time { font-size: 11px; color: #666; margin-bottom: 2px; }
+.app-department { font-size: 10px; color: #999; }
+.app-status { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 600; white-space: nowrap; }
+.app-status.pending { background: #FFF8E1; color: #F57C00; }
+.app-status.confirmed { background: #E8F5E9; color: #2E7D32; }
 
 /* Footer */
 .main-footer { background-color: #fff; border-top: 1px solid #eee; padding: 40px 0; margin-top: 0; }
