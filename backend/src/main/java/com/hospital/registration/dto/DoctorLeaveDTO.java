@@ -9,8 +9,10 @@ public class DoctorLeaveDTO {
     private String id;
     private String doctorId;
     private String doctorName;
+    private String departmentName;
     private LocalDate startDate;
     private LocalDate endDate;
+    private Integer days;  // 请假天数
     private String reason;
     private String status;
     private String statusName;
@@ -18,4 +20,5 @@ public class DoctorLeaveDTO {
     private LocalDateTime approvedAt;
     private String rejectReason;
     private LocalDateTime createdAt;
+    private String reviewNote;  // 审批意见（拒绝原因或备注）
 }

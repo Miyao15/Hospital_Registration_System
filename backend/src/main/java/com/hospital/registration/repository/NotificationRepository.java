@@ -1,6 +1,7 @@
 package com.hospital.registration.repository;
 
 import com.hospital.registration.entity.Notification;
+import com.hospital.registration.enums.NotificationType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,6 +16,11 @@ public interface NotificationRepository extends JpaRepository<Notification, Stri
     Page<Notification> findByUserIdOrderByCreatedAtDesc(String userId, Pageable pageable);
     
     Page<Notification> findByUserIdAndIsReadOrderByCreatedAtDesc(String userId, Boolean isRead, Pageable pageable);
+    
+    // 按类型筛选
+    Page<Notification> findByUserIdAndTypeOrderByCreatedAtDesc(String userId, NotificationType type, Pageable pageable);
+    
+    Page<Notification> findByUserIdAndTypeAndIsReadOrderByCreatedAtDesc(String userId, NotificationType type, Boolean isRead, Pageable pageable);
     
     @Query("SELECT COUNT(n) FROM Notification n WHERE n.userId = :userId AND n.isRead = false")
     int countUnreadByUserId(@Param("userId") String userId);

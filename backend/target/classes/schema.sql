@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS users (
     status ENUM('ACTIVE', 'PENDING', 'LOCKED', 'DISABLED') NOT NULL DEFAULT 'ACTIVE' COMMENT '账户状态',
     login_failures INT DEFAULT 0 COMMENT '连续登录失败次数',
     locked_until DATETIME NULL COMMENT '锁定截止时间',
+    last_login_at DATETIME NULL COMMENT '最后登录时间',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     INDEX idx_users_phone (phone),
@@ -141,6 +142,7 @@ CREATE TABLE IF NOT EXISTS appointments (
     doctor_id VARCHAR(36) NOT NULL COMMENT '医生ID',
     department_id VARCHAR(36) NOT NULL COMMENT '科室ID',
     time_slot_id VARCHAR(36) NOT NULL COMMENT '时间段ID',
+    medical_item_id VARCHAR(36) COMMENT '检查项目ID',
     appointment_date DATE NOT NULL COMMENT '预约日期',
     period ENUM('MORNING', 'AFTERNOON', 'EVENING') NOT NULL COMMENT '时间段',
     patient_name VARCHAR(50) NOT NULL COMMENT '就诊人姓名',
@@ -154,6 +156,7 @@ CREATE TABLE IF NOT EXISTS appointments (
     FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE CASCADE,
     FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE CASCADE,
     FOREIGN KEY (time_slot_id) REFERENCES time_slots(id) ON DELETE CASCADE,
+    FOREIGN KEY (medical_item_id) REFERENCES examination_items(id) ON DELETE SET NULL,
     INDEX idx_appointments_patient (patient_id),
     INDEX idx_appointments_doctor (doctor_id),
     INDEX idx_appointments_date (appointment_date),
@@ -178,18 +181,31 @@ CREATE TABLE IF NOT EXISTS notifications (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='消息通知表';
 
 
--- 检查项目表
+-- 检查项目表（健康检查推荐项目）
 CREATE TABLE IF NOT EXISTS examination_items (
     id VARCHAR(36) PRIMARY KEY COMMENT '检查项目ID (UUID)',
     name VARCHAR(100) NOT NULL UNIQUE COMMENT '项目名称',
     description TEXT COMMENT '项目描述',
     price DECIMAL(10, 2) NOT NULL COMMENT '项目价格',
-    category VARCHAR(50) NOT NULL COMMENT '项目类别 (如: 常规检查, 血液检查, 影像检查)',
-    department_id VARCHAR(36) NULL COMMENT '关联科室ID (可选)',
+    category VARCHAR(50) NOT NULL COMMENT '项目类别 (如: 常规检查, 专科检查)',
+    department_id VARCHAR(36) NULL COMMENT '关联科室ID (可选，保留字段，实际使用关联表)',
     enabled BOOLEAN DEFAULT TRUE COMMENT '是否启用',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE SET NULL,
     INDEX idx_examination_items_category (category),
     INDEX idx_examination_items_enabled (enabled)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='检查项目表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='检查项目表（健康检查推荐项目）';
+
+-- 检查项目与科室关联表（多对多关系）
+CREATE TABLE IF NOT EXISTS examination_item_departments (
+    id VARCHAR(36) PRIMARY KEY COMMENT '关联ID (UUID)',
+    examination_item_id VARCHAR(36) NOT NULL COMMENT '检查项目ID',
+    department_id VARCHAR(36) NOT NULL COMMENT '科室ID',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    FOREIGN KEY (examination_item_id) REFERENCES examination_items(id) ON DELETE CASCADE,
+    FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE CASCADE,
+    UNIQUE KEY uk_item_dept (examination_item_id, department_id),
+    INDEX idx_examination_item_id (examination_item_id),
+    INDEX idx_department_id (department_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='检查项目与科室关联表';

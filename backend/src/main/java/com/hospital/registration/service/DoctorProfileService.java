@@ -9,6 +9,7 @@ import com.hospital.registration.exception.BusinessException;
 import com.hospital.registration.repository.DepartmentRepository;
 import com.hospital.registration.repository.DoctorRepository;
 import com.hospital.registration.repository.DoctorReviewRepository;
+import com.hospital.registration.repository.ExaminationItemDepartmentRepository;
 import com.hospital.registration.repository.UserRepository;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,7 @@ public class DoctorProfileService {
     private final DepartmentRepository departmentRepository;
     private final DoctorReviewRepository doctorReviewRepository;
     private final UserRepository userRepository;
+    private final ExaminationItemDepartmentRepository examinationItemDepartmentRepository;
     
     public List<DoctorListDTO> getDoctorsByDepartment(String departmentId) {
         try {
@@ -72,7 +74,10 @@ public class DoctorProfileService {
             dto.setId(doctor.getId());
             dto.setName(doctor.getName() != null ? doctor.getName() : "未知");
             dto.setTitle("医生");
+            dto.setEmployeeId(doctor.getEmployeeId());
+            dto.setLicenseNumber(doctor.getLicenseNumber());
             dto.setOnlineStatus("AVAILABLE");
+            dto.setStatus("ACTIVE");
             return dto;
         }
     }
@@ -94,12 +99,48 @@ public class DoctorProfileService {
         Pageable pageable = PageRequest.of(page, size);
         
         try {
-            log.info("Searching doctors with departmentId: {}, keyword: {}", searchDTO.getDepartmentId(), searchDTO.getKeyword());
+            log.info("Searching doctors with departmentId: {}, keyword: {}, medicalItemId: {}", 
+                    searchDTO.getDepartmentId(), searchDTO.getKeyword(), searchDTO.getMedicalItemId());
             
             Page<Doctor> doctors;
             
-            // 简化查询逻辑
-            if (searchDTO.getDepartmentId() != null && !searchDTO.getDepartmentId().isEmpty()) {
+            // 如果提供了检查项目ID，先查询关联的科室ID列表
+            if (searchDTO.getMedicalItemId() != null && !searchDTO.getMedicalItemId().isEmpty()) {
+                List<String> departmentIds = examinationItemDepartmentRepository
+                        .findDepartmentIdsByExaminationItemId(searchDTO.getMedicalItemId());
+                log.info("Found {} departments for medical item {}", departmentIds.size(), searchDTO.getMedicalItemId());
+                
+                if (departmentIds.isEmpty()) {
+                    // 如果没有关联的科室，返回空结果
+                    return Page.empty(pageable);
+                }
+                
+                // 如果同时指定了departmentId，则取交集
+                if (searchDTO.getDepartmentId() != null && !searchDTO.getDepartmentId().isEmpty()) {
+                    if (!departmentIds.contains(searchDTO.getDepartmentId())) {
+                        // 指定的科室不在关联列表中，返回空结果
+                        return Page.empty(pageable);
+                    }
+                    // 使用指定的科室ID
+                    List<Doctor> deptDoctors = doctorRepository.findByDepartmentId(searchDTO.getDepartmentId());
+                    int start = (int) pageable.getOffset();
+                    int end = Math.min(start + pageable.getPageSize(), deptDoctors.size());
+                    List<Doctor> pageContent = start < deptDoctors.size() ? deptDoctors.subList(start, end) : new ArrayList<>();
+                    doctors = new org.springframework.data.domain.PageImpl<>(pageContent, pageable, deptDoctors.size());
+                } else {
+                    // 查询所有关联科室的医生
+                    List<Doctor> allDoctors = new ArrayList<>();
+                    for (String deptId : departmentIds) {
+                        allDoctors.addAll(doctorRepository.findByDepartmentId(deptId));
+                    }
+                    log.info("Found {} doctors across {} departments", allDoctors.size(), departmentIds.size());
+                    // 手动分页
+                    int start = (int) pageable.getOffset();
+                    int end = Math.min(start + pageable.getPageSize(), allDoctors.size());
+                    List<Doctor> pageContent = start < allDoctors.size() ? allDoctors.subList(start, end) : new ArrayList<>();
+                    doctors = new org.springframework.data.domain.PageImpl<>(pageContent, pageable, allDoctors.size());
+                }
+            } else if (searchDTO.getDepartmentId() != null && !searchDTO.getDepartmentId().isEmpty()) {
                 // 按科室查询
                 List<Doctor> deptDoctors = doctorRepository.findByDepartmentId(searchDTO.getDepartmentId());
                 log.info("Found {} doctors in department {}", deptDoctors.size(), searchDTO.getDepartmentId());
@@ -216,12 +257,25 @@ public class DoctorProfileService {
         dto.setId(doctor.getId());
         dto.setName(doctor.getName() != null ? doctor.getName() : "未知医生");
         dto.setTitle(getTitleDisplayName(doctor.getTitle()));
+        dto.setEmployeeId(doctor.getEmployeeId());        // 工号
+        dto.setLicenseNumber(doctor.getLicenseNumber());  // 执业证号
         dto.setDepartmentId(doctor.getDepartmentId());
         dto.setAvatarUrl(doctor.getAvatarUrl());
         dto.setSpecialty(doctor.getSpecialty() != null ? doctor.getSpecialty() : "");
         dto.setScheduleInfo(doctor.getScheduleInfo());
         dto.setOnlineStatus("AVAILABLE");
         dto.setDepartmentName(""); // 默认值
+        
+        // 获取用户状态
+        try {
+            userRepository.findById(doctor.getUserId()).ifPresent(user -> {
+                dto.setStatus(user.getStatus().name());  // 设置医生状态
+                dto.setPhone(user.getPhone());           // 设置手机号
+            });
+        } catch (Exception e) {
+            log.warn("Could not get user info for doctor: {}, error: {}", doctor.getId(), e.getMessage());
+            dto.setStatus("ACTIVE"); // 默认状态
+        }
         
         // 获取科室名称
         if (doctor.getDepartmentId() != null && !doctor.getDepartmentId().isEmpty()) {
@@ -233,6 +287,33 @@ public class DoctorProfileService {
             }
         }
         
+        // 获取评价统计
+        try {
+            Double avgRating = doctorReviewRepository.getAverageRatingByDoctorId(doctor.getId());
+            Integer reviewCount = doctorReviewRepository.getReviewCountByDoctorId(doctor.getId());
+            log.info("Doctor {} - avgRating: {}, reviewCount: {}", doctor.getId(), avgRating, reviewCount);
+            // 只有当没有评价记录时才使用默认值，如果有评价记录但avgRating为null，则说明有问题
+            if (reviewCount != null && reviewCount > 0) {
+                // 有评价记录，必须使用实际的平均评分
+                if (avgRating == null) {
+                    log.error("Doctor {} has {} reviews but avgRating is null!", doctor.getId(), reviewCount);
+                    // 如果没有平均分但有评价记录，重新计算或使用0
+                    dto.setRating(0.0);
+                } else {
+                    dto.setRating(avgRating);
+                }
+                dto.setReviewCount(reviewCount);
+            } else {
+                // 没有评价记录，使用默认值
+                dto.setRating(5.0);
+                dto.setReviewCount(0);
+            }
+        } catch (Exception e) {
+            log.warn("Could not get review stats for doctor: {}, error: {}", doctor.getId(), e.getMessage());
+            dto.setRating(5.0);
+            dto.setReviewCount(0);
+        }
+        
         return dto;
     }
     
@@ -241,6 +322,8 @@ public class DoctorProfileService {
         dto.setId(doctor.getId());
         dto.setName(doctor.getName());
         dto.setTitle(getTitleDisplayName(doctor.getTitle()));
+        dto.setEmployeeId(doctor.getEmployeeId());        // 添加工号
+        dto.setLicenseNumber(doctor.getLicenseNumber());  // 添加执业证号
         dto.setDepartmentId(doctor.getDepartmentId());
         dto.setAvatarUrl(doctor.getAvatarUrl());
         dto.setIntroduction(doctor.getIntroduction());
@@ -263,11 +346,31 @@ public class DoctorProfileService {
         try {
             Double avgRating = doctorReviewRepository.getAverageRatingByDoctorId(doctor.getId());
             Integer reviewCount = doctorReviewRepository.getReviewCountByDoctorId(doctor.getId());
-            dto.setAvgRating(avgRating != null ? avgRating : 5.0);
-            dto.setReviewCount(reviewCount != null ? reviewCount : 0);
+            log.info("Doctor {} (detail) - avgRating: {}, reviewCount: {}", doctor.getId(), avgRating, reviewCount);
+            // 只有当没有评价记录时才使用默认值，如果有评价记录但avgRating为null，则说明有问题
+            if (reviewCount != null && reviewCount > 0) {
+                // 有评价记录，必须使用实际的平均评分
+                if (avgRating == null) {
+                    log.error("Doctor {} has {} reviews but avgRating is null!", doctor.getId(), reviewCount);
+                    // 如果没有平均分但有评价记录，重新计算或使用0
+                    dto.setAvgRating(0.0);
+                    dto.setRating(0.0);
+                } else {
+                    dto.setAvgRating(avgRating);
+                    dto.setRating(avgRating);
+                }
+                dto.setReviewCount(reviewCount);
+            } else {
+                // 没有评价记录，使用默认值
+                dto.setAvgRating(5.0);
+                dto.setReviewCount(0);
+                dto.setRating(5.0);
+            }
         } catch (Exception e) {
+            log.warn("Could not get review stats for doctor: {}, error: {}", doctor.getId(), e.getMessage());
             dto.setAvgRating(5.0);
             dto.setReviewCount(0);
+            dto.setRating(5.0);
         }
         
         return dto;
@@ -283,5 +386,54 @@ public class DoctorProfileService {
             case CHIEF -> "主任医师";
             default -> "医生";
         };
+    }
+    
+    /**
+     * 根据用户ID获取医生详情
+     */
+    public DoctorDetailDTO getDoctorProfileByUserId(String userId) {
+        log.info("根据userId获取医生资料: {}", userId);
+        Doctor doctor = doctorRepository.findByUserId(userId)
+                .orElseThrow(() -> new BusinessException("医生信息不存在"));
+        return convertToDetailDTO(doctor);
+    }
+    
+    /**
+     * 更新医生个人资料
+     */
+    public DoctorDetailDTO updateDoctorProfile(String userId, UpdateDoctorProfileDTO dto) {
+        log.info("更新医生资料: userId={}", userId);
+        Doctor doctor = doctorRepository.findByUserId(userId)
+                .orElseThrow(() -> new BusinessException("医生信息不存在"));
+        
+        // 更新字段
+        if (dto.getName() != null) {
+            doctor.setName(dto.getName());
+        }
+        if (dto.getTitle() != null) {
+            try {
+                doctor.setTitle(DoctorTitle.valueOf(dto.getTitle()));
+            } catch (IllegalArgumentException e) {
+                log.warn("无效的职称: {}", dto.getTitle());
+            }
+        }
+        if (dto.getLicenseNumber() != null) {
+            doctor.setLicenseNumber(dto.getLicenseNumber());
+        }
+        if (dto.getSpecialty() != null) {
+            doctor.setSpecialty(dto.getSpecialty());
+        }
+        if (dto.getIntroduction() != null) {
+            doctor.setIntroduction(dto.getIntroduction());
+        }
+        if (dto.getEducation() != null) {
+            doctor.setEducation(dto.getEducation());
+        }
+        if (dto.getAvatarUrl() != null) {
+            doctor.setAvatarUrl(dto.getAvatarUrl());
+        }
+        
+        doctor = doctorRepository.save(doctor);
+        return convertToDetailDTO(doctor);
     }
 }

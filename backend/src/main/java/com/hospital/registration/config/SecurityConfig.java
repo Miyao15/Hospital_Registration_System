@@ -41,7 +41,16 @@ public class SecurityConfig {
             .requestMatchers(HttpMethod.GET, "/api/doctors/**", "/api/doctors").permitAll()
             .requestMatchers(HttpMethod.GET, "/api/medical-items/**", "/api/medical-items").permitAll()
             .requestMatchers(HttpMethod.GET, "/api/schedules/**").permitAll()
-            .requestMatchers("/api/appointments/**").hasRole("PATIENT") // 患者预约相关接口
+            // 患者端接口
+            .requestMatchers("/api/appointments/**").hasRole("PATIENT")
+            .requestMatchers("/api/patients/**").hasRole("PATIENT")
+            .requestMatchers(HttpMethod.POST, "/api/reviews").hasRole("PATIENT")
+            // 医生端接口
+            .requestMatchers("/api/doctor/**").hasRole("DOCTOR")
+            .requestMatchers("/api/doctor/work/**").hasRole("DOCTOR")
+            .requestMatchers("/api/doctor/leaves/**").hasRole("DOCTOR")
+            // 通知接口 - 医生和患者都可以访问
+            .requestMatchers("/api/notifications/**").hasAnyRole("PATIENT", "DOCTOR")
             .requestMatchers("/error").permitAll()
             .anyRequest().authenticated()
         )

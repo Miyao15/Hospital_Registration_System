@@ -2,7 +2,6 @@ package com.hospital.registration.entity;
 
 import com.hospital.registration.enums.AppointmentStatus;
 import com.hospital.registration.enums.TimePeriod;
-import com.hospital.registration.entity.MedicalItem; // Import MedicalItem
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -35,9 +34,8 @@ public class Appointment {
     @Column(name = "time_slot_id", nullable = false)
     private String timeSlotId;
     
-    @ManyToOne(fetch = FetchType.LAZY) // Lazy loading for performance
-    @JoinColumn(name = "medical_item_id") // Assumes medical_item_id column exists in appointments table
-    private MedicalItem medicalItem;
+    @Column(name = "medical_item_id")
+    private String medicalItemId;
     
     @Column(name = "appointment_date", nullable = false)
     private LocalDate appointmentDate;

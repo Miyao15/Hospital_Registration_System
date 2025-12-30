@@ -3,7 +3,8 @@ package com.hospital.registration.enums;
 public enum LeaveStatus {
     PENDING("待审批"),
     APPROVED("已批准"),
-    REJECTED("已拒绝");
+    REJECTED("已拒绝"),
+    CANCELLED("已撤销");
     
     private final String displayName;
     

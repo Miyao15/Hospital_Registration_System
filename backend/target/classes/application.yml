@@ -21,9 +21,11 @@ spring:
 
   sql:
     init:
-      mode: never
+      mode: always  # 改为 always，每次启动时自动执行 schema.sql（使用 CREATE TABLE IF NOT EXISTS 确保安全）
+      encoding: UTF-8  # 明确指定 SQL 脚本文件的字符编码为 UTF-8
       schema-locations: classpath:schema.sql
-      data-locations: []
+      data-locations: 
+        - classpath:01_add_examination_items.sql  # 初始化数据脚本
   
   data:
     redis:

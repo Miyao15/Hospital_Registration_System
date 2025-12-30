@@ -29,11 +29,26 @@ public class NotificationService {
         notificationRepository.save(notification);
     }
     
-    public Page<NotificationDTO> getNotifications(String userId, Boolean unreadOnly, int page, int size) {
+    public Page<NotificationDTO> getNotifications(String userId, Boolean unreadOnly, String type, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<Notification> notifications;
         
-        if (unreadOnly != null && unreadOnly) {
+        if (type != null && !type.isEmpty()) {
+            // 按类型筛选
+            try {
+                NotificationType notificationType = NotificationType.valueOf(type);
+                if (unreadOnly != null && unreadOnly) {
+                    notifications = notificationRepository.findByUserIdAndTypeAndIsReadOrderByCreatedAtDesc(
+                            userId, notificationType, false, pageable);
+                } else {
+                    notifications = notificationRepository.findByUserIdAndTypeOrderByCreatedAtDesc(
+                            userId, notificationType, pageable);
+                }
+            } catch (IllegalArgumentException e) {
+                // 无效的类型，返回全部
+                notifications = notificationRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable);
+            }
+        } else if (unreadOnly != null && unreadOnly) {
             notifications = notificationRepository.findByUserIdAndIsReadOrderByCreatedAtDesc(
                     userId, false, pageable);
         } else {

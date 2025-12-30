@@ -1,5 +1,6 @@
 package com.hospital.registration.service;
 
+import com.hospital.registration.dto.AdminUpdateAppointmentDTO;
 import com.hospital.registration.dto.AppointmentDetailDTO;
 import com.hospital.registration.dto.CreateAppointmentDTO;
 import com.hospital.registration.entity.*;
@@ -29,6 +30,8 @@ public class AppointmentService {
     private final DoctorRepository doctorRepository;
     private final DepartmentRepository departmentRepository;
     private final PatientRepository patientRepository;
+    private final MedicalItemRepository medicalItemRepository;
+    private final NotificationService notificationService;
     
     @Transactional
     public AppointmentDetailDTO createAppointment(String userId, CreateAppointmentDTO dto) {
@@ -81,9 +84,26 @@ public class AppointmentService {
         appointment.setPatientName(dto.getPatientName());
         appointment.setPatientPhone(dto.getPatientPhone());
         appointment.setSymptomDesc(dto.getSymptomDesc());
+        appointment.setMedicalItemId(dto.getMedicalItemId());
         appointment.setStatus(AppointmentStatus.PENDING);
         
         appointment = appointmentRepository.save(appointment);
+        
+        // 发送预约成功通知
+        try {
+            String dateStr = schedule.getScheduleDate().format(DateTimeFormatter.ofPattern("yyyy年MM月dd日"));
+            String timeStr = timeSlot.getPeriod().getDisplayName();
+            notificationService.sendAppointmentSuccessNotification(
+                    userId, 
+                    appointment.getAppointmentNo(), 
+                    doctor.getName(), 
+                    dateStr, 
+                    timeStr
+            );
+            log.info("预约成功通知已发送 - userId: {}", userId);
+        } catch (Exception e) {
+            log.warn("发送预约通知失败: {}", e.getMessage());
+        }
         
         return convertToDetailDTO(appointment);
     }
@@ -156,6 +176,14 @@ public class AppointmentService {
         appointment.setStatus(AppointmentStatus.CANCELLED);
         appointment.setCancelReason(reason);
         appointmentRepository.save(appointment);
+        
+        // 发送取消通知
+        try {
+            notificationService.sendCancelNotification(userId, reason);
+            log.info("预约取消通知已发送 - userId: {}", userId);
+        } catch (Exception e) {
+            log.warn("发送取消通知失败: {}", e.getMessage());
+        }
     }
     
     @Transactional
@@ -215,6 +243,123 @@ public class AppointmentService {
         return appointmentRepository.findExpiredAppointments(LocalDate.now());
     }
     
+    // 管理员删除预约（软删除，标记为已取消）
+    @Transactional
+    public void adminCancelAppointment(String appointmentId, String reason) {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new BusinessException("预约记录不存在"));
+        
+        if (appointment.getStatus() == AppointmentStatus.CANCELLED) {
+            throw new BusinessException("预约已取消");
+        }
+        
+        if (appointment.getStatus() == AppointmentStatus.COMPLETED) {
+            throw new BusinessException("已完成的预约不能取消");
+        }
+        
+        // 如果是待就诊状态，释放号源
+        if (appointment.getStatus() == AppointmentStatus.PENDING) {
+            timeSlotRepository.incrementSlot(appointment.getTimeSlotId());
+        }
+        
+        // 更新预约状态
+        appointment.setStatus(AppointmentStatus.CANCELLED);
+        appointment.setCancelReason(reason != null ? reason : "管理员取消");
+        appointmentRepository.save(appointment);
+        
+        log.info("管理员取消预约 - appointmentId: {}, reason: {}", appointmentId, reason);
+    }
+    
+    // 管理员修改预约信息
+    @Transactional
+    public AppointmentDetailDTO adminUpdateAppointment(String appointmentId, AdminUpdateAppointmentDTO dto) {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new BusinessException("预约记录不存在"));
+        
+        if (appointment.getStatus() == AppointmentStatus.COMPLETED) {
+            throw new BusinessException("已完成的预约不能修改");
+        }
+        
+        if (appointment.getStatus() == AppointmentStatus.CANCELLED) {
+            throw new BusinessException("已取消的预约不能修改");
+        }
+        
+        // 如果修改了时间段，需要处理号源
+        if (dto.getTimeSlotId() != null && !dto.getTimeSlotId().equals(appointment.getTimeSlotId())) {
+            // 验证新时间段
+            TimeSlot newTimeSlot = timeSlotRepository.findById(dto.getTimeSlotId())
+                    .orElseThrow(() -> new BusinessException("新时间段不存在"));
+            
+            Schedule newSchedule = scheduleRepository.findById(newTimeSlot.getScheduleId())
+                    .orElseThrow(() -> new BusinessException("排班信息不存在"));
+            
+            // 检查新时间段是否属于同一医生
+            if (!newSchedule.getDoctorId().equals(appointment.getDoctorId())) {
+                throw new BusinessException("只能改期到同一医生的其他时间段");
+            }
+            
+            // 释放旧号源
+            if (appointment.getStatus() == AppointmentStatus.PENDING) {
+                timeSlotRepository.incrementSlot(appointment.getTimeSlotId());
+            }
+            
+            // 使用乐观锁扣减新号源
+            int updated = timeSlotRepository.decrementSlot(newTimeSlot.getId(), newTimeSlot.getVersion());
+            if (updated == 0) {
+                throw new BusinessException("该时间段号源已满");
+            }
+            
+            appointment.setTimeSlotId(dto.getTimeSlotId());
+            appointment.setAppointmentDate(newSchedule.getScheduleDate());
+            appointment.setPeriod(newTimeSlot.getPeriod());
+        }
+        
+        // 更新其他字段
+        if (dto.getSymptomDesc() != null) {
+            appointment.setSymptomDesc(dto.getSymptomDesc());
+        }
+        if (dto.getPatientName() != null) {
+            appointment.setPatientName(dto.getPatientName());
+        }
+        if (dto.getPatientPhone() != null) {
+            appointment.setPatientPhone(dto.getPatientPhone());
+        }
+        
+        appointment = appointmentRepository.save(appointment);
+        log.info("管理员修改预约 - appointmentId: {}", appointmentId);
+        
+        return convertToDetailDTO(appointment);
+    }
+    
+    // 管理员查询所有预约
+    public Page<AppointmentDetailDTO> getAllAppointments(String status, LocalDate appointmentDate, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Appointment> appointments;
+        
+        if (status != null && !status.isEmpty() && appointmentDate != null) {
+            try {
+                AppointmentStatus appointmentStatus = AppointmentStatus.valueOf(status);
+                appointments = appointmentRepository.findByStatusAndAppointmentDateOrderByCreatedAtDesc(
+                        appointmentStatus, appointmentDate, pageable);
+            } catch (IllegalArgumentException e) {
+                appointments = appointmentRepository.findByAppointmentDateOrderByCreatedAtDesc(appointmentDate, pageable);
+            }
+        } else if (status != null && !status.isEmpty()) {
+            try {
+                AppointmentStatus appointmentStatus = AppointmentStatus.valueOf(status);
+                appointments = appointmentRepository.findByStatusOrderByCreatedAtDesc(appointmentStatus, pageable);
+            } catch (IllegalArgumentException e) {
+                appointments = appointmentRepository.findAllByOrderByCreatedAtDesc(pageable);
+            }
+        } else if (appointmentDate != null) {
+            appointments = appointmentRepository.findByAppointmentDateOrderByCreatedAtDesc(appointmentDate, pageable);
+        } else {
+            appointments = appointmentRepository.findAllByOrderByCreatedAtDesc(pageable);
+        }
+        
+        return appointments.map(this::convertToDetailDTO);
+    }
+    
     @Transactional
     public void markAsExpired(String appointmentId) {
         Appointment appointment = appointmentRepository.findById(appointmentId)
@@ -264,6 +409,15 @@ public class AppointmentService {
         timeSlotRepository.findById(appointment.getTimeSlotId()).ifPresent(slot -> {
             dto.setTimeRange(slot.getStartTime() + " - " + slot.getEndTime());
         });
+        
+        // 获取检查项目信息
+        if (appointment.getMedicalItemId() != null) {
+            medicalItemRepository.findById(appointment.getMedicalItemId()).ifPresent(item -> {
+                dto.setMedicalItemId(item.getId());
+                dto.setMedicalItemName(item.getName());
+                dto.setMedicalItemPrice(item.getPrice());
+            });
+        }
         
         return dto;
     }

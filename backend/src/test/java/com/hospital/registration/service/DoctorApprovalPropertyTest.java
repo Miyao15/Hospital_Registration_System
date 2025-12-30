@@ -6,12 +6,15 @@ import com.hospital.registration.enums.DoctorTitle;
 import com.hospital.registration.enums.UserRole;
 import com.hospital.registration.enums.UserStatus;
 import com.hospital.registration.exception.BusinessException;
+import com.hospital.registration.repository.AdminRepository;
 import com.hospital.registration.repository.DoctorRepository;
+import com.hospital.registration.repository.PatientRepository;
 import com.hospital.registration.repository.UserRepository;
 import net.jqwik.api.*;
 import net.jqwik.api.lifecycle.BeforeProperty;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -29,14 +32,20 @@ class DoctorApprovalPropertyTest {
 
     private UserRepository userRepository;
     private DoctorRepository doctorRepository;
+    private PatientRepository patientRepository;
+    private AdminRepository adminRepository;
+    private PasswordEncoder passwordEncoder;
     private AdminService adminService;
 
     @BeforeProperty
     void setUp() {
         userRepository = Mockito.mock(UserRepository.class);
         doctorRepository = Mockito.mock(DoctorRepository.class);
+        patientRepository = Mockito.mock(PatientRepository.class);
+        adminRepository = Mockito.mock(AdminRepository.class);
+        passwordEncoder = Mockito.mock(PasswordEncoder.class);
 
-        adminService = new AdminService(userRepository, doctorRepository);
+        adminService = new AdminService(userRepository, doctorRepository, patientRepository, adminRepository, passwordEncoder);
     }
 
     // ========== 属性 6: 医师审批激活账户 ==========

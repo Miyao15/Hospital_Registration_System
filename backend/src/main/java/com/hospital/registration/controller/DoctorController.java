@@ -40,13 +40,15 @@ public class DoctorController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String departmentId,
             @RequestParam(required = false) String title,
+            @RequestParam(required = false) String medicalItemId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        log.info("GET /api/doctors/search called with keyword={}, departmentId={}, title={}", keyword, departmentId, title);
+        log.info("GET /api/doctors/search called with keyword={}, departmentId={}, title={}, medicalItemId={}", keyword, departmentId, title, medicalItemId);
         DoctorSearchDTO searchDTO = new DoctorSearchDTO();
         searchDTO.setKeyword(keyword);
         searchDTO.setDepartmentId(departmentId);
         searchDTO.setTitle(title);
+        searchDTO.setMedicalItemId(medicalItemId);
         searchDTO.setPage(page);
         searchDTO.setSize(size);
         Page<DoctorListDTO> result = doctorProfileService.searchDoctors(searchDTO);

@@ -8,13 +8,34 @@ import com.hospital.registration.repository.DepartmentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class AdminDepartmentService {
     
     private final DepartmentRepository departmentRepository;
+    
+    public List<DepartmentDTO> getAllDepartments() {
+        try {
+            return departmentRepository.findAll().stream()
+                    .sorted((a, b) -> {
+                        if (a == null) return 1;
+                        if (b == null) return -1;
+                        if (a.getSortOrder() == null) return 1;
+                        if (b.getSortOrder() == null) return -1;
+                        return a.getSortOrder().compareTo(b.getSortOrder());
+                    })
+                    .map(this::convertToDTO)
+                    .filter(dto -> dto != null)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new BusinessException("获取科室列表失败: " + (e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName()));
+        }
+    }
     
     @Transactional
     public DepartmentDTO createDepartment(CreateDepartmentDTO dto) {
@@ -84,6 +105,9 @@ public class AdminDepartmentService {
     }
     
     private DepartmentDTO convertToDTO(Department department) {
+        if (department == null) {
+            return null;
+        }
         DepartmentDTO dto = new DepartmentDTO();
         dto.setId(department.getId());
         dto.setName(department.getName());
@@ -91,6 +115,8 @@ public class AdminDepartmentService {
         dto.setDescription(department.getDescription());
         dto.setLocation(department.getLocation());
         dto.setPhone(department.getPhone());
+        dto.setEnabled(department.getEnabled() != null ? department.getEnabled() : true);
+        dto.setSortOrder(department.getSortOrder());
         return dto;
     }
 }

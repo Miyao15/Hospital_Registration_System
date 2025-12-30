@@ -3,6 +3,7 @@ package com.hospital.registration.dto;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -25,6 +26,9 @@ public class AppointmentDetailDTO {
     private String patientName;
     private String patientPhone;
     private String symptomDesc;
+    private String medicalItemId;
+    private String medicalItemName;
+    private BigDecimal medicalItemPrice;
     private String status;
     private String statusName;
     private LocalDateTime createdAt;

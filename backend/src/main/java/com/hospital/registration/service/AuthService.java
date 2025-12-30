@@ -250,6 +250,10 @@ public class AuthService {
         // 清除登录失败记录
         clearLoginFailures(user);
 
+        // 更新最后登录时间
+        user.setLastLoginAt(LocalDateTime.now());
+        userRepository.save(user);
+
         // 生成令牌
         String accessToken = jwtService.generateAccessToken(user.getId(), user.getRole());
         String refreshToken = jwtService.generateRefreshToken(user.getId(), user.getRole());

@@ -23,4 +23,6 @@ public class CreateAppointmentDTO {
     private String patientPhone;
     
     private String symptomDesc;
+    
+    private String medicalItemId;
 }

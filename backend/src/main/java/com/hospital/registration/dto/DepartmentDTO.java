@@ -16,4 +16,6 @@ public class DepartmentDTO {
     private String phone;
     private DoctorSimpleDTO director;
     private Integer doctorCount;
+    private Boolean enabled;
+    private Integer sortOrder;
 }

@@ -1,30 +1,41 @@
 package com.hospital.registration.service;
 
 import com.hospital.registration.dto.AvailableDateDTO;
+import com.hospital.registration.dto.DoctorScheduleDTO;
 import com.hospital.registration.dto.TimeSlotDTO;
+import com.hospital.registration.entity.Appointment;
+import com.hospital.registration.entity.Doctor;
 import com.hospital.registration.entity.Schedule;
 import com.hospital.registration.entity.TimeSlot;
 import com.hospital.registration.enums.TimePeriod;
 import com.hospital.registration.exception.BusinessException;
+import com.hospital.registration.repository.AppointmentRepository;
+import com.hospital.registration.repository.DoctorRepository;
 import com.hospital.registration.repository.ScheduleRepository;
 import com.hospital.registration.repository.TimeSlotRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ScheduleService {
     
     private final ScheduleRepository scheduleRepository;
     private final TimeSlotRepository timeSlotRepository;
+    private final DoctorRepository doctorRepository;
+    private final AppointmentRepository appointmentRepository;
     
     public List<AvailableDateDTO> getAvailableDates(String doctorId, int days) {
         LocalDate startDate = LocalDate.now().plusDays(1);
@@ -138,5 +149,58 @@ public class ScheduleService {
         dto.setRemainingSlots(slot.getRemainingSlots());
         dto.setAvailable(slot.getRemainingSlots() > 0);
         return dto;
+    }
+    
+    /**
+     * 医生端 - 获取月排班信息
+     */
+    public List<DoctorScheduleDTO> getDoctorSchedulesByUserId(String userId, int year, int month) {
+        log.info("获取医生排班信息 - userId: {}, year: {}, month: {}", userId, year, month);
+        
+        Doctor doctor = doctorRepository.findByUserId(userId)
+                .orElseThrow(() -> new BusinessException("医生信息不存在"));
+        
+        YearMonth yearMonth = YearMonth.of(year, month);
+        LocalDate startDate = yearMonth.atDay(1);
+        LocalDate endDate = yearMonth.atEndOfMonth();
+        
+        List<Schedule> schedules = scheduleRepository.findByDoctorIdAndScheduleDateBetweenOrderByScheduleDateAsc(
+                doctor.getId(), startDate, endDate);
+        
+        List<DoctorScheduleDTO> result = new ArrayList<>();
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+        
+        for (Schedule schedule : schedules) {
+            DoctorScheduleDTO dto = new DoctorScheduleDTO();
+            dto.setId(schedule.getId());
+            dto.setScheduleDate(schedule.getScheduleDate().format(dateFormatter));
+            dto.setIsWorking(schedule.getIsWorking());
+            
+            if (schedule.getIsWorking()) {
+                List<TimeSlot> slots = timeSlotRepository.findByScheduleIdOrderByPeriodAsc(schedule.getId());
+                
+                for (TimeSlot slot : slots) {
+                    if (slot.getPeriod() == TimePeriod.MORNING) {
+                        dto.setHasMorning(true);
+                        dto.setMorningTime(slot.getStartTime().format(timeFormatter) + " - " + slot.getEndTime().format(timeFormatter));
+                        dto.setMorningSlots(slot.getRemainingSlots());
+                    } else if (slot.getPeriod() == TimePeriod.AFTERNOON) {
+                        dto.setHasAfternoon(true);
+                        dto.setAfternoonTime(slot.getStartTime().format(timeFormatter) + " - " + slot.getEndTime().format(timeFormatter));
+                        dto.setAfternoonSlots(slot.getRemainingSlots());
+                    }
+                }
+                
+                // 获取当天预约数量
+                int appointmentCount = appointmentRepository.countByDoctorIdAndAppointmentDate(
+                        doctor.getId(), schedule.getScheduleDate());
+                dto.setAppointmentCount(appointmentCount);
+            }
+            
+            result.add(dto);
+        }
+        
+        return result;
     }
 }

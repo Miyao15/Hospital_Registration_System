@@ -2,11 +2,14 @@ package com.hospital.registration.service;
 
 import com.hospital.registration.dto.DoctorAppointmentDTO;
 import com.hospital.registration.entity.Appointment;
+import com.hospital.registration.entity.Doctor;
 import com.hospital.registration.entity.Patient;
 import com.hospital.registration.entity.TimeSlot;
 import com.hospital.registration.enums.AppointmentStatus;
 import com.hospital.registration.exception.BusinessException;
 import com.hospital.registration.repository.AppointmentRepository;
+import com.hospital.registration.repository.DoctorRepository;
+import com.hospital.registration.repository.MedicalItemRepository;
 import com.hospital.registration.repository.PatientRepository;
 import com.hospital.registration.repository.TimeSlotRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,12 +27,19 @@ public class DoctorAppointmentService {
     private final AppointmentRepository appointmentRepository;
     private final PatientRepository patientRepository;
     private final TimeSlotRepository timeSlotRepository;
+    private final DoctorRepository doctorRepository;
+    private final MedicalItemRepository medicalItemRepository;
     
-    public List<DoctorAppointmentDTO> getTodayAppointments(String doctorId) {
-        return getAppointmentsByDate(doctorId, LocalDate.now());
+    public List<DoctorAppointmentDTO> getTodayAppointments(String userId) {
+        return getAppointmentsByDate(userId, LocalDate.now());
     }
     
-    public List<DoctorAppointmentDTO> getAppointmentsByDate(String doctorId, LocalDate date) {
+    public List<DoctorAppointmentDTO> getAppointmentsByDate(String userId, LocalDate date) {
+        // 通过userId获取doctorId
+        Doctor doctor = doctorRepository.findByUserId(userId)
+                .orElseThrow(() -> new BusinessException("医生信息不存在"));
+        
+        String doctorId = doctor.getId();
         List<Appointment> appointments = appointmentRepository
                 .findByDoctorIdAndAppointmentDateOrderByPeriodAsc(doctorId, date);
         return appointments.stream()
@@ -38,8 +48,10 @@ public class DoctorAppointmentService {
     }
     
     @Transactional
-    public void markCheckedIn(String appointmentId, String doctorId) {
-        Appointment appointment = getAndValidateAppointment(appointmentId, doctorId);
+    public void markCheckedIn(String appointmentId, String userId) {
+        Doctor doctor = doctorRepository.findByUserId(userId)
+                .orElseThrow(() -> new BusinessException("医生信息不存在"));
+        Appointment appointment = getAndValidateAppointment(appointmentId, doctor.getId());
         
         if (appointment.getStatus() != AppointmentStatus.PENDING) {
             throw new BusinessException("只能标记待就诊的预约为已到诊");
@@ -50,8 +62,10 @@ public class DoctorAppointmentService {
     }
     
     @Transactional
-    public void markCompleted(String appointmentId, String doctorId) {
-        Appointment appointment = getAndValidateAppointment(appointmentId, doctorId);
+    public void markCompleted(String appointmentId, String userId) {
+        Doctor doctor = doctorRepository.findByUserId(userId)
+                .orElseThrow(() -> new BusinessException("医生信息不存在"));
+        Appointment appointment = getAndValidateAppointment(appointmentId, doctor.getId());
         
         if (appointment.getStatus() != AppointmentStatus.CHECKED_IN) {
             throw new BusinessException("只能标记已到诊的预约为已完成");
@@ -62,8 +76,10 @@ public class DoctorAppointmentService {
     }
     
     @Transactional
-    public void markNoShow(String appointmentId, String doctorId) {
-        Appointment appointment = getAndValidateAppointment(appointmentId, doctorId);
+    public void markNoShow(String appointmentId, String userId) {
+        Doctor doctor = doctorRepository.findByUserId(userId)
+                .orElseThrow(() -> new BusinessException("医生信息不存在"));
+        Appointment appointment = getAndValidateAppointment(appointmentId, doctor.getId());
         
         if (appointment.getStatus() != AppointmentStatus.PENDING) {
             throw new BusinessException("只能标记待就诊的预约为未到诊");
@@ -113,6 +129,15 @@ public class DoctorAppointmentService {
         timeSlotRepository.findById(appointment.getTimeSlotId()).ifPresent(slot -> {
             dto.setTimeRange(slot.getStartTime() + " - " + slot.getEndTime());
         });
+        
+        // 获取检查项目信息
+        if (appointment.getMedicalItemId() != null) {
+            medicalItemRepository.findById(appointment.getMedicalItemId()).ifPresent(item -> {
+                dto.setMedicalItemId(item.getId());
+                dto.setMedicalItemName(item.getName());
+                dto.setMedicalItemPrice(item.getPrice());
+            });
+        }
         
         return dto;
     }
