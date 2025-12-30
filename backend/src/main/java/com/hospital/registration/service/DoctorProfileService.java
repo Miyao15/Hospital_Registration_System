@@ -172,13 +172,37 @@ public class DoctorProfileService {
     
     public List<DoctorListDTO> getTopDoctors(Integer limit) {
         try {
-            log.info("Fetching top doctors with limit: {}", limit);
-            Pageable pageable = PageRequest.of(0, limit != null ? limit : 10);
-            List<Doctor> doctors = doctorRepository.findAll(pageable).getContent();
-            log.info("Found {} top doctors", doctors.size());
-            return doctors.stream()
+            log.info("Fetching top doctors (5 stars only) with limit: {}", limit);
+            // 获取所有医生并转换为DTO
+            List<Doctor> allDoctors = doctorRepository.findAll();
+            List<DoctorListDTO> allDoctorsDTO = allDoctors.stream()
                     .map(this::safeConvertToListDTO)
                     .collect(Collectors.toList());
+            
+            // 筛选出5星医生（rating >= 5.0）
+            List<DoctorListDTO> fiveStarDoctors = allDoctorsDTO.stream()
+                    .filter(doctor -> {
+                        Double rating = doctor.getRating();
+                        // 只返回评分为5.0的医生（允许null或5.0）
+                        return rating != null && rating >= 5.0;
+                    })
+                    .sorted((a, b) -> {
+                        // 按评分降序，然后按评价数量降序
+                        int ratingCompare = Double.compare(
+                            b.getRating() != null ? b.getRating() : 0.0,
+                            a.getRating() != null ? a.getRating() : 0.0
+                        );
+                        if (ratingCompare != 0) return ratingCompare;
+                        return Integer.compare(
+                            b.getReviewCount() != null ? b.getReviewCount() : 0,
+                            a.getReviewCount() != null ? a.getReviewCount() : 0
+                        );
+                    })
+                    .limit(limit != null ? limit : 10)
+                    .collect(Collectors.toList());
+            
+            log.info("Found {} five-star doctors out of {} total doctors", fiveStarDoctors.size(), allDoctorsDTO.size());
+            return fiveStarDoctors;
         } catch (Exception e) {
             log.error("Error fetching top doctors: {}", e.getMessage(), e);
             return new ArrayList<>(); // 返回空列表
