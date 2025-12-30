@@ -49,6 +49,12 @@ const routes = [
     meta: { title: '注册' }
   },
   {
+    path: '/doctor/:id',
+    name: 'DoctorDetail',
+    component: () => import('@/views/patient/DoctorDetail.vue'),
+    meta: { title: '医生详情' }
+  },
+  {
     path: '/patient',
     name: 'PatientLayout',
     component: () => import('@/layouts/PatientLayout.vue'),
@@ -65,35 +71,102 @@ const routes = [
         name: 'PatientProfile',
         component: () => import('@/views/patient/Profile.vue'),
         meta: { title: '个人信息' }
+      },
+      {
+        path: 'appointments',
+        name: 'MyAppointments',
+        component: () => import('@/views/patient/MyAppointments.vue'),
+        meta: { title: '我的预约' }
+      },
+      {
+        path: 'medical-records',
+        name: 'MedicalRecords',
+        component: () => import('@/views/patient/MedicalRecords.vue'),
+        meta: { title: '就诊记录' }
+      },
+      {
+        path: 'settings',
+        name: 'PatientSettings',
+        component: () => import('@/views/patient/Settings.vue'),
+        meta: { title: '设置' }
+      },
+      {
+        path: 'notifications',
+        name: 'PatientNotifications',
+        component: () => import('@/views/patient/Notifications.vue'),
+        meta: { title: '消息通知' }
       }
     ]
   },
   {
     path: '/doctor',
-    name: 'DoctorLayout',
     component: () => import('@/layouts/DoctorLayout.vue'),
     meta: { requiresAuth: true, role: 'DOCTOR' },
     children: [
       {
+        path: '',
+        name: 'DoctorLayout',
+        redirect: '/doctor/home'
+      },
+      {
         path: 'home',
         name: 'DoctorHome',
         component: () => import('@/views/doctor/Home.vue'),
-        meta: { title: '医生工作台' }
+        meta: { title: '工作台' }
+      },
+      {
+        path: 'appointments',
+        name: 'DoctorAppointments',
+        component: () => import('@/views/doctor/Appointments.vue'),
+        meta: { title: '预约管理' }
+      },
+      {
+        path: 'schedule',
+        name: 'DoctorSchedule',
+        component: () => import('@/views/doctor/Schedule.vue'),
+        meta: { title: '排班日历' }
+      },
+      {
+        path: 'leaves',
+        name: 'DoctorLeaves',
+        component: () => import('@/views/doctor/Leaves.vue'),
+        meta: { title: '请假管理' }
+      },
+      {
+        path: 'reviews',
+        name: 'DoctorReviews',
+        component: () => import('@/views/doctor/Reviews.vue'),
+        meta: { title: '我的评价' }
       },
       {
         path: 'profile',
         name: 'DoctorProfile',
         component: () => import('@/views/doctor/Profile.vue'),
-        meta: { title: '个人信息' }
+        meta: { title: '个人资料' }
+      },
+      {
+        path: 'notifications',
+        name: 'DoctorNotifications',
+        component: () => import('@/views/doctor/Notifications.vue'),
+        meta: { title: '消息通知' }
+      },
+      {
+        path: 'settings',
+        name: 'DoctorSettings',
+        component: () => import('@/views/doctor/Settings.vue'),
+        meta: { title: '设置' }
       }
     ]
   },
   {
     path: '/admin',
-    name: 'AdminLayout',
     component: () => import('@/layouts/AdminLayout.vue'),
     meta: { requiresAuth: true, role: 'ADMIN' },
     children: [
+      {
+        path: '',
+        redirect: '/admin/home'
+      },
       {
         path: 'home',
         name: 'AdminHome',
@@ -105,6 +178,36 @@ const routes = [
         name: 'AdminUsers',
         component: () => import('@/views/admin/Users.vue'),
         meta: { title: '用户管理' }
+      },
+      {
+        path: 'doctors',
+        name: 'AdminDoctors',
+        component: () => import('@/views/admin/Doctors.vue'),
+        meta: { title: '医生审批' }
+      },
+      {
+        path: 'departments',
+        name: 'AdminDepartments',
+        component: () => import('@/views/admin/Departments.vue'),
+        meta: { title: '科室管理' }
+      },
+      {
+        path: 'schedules',
+        name: 'AdminSchedules',
+        component: () => import('@/views/admin/Schedules.vue'),
+        meta: { title: '排班管理' }
+      },
+      {
+        path: 'leaves',
+        name: 'AdminLeaves',
+        component: () => import('@/views/admin/Leaves.vue'),
+        meta: { title: '请假审批' }
+      },
+      {
+        path: 'appointments',
+        name: 'AdminAppointments',
+        component: () => import('@/views/admin/Appointments.vue'),
+        meta: { title: '预约管理' }
       }
     ]
   }

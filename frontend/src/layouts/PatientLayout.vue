@@ -10,7 +10,7 @@
           <span class="page-title">{{ pageTitle }}</span>
         </div>
         <div class="header-right">
-          <el-badge :value="3" class="notification">
+          <el-badge :value="unreadCount" :hidden="unreadCount === 0" class="notification" @click="goToNotifications">
             <el-icon :size="20"><Bell /></el-icon>
           </el-badge>
           <el-dropdown @command="handleCommand">
@@ -59,17 +59,46 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, onMounted, watch, provide } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessageBox } from 'element-plus'
+import { getUnreadCount } from '@/api/notification'
 
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
 
+const unreadCount = ref(0)
+
 const activeMenu = computed(() => route.path)
 const pageTitle = computed(() => route.meta.title || '患者中心')
+
+// 刷新未读数量的方法
+const refreshUnreadCount = async () => {
+  try {
+    const data = await getUnreadCount()
+    unreadCount.value = data?.count || 0
+  } catch (e) {
+    console.error('获取未读消息数失败:', e)
+  }
+}
+
+// 提供刷新方法给子组件
+provide('refreshUnreadCount', refreshUnreadCount)
+
+onMounted(() => {
+  refreshUnreadCount()
+})
+
+// 监听路由变化，刷新未读数量
+watch(() => route.path, () => {
+  refreshUnreadCount()
+})
+
+const goToNotifications = () => {
+  router.push('/patient/notifications')
+}
 
 const handleCommand = (command) => {
   switch (command) {
@@ -83,13 +112,13 @@ const handleCommand = (command) => {
       router.push('/patient/appointments')
       break
     case 'doctors':
-      router.push('/patient/doctors')
+      router.push('/search-results')
       break
     case 'records':
-      router.push('/patient/records')
+      router.push('/patient/medical-records')
       break
     case 'settings':
-      // TODO: 跳转到设置页面
+      router.push('/patient/settings')
       break
     case 'logout':
       ElMessageBox.confirm('确定要退出登录吗？', '提示', {

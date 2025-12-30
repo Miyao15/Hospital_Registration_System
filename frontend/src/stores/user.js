@@ -31,6 +31,31 @@ export const useUserStore = defineStore('user', () => {
       
       ElMessage.success('登录成功！');
 
+      // 检查是否有待处理的预约信息
+      const pendingBooking = localStorage.getItem('pendingBooking');
+      if (pendingBooking && response.role === 'PATIENT') {
+        try {
+          const bookingData = JSON.parse(pendingBooking);
+          // 清除待处理的预约信息
+          localStorage.removeItem('pendingBooking');
+          // 跳转到预约信息填写页面
+          router.push({
+            path: '/booking/info',
+            query: bookingData
+          });
+          return true;
+        } catch (e) {
+          console.error('恢复预约信息失败:', e);
+        }
+      }
+
+      // 检查是否有重定向参数
+      const redirect = router.currentRoute.value.query.redirect;
+      if (redirect) {
+        router.push(redirect);
+        return true;
+      }
+
       // Redirect based on role from the server
       switch (response.role) {
         case 'ADMIN':

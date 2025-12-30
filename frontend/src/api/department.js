@@ -7,6 +7,11 @@ export function getAllDepartments() {
   })
 }
 
+// 别名函数，用于兼容性
+export function listAllDepartments() {
+  return getAllDepartments()
+}
+
 export function getDepartmentsGroupedByCategory() {
     return request({
         url: '/api/departments/grouped',

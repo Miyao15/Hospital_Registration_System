@@ -28,7 +28,8 @@
           <h3 class="item-name">{{ item.name }}</h3>
           <p class="item-desc">{{ item.description || '专业检查项目' }}</p>
           <div class="item-footer">
-            <span class="item-price">¥{{ item.price }}</span>
+            <!-- 价格为0时不显示价格 -->
+            <span class="item-price" v-if="item.price && parseFloat(item.price) > 0">¥{{ item.price }}</span>
             <span class="item-category">{{ item.category }}</span>
           </div>
         </div>

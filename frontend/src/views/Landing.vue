@@ -78,73 +78,23 @@
           <div class="doctor-card" v-for="(doc, index) in topDoctors" :key="index">
             <div class="card-top">
               <div class="avatar-wrapper">
-                <img :src="doc.avatar" alt="Avatar" class="avatar" />
-                <div class="video-badge" v-if="doc.video">
-                  <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
-                </div>
+                <img :src="doc.avatarUrl || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'" alt="Avatar" class="avatar" />
               </div>
               <div class="doc-info">
                 <h3 class="doc-name">{{ doc.name }}</h3>
                 <p class="doc-title">{{ doc.title }}</p>
                 <div class="rating">
                   <svg class="star-icon" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                  <span class="score">{{ doc.score }}</span>
-                  <span class="reviews">({{ doc.reviews }})</span>
+                  <span class="score">{{ (doc.rating || 5.0).toFixed(1) }}</span>
+                  <span class="reviews">({{ doc.reviewCount || 0 }})</span>
                 </div>
               </div>
             </div>
             <div class="card-body">
               <div class="location-row">
                 <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                {{ doc.location }}
+                {{ doc.departmentName || '暂无地址' }}
               </div>
-              <div class="availability">最早可约: <strong>{{ doc.nextSlot }}</strong></div>
-            </div>
-            <button class="btn-book" @click="findCare">在线预约</button>
-          </div>
-          
-          <div class="see-more-card">
-             <div class="icon-circle-bg">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-             </div>
-             <h3>还有更多</h3>
-             <button class="btn-see-more">浏览列表</button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="list-section grey-bg">
-      <div class="container">
-        <div class="section-header">
-          <div>
-            <h2 class="section-title">候诊时间最短的牙医</h2>
-            <p class="section-subtitle">91% 的患者在这些诊所的等待时间少于 30 分钟</p>
-          </div>
-          <a href="#" class="see-all">查看全部 ›</a>
-        </div>
-        <div class="scroll-container">
-          <div class="doctor-card" v-for="(doc, index) in dentists" :key="index">
-            <div class="card-top">
-              <div class="avatar-wrapper">
-                <img :src="doc.avatar" alt="Avatar" class="avatar" />
-              </div>
-              <div class="doc-info">
-                <h3 class="doc-name">{{ doc.name }}</h3>
-                <p class="doc-title">{{ doc.title }}</p>
-                <div class="rating">
-                  <svg class="star-icon" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                  <span class="score">{{ doc.score }}</span>
-                  <span class="reviews">({{ doc.reviews }})</span>
-                </div>
-              </div>
-            </div>
-            <div class="card-body">
-              <div class="location-row">
-                <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                {{ doc.location }}
-              </div>
-              <div class="availability">最早可约: <strong>{{ doc.nextSlot }}</strong></div>
             </div>
             <button class="btn-book" @click="findCare">在线预约</button>
           </div>
@@ -185,21 +135,21 @@
                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#2A2A2A" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
             </div>
             <h3 class="feature-text">浏览各类专业医生<br>满足您的就医需求</h3>
-            <button class="feature-btn">查看科室</button>
+            <button class="feature-btn" @click="goToDepartments">查看科室</button>
           </div>
           <div class="feature-card">
             <div class="feature-illus illus-yellow">
                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#2A2A2A" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
             </div>
             <h3 class="feature-text">查看真实患者评价<br>选择更放心</h3>
-            <button class="feature-btn">查看医生</button>
+            <button class="feature-btn" @click="goToDoctors">查看医生</button>
           </div>
           <div class="feature-card">
              <div class="feature-illus illus-mint">
                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#2A2A2A" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
             </div>
             <h3 class="feature-text">今天即可在线预约<br>方便快捷</h3>
-            <button class="feature-btn">查看排期</button>
+            <button class="feature-btn" @click="goToSchedule">查看排期</button>
           </div>
         </div>
       </div>
@@ -278,6 +228,7 @@ const searchLocation = ref('');
 const goLogin = () => router.push('/login');
 const goRegister = () => router.push('/register');
 const findCare = () => {
+  // 在线预约按钮直接跳转到搜索结果页面
   const query = {};
   if (searchKeyword.value) {
     query.keyword = searchKeyword.value;
@@ -285,11 +236,25 @@ const findCare = () => {
   if (searchLocation.value) {
     query.location = searchLocation.value;
   }
-  router.push({ path: '/search-triage', query });
+  router.push({ path: '/search-results', query });
+};
+
+// 查看科室 - 跳转到检查项目选择页面
+const goToDepartments = () => {
+  router.push('/search-triage');
+};
+
+// 查看医生 - 跳转到检查项目选择页面
+const goToDoctors = () => {
+  router.push('/search-triage');
+};
+
+// 查看排期 - 跳转到检查项目选择页面
+const goToSchedule = () => {
+  router.push('/search-triage');
 };
 
 const topDoctors = ref([]);
-const dentists = ref([]);
 const specialties = ref([]);
 
 const fetchLandingData = async () => {
@@ -297,15 +262,13 @@ const fetchLandingData = async () => {
     // Use allSettled to ensure single interface failure doesn't affect others
     const results = await Promise.allSettled([
       request.get('/api/doctors/top', { params: { limit: 10 } }),
-      request.get('/api/doctors/specialty/DENTIST'),
       request.get('/api/departments')
     ]);
     
     // The interceptor in `request` already unwraps the .data property from the response.
     // The value of a fulfilled promise is the data itself.
     topDoctors.value = (results[0].status === 'fulfilled' && results[0].value) ? results[0].value : [];
-    dentists.value = (results[1].status === 'fulfilled' && results[1].value) ? results[1].value : [];
-    specialties.value = (results[2].status === 'fulfilled' && results[2].value) ? results[2].value : [];
+    specialties.value = (results[1].status === 'fulfilled' && results[1].value) ? results[1].value : [];
 
     results.forEach((res, i) => {
       if (res.status === 'rejected') {

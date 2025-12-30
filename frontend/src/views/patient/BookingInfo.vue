@@ -130,13 +130,28 @@
           <!-- 病情描述 -->
           <div class="form-row">
             <div class="form-group">
-              <label for="symptom">病情描述</label>
+              <label for="symptom">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" style="display: inline-block; vertical-align: middle; margin-right: 6px;">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                </svg>
+                病情描述
+                <span class="optional-hint">（选填，但有助于医生更好地了解您的情况）</span>
+              </label>
               <textarea 
                 id="symptom" 
                 v-model="form.symptom" 
-                placeholder="请简要描述您的症状或就诊原因（选填）"
-                rows="4"
+                placeholder="请详细描述您的症状、不适部位、持续时间、疼痛程度等，或说明就诊原因。例如：头痛3天，伴有恶心，疼痛程度中等..."
+                rows="5"
+                class="symptom-textarea"
               ></textarea>
+              <div class="form-hint">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="16" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                详细描述有助于医生提前了解您的病情，提高就诊效率
+              </div>
             </div>
           </div>
 
@@ -212,8 +227,33 @@ const formattedDateTime = computed(() => {
 });
 
 onMounted(async () => {
-  // 从路由获取参数
-  const { doctorId, doctorName, doctorTitle, departmentName, date, time, slotId, period, medicalItemId } = route.query;
+  // 检查是否登录
+  if (!userStore.isLoggedIn) {
+    ElMessage.warning('请先登录后再进行预约');
+    // 保存当前路由参数到 localStorage
+    localStorage.setItem('pendingBooking', JSON.stringify(route.query));
+    router.push({
+      path: '/login',
+      query: { redirect: route.fullPath }
+    });
+    return;
+  }
+
+  // 优先从路由参数获取，如果没有则从 localStorage 恢复
+  let bookingParams = { ...route.query };
+  const pendingBooking = localStorage.getItem('pendingBooking');
+  if (pendingBooking && Object.keys(route.query).length === 0) {
+    try {
+      const savedBooking = JSON.parse(pendingBooking);
+      bookingParams = savedBooking;
+      // 清除已恢复的预约信息
+      localStorage.removeItem('pendingBooking');
+    } catch (e) {
+      console.error('恢复预约信息失败:', e);
+    }
+  }
+
+  const { doctorId, doctorName, doctorTitle, departmentName, date, time, slotId, period, medicalItemId } = bookingParams;
   
   doctorInfo.value = {
     id: doctorId,
@@ -322,18 +362,16 @@ const handleSubmit = async () => {
       period: bookingInfo.value.period || 'MORNING',
       patientName: form.value.name,
       patientPhone: form.value.phone,
-      symptomDesc: form.value.symptom || ''
+      symptomDesc: form.value.symptom || '',
+      medicalItemId: route.query.medicalItemId || null
     };
 
     const result = await createAppointment(appointmentData);
     
-    ElMessage.success('预约成功！');
+    ElMessage.success('预约成功！您可以在"我的预约"中查看详情。');
     
-    // 跳转到预约成功页面或我的预约列表
-    router.push({
-      path: '/patient/appointments',
-      query: { success: 'true', appointmentId: result?.id }
-    });
+    // 跳转到患者首页
+    router.push('/patient/home');
     
   } catch (error) {
     console.error('预约失败:', error);
@@ -554,6 +592,37 @@ const handleSubmit = async () => {
 .form-group textarea {
   resize: vertical;
   min-height: 100px;
+}
+
+.form-group textarea.symptom-textarea {
+  min-height: 120px;
+  font-family: inherit;
+  line-height: 1.6;
+}
+
+.optional-hint {
+  font-size: 12px;
+  font-weight: normal;
+  color: #666;
+  margin-left: 4px;
+}
+
+.form-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 13px;
+  color: #666;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border-left: 3px solid #FFD300;
+}
+
+.form-hint svg {
+  color: #FFD300;
+  flex-shrink: 0;
 }
 
 .error-text {

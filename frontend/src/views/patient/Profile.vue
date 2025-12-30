@@ -1,480 +1,367 @@
 <template>
-  <div class="patient-profile">
-    <el-card class="card-shadow">
-      <template #header>
-        <div class="card-header">
-          <span class="card-title">个人信息</span>
-          <el-button 
-            v-if="!isEditing" 
-            type="primary" 
-            @click="isEditing = true"
-          >
-            <el-icon><Edit /></el-icon>
-            编辑信息
-          </el-button>
-          <div v-else>
-            <el-button @click="cancelEdit">取消</el-button>
-            <el-button type="primary" :loading="loading" @click="saveProfile">
-              保存
-            </el-button>
-          </div>
-        </div>
-      </template>
+  <div class="profile-page">
+    <div class="page-header">
+      <h1>个人信息</h1>
+      <p class="subtitle">查看和编辑您的个人资料</p>
+    </div>
 
-      <div class="profile-content">
-        <!-- 头像区域 -->
+    <div class="content-card">
+      <div class="card-header">
         <div class="avatar-section">
-          <el-avatar :size="120" :src="profileForm.avatar">
-            {{ profileForm.realName?.charAt(0) }}
-          </el-avatar>
-          <el-button v-if="isEditing" type="text" class="upload-avatar">
-            <el-icon><Upload /></el-icon>
-            更换头像
-          </el-button>
-          <div class="user-basic">
-            <h2>{{ profileForm.realName }}</h2>
-            <p>{{ profileForm.phone }}</p>
-          </div>
+          <img :src="userInfo.avatarUrl || defaultAvatar" class="avatar" />
+          <button class="btn-change-avatar">更换头像</button>
         </div>
+      </div>
 
-        <!-- 信息表单 -->
-        <el-form
-          ref="profileFormRef"
-          :model="profileForm"
-          :rules="profileRules"
-          label-width="120px"
-          class="profile-form"
-          :disabled="!isEditing"
-        >
-          <el-divider content-position="left">基本信息</el-divider>
+      <form @submit.prevent="handleSave" class="profile-form">
+        <div class="form-section">
+          <h3>基本信息</h3>
           
-          <el-row :gutter="40">
-            <el-col :span="12">
-              <el-form-item label="真实姓名" prop="realName">
-                <el-input v-model="profileForm.realName" />
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item label="性别" prop="gender">
-                <el-radio-group v-model="profileForm.gender">
-                  <el-radio label="male">男</el-radio>
-                  <el-radio label="female">女</el-radio>
-                </el-radio-group>
-              </el-form-item>
-            </el-col>
-          </el-row>
-
-          <el-row :gutter="40">
-            <el-col :span="12">
-              <el-form-item label="手机号" prop="phone">
-                <el-input v-model="profileForm.phone" />
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item label="身份证号" prop="idCard">
-                <el-input v-model="profileForm.idCard" />
-              </el-form-item>
-            </el-col>
-          </el-row>
-
-          <el-row :gutter="40">
-            <el-col :span="12">
-              <el-form-item label="出生日期" prop="birthDate">
-                <el-date-picker
-                  v-model="profileForm.birthDate"
-                  type="date"
-                  placeholder="选择日期"
-                  style="width: 100%"
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item label="年龄" prop="age">
-                <el-input v-model="profileForm.age" disabled />
-              </el-form-item>
-            </el-col>
-          </el-row>
-
-          <el-form-item label="联系地址" prop="address">
-            <el-input v-model="profileForm.address" />
-          </el-form-item>
-
-          <el-divider content-position="left">医疗信息</el-divider>
-
-          <el-form-item label="血型" prop="bloodType">
-            <el-select v-model="profileForm.bloodType" placeholder="请选择血型">
-              <el-option label="A型" value="A" />
-              <el-option label="B型" value="B" />
-              <el-option label="AB型" value="AB" />
-              <el-option label="O型" value="O" />
-              <el-option label="未知" value="unknown" />
-            </el-select>
-          </el-form-item>
-
-          <el-form-item label="过敏史" prop="allergyHistory">
-            <el-input
-              v-model="profileForm.allergyHistory"
-              type="textarea"
-              :rows="3"
-              placeholder="请详细描述您的过敏史（如药物过敏、食物过敏等）"
-            />
-          </el-form-item>
-
-          <el-form-item label="既往病史" prop="medicalHistory">
-            <el-input
-              v-model="profileForm.medicalHistory"
-              type="textarea"
-              :rows="3"
-              placeholder="请描述您的既往病史（如慢性病、手术史等）"
-            />
-          </el-form-item>
-
-          <el-form-item label="家族病史" prop="familyHistory">
-            <el-input
-              v-model="profileForm.familyHistory"
-              type="textarea"
-              :rows="3"
-              placeholder="请描述家族遗传病史"
-            />
-          </el-form-item>
-
-          <el-divider content-position="left">紧急联系人</el-divider>
-
-          <el-row :gutter="40">
-            <el-col :span="12">
-              <el-form-item label="联系人姓名" prop="emergencyContact">
-                <el-input v-model="profileForm.emergencyContact" />
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item label="与本人关系" prop="emergencyRelation">
-                <el-select v-model="profileForm.emergencyRelation" placeholder="请选择">
-                  <el-option label="配偶" value="spouse" />
-                  <el-option label="父母" value="parent" />
-                  <el-option label="子女" value="child" />
-                  <el-option label="兄弟姐妹" value="sibling" />
-                  <el-option label="其他" value="other" />
-                </el-select>
-              </el-form-item>
-            </el-col>
-          </el-row>
-
-          <el-form-item label="联系人电话" prop="emergencyPhone">
-            <el-input v-model="profileForm.emergencyPhone" />
-          </el-form-item>
-        </el-form>
-      </div>
-    </el-card>
-
-    <!-- 修改密码卡片 -->
-    <el-card class="card-shadow password-card">
-      <template #header>
-        <span class="card-title">安全设置</span>
-      </template>
-      <div class="password-section">
-        <div class="password-item">
-          <div class="password-info">
-            <h4>登录密码</h4>
-            <p>定期更换密码可以保护账号安全</p>
+          <div class="form-row">
+            <div class="form-group">
+              <label>姓名</label>
+              <input type="text" v-model="form.name" placeholder="请输入姓名" />
+            </div>
+            <div class="form-group">
+              <label>手机号</label>
+              <input type="tel" v-model="form.phone" disabled class="disabled" />
+              <span class="hint">手机号不可修改</span>
+            </div>
           </div>
-          <el-button type="primary" @click="showPasswordDialog = true">
-            修改密码
-          </el-button>
-        </div>
-      </div>
-    </el-card>
 
-    <!-- 修改密码对话框 -->
-    <el-dialog
-      v-model="showPasswordDialog"
-      title="修改密码"
-      width="500px"
-    >
-      <el-form
-        ref="passwordFormRef"
-        :model="passwordForm"
-        :rules="passwordRules"
-        label-width="100px"
-      >
-        <el-form-item label="原密码" prop="oldPassword">
-          <el-input
-            v-model="passwordForm.oldPassword"
-            type="password"
-            show-password
-          />
-        </el-form-item>
-        <el-form-item label="新密码" prop="newPassword">
-          <el-input
-            v-model="passwordForm.newPassword"
-            type="password"
-            show-password
-          />
-        </el-form-item>
-        <el-form-item label="确认密码" prop="confirmPassword">
-          <el-input
-            v-model="passwordForm.confirmPassword"
-            type="password"
-            show-password
-          />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="showPasswordDialog = false">取消</el-button>
-        <el-button type="primary" :loading="passwordLoading" @click="changePassword">
-          确定
-        </el-button>
-      </template>
-    </el-dialog>
+          <div class="form-row">
+            <div class="form-group">
+              <label>身份证号</label>
+              <input type="text" v-model="form.idCard" placeholder="请输入身份证号" />
+            </div>
+            <div class="form-group">
+              <label>性别</label>
+              <select v-model="form.gender">
+                <option value="">请选择</option>
+                <option value="MALE">男</option>
+                <option value="FEMALE">女</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>出生日期</label>
+              <input type="date" v-model="form.birthDate" />
+            </div>
+            <div class="form-group">
+              <label>紧急联系人</label>
+              <input type="text" v-model="form.emergencyContact" placeholder="紧急联系人姓名" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>紧急联系电话</label>
+              <input type="tel" v-model="form.emergencyPhone" placeholder="紧急联系人电话" />
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3>健康信息</h3>
+          
+          <div class="form-row">
+            <div class="form-group full-width">
+              <label>病史</label>
+              <textarea v-model="form.medicalHistory" placeholder="请描述您的既往病史（如有）" rows="3"></textarea>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group full-width">
+              <label>过敏史</label>
+              <textarea v-model="form.allergyHistory" placeholder="请描述您的过敏史（如有）" rows="3"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-cancel" @click="resetForm">取消修改</button>
+          <button type="submit" class="btn-save" :disabled="saving">
+            {{ saving ? '保存中...' : '保存修改' }}
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
-import { useUserStore } from '@/stores/user'
-import { ElMessage } from 'element-plus'
-import { changePassword as changePasswordApi } from '@/api/auth'
+import { ref, onMounted } from 'vue';
+import { useUserStore } from '@/stores/user';
+import { ElMessage } from 'element-plus';
+import request from '@/utils/request';
 
-const userStore = useUserStore()
-const profileFormRef = ref(null)
-const passwordFormRef = ref(null)
+const userStore = useUserStore();
+const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png';
 
-const isEditing = ref(false)
-const loading = ref(false)
-const showPasswordDialog = ref(false)
-const passwordLoading = ref(false)
+const userInfo = ref({});
+const saving = ref(false);
 
-const profileForm = reactive({
-  avatar: '',
-  realName: '',
-  gender: 'male',
+const form = ref({
+  name: '',
   phone: '',
   idCard: '',
+  gender: '',
   birthDate: '',
-  age: '',
-  address: '',
-  bloodType: '',
-  allergyHistory: '',
-  medicalHistory: '',
-  familyHistory: '',
   emergencyContact: '',
-  emergencyRelation: '',
-  emergencyPhone: ''
-})
+  emergencyPhone: '',
+  medicalHistory: '',
+  allergyHistory: ''
+});
 
-const passwordForm = reactive({
-  oldPassword: '',
-  newPassword: '',
-  confirmPassword: ''
-})
+const originalForm = ref({});
 
-const profileRules = {
-  realName: [{ required: true, message: '请输入真实姓名', trigger: 'blur' }],
-  phone: [
-    { required: true, message: '请输入手机号', trigger: 'blur' },
-    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
-  ],
-  idCard: [
-    { required: true, message: '请输入身份证号', trigger: 'blur' },
-    { pattern: /(^\d{15}$)|(^\d{18}$)|(^\d{17}(\d|X|x)$)/, message: '请输入正确的身份证号', trigger: 'blur' }
-  ]
-}
-
-const validateNewPassword = (rule, value, callback) => {
-  if (value === '') {
-    callback(new Error('请输入新密码'))
-  } else if (value.length < 6) {
-    callback(new Error('密码长度不能少于6位'))
-  } else if (value === passwordForm.oldPassword) {
-    callback(new Error('新密码不能与原密码相同'))
-  } else {
-    callback()
+onMounted(async () => {
+  // 从 store 获取基本信息
+  if (userStore.userInfo) {
+    form.value.phone = userStore.userInfo.phone || '';
   }
-}
-
-const validateConfirmPassword = (rule, value, callback) => {
-  if (value === '') {
-    callback(new Error('请再次输入密码'))
-  } else if (value !== passwordForm.newPassword) {
-    callback(new Error('两次输入密码不一致'))
-  } else {
-    callback()
-  }
-}
-
-const passwordRules = {
-  oldPassword: [{ required: true, message: '请输入原密码', trigger: 'blur' }],
-  newPassword: [{ required: true, validator: validateNewPassword, trigger: 'blur' }],
-  confirmPassword: [{ required: true, validator: validateConfirmPassword, trigger: 'blur' }]
-}
-
-// 计算年龄
-const calculateAge = computed(() => {
-  if (!profileForm.birthDate) return ''
-  const birth = new Date(profileForm.birthDate)
-  const today = new Date()
-  let age = today.getFullYear() - birth.getFullYear()
-  const monthDiff = today.getMonth() - birth.getMonth()
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-    age--
-  }
-  return age
-})
-
-const loadProfile = () => {
-  // 从 userStore 加载数据
-  const userInfo = userStore.userInfo
-  if (userInfo) {
-    Object.assign(profileForm, {
-      avatar: userInfo.avatar || '',
-      realName: userInfo.realName || '',
-      gender: userInfo.gender || 'male',
-      phone: userInfo.phone || '',
-      idCard: userInfo.idCard || '',
-      birthDate: userInfo.birthDate || '',
-      age: calculateAge.value,
-      address: userInfo.address || '',
-      bloodType: userInfo.bloodType || '',
-      allergyHistory: userInfo.allergyHistory || '',
-      medicalHistory: userInfo.medicalHistory || '',
-      familyHistory: userInfo.familyHistory || '',
-      emergencyContact: userInfo.emergencyContact || '',
-      emergencyRelation: userInfo.emergencyRelation || '',
-      emergencyPhone: userInfo.emergencyPhone || ''
-    })
-  }
-}
-
-const saveProfile = async () => {
-  await profileFormRef.value.validate(async (valid) => {
-    if (valid) {
-      loading.value = true
-      try {
-        const success = await userStore.updateUserInfoAction(profileForm)
-        if (success) {
-          isEditing.value = false
-        }
-      } finally {
-        loading.value = false
-      }
+  
+  // 获取患者详细信息
+  try {
+    const data = await request.get('/api/patients/profile');
+    if (data) {
+      form.value = {
+        name: data.name || '',
+        phone: userStore.userInfo?.phone || '',
+        idCard: data.idCard || '',
+        gender: data.gender || '',
+        birthDate: data.birthDate || '',
+        emergencyContact: data.emergencyContact || '',
+        emergencyPhone: data.emergencyPhone || '',
+        medicalHistory: data.medicalHistory || '',
+        allergyHistory: data.allergyHistory || ''
+      };
+      originalForm.value = { ...form.value };
     }
-  })
-}
+  } catch (e) {
+    console.error('获取个人信息失败:', e);
+  }
+});
 
-const cancelEdit = () => {
-  isEditing.value = false
-  loadProfile()
-}
+const resetForm = () => {
+  form.value = { ...originalForm.value };
+};
 
-const changePassword = async () => {
-  await passwordFormRef.value.validate(async (valid) => {
-    if (valid) {
-      passwordLoading.value = true
-      try {
-        await changePasswordApi(passwordForm)
-        ElMessage.success('密码修改成功，请重新登录')
-        showPasswordDialog.value = false
-        // 清空表单
-        Object.assign(passwordForm, {
-          oldPassword: '',
-          newPassword: '',
-          confirmPassword: ''
-        })
-        // 退出登录
-        setTimeout(() => {
-          userStore.logout()
-          router.push('/login')
-        }, 1500)
-      } catch (error) {
-        ElMessage.error(error.message || '密码修改失败')
-      } finally {
-        passwordLoading.value = false
-      }
-    }
-  })
-}
-
-onMounted(() => {
-  loadProfile()
-})
+const handleSave = async () => {
+  if (!form.value.name) {
+    ElMessage.warning('请输入姓名');
+    return;
+  }
+  
+  saving.value = true;
+  try {
+    await request.put('/api/patients/profile', {
+      name: form.value.name,
+      idCard: form.value.idCard,
+      gender: form.value.gender,
+      birthDate: form.value.birthDate,
+      emergencyContact: form.value.emergencyContact,
+      emergencyPhone: form.value.emergencyPhone,
+      medicalHistory: form.value.medicalHistory,
+      allergyHistory: form.value.allergyHistory
+    });
+    ElMessage.success('保存成功');
+    originalForm.value = { ...form.value };
+  } catch (e) {
+    ElMessage.error('保存失败，请稍后重试');
+  } finally {
+    saving.value = false;
+  }
+};
 </script>
 
-<style lang="scss" scoped>
-.patient-profile {
-  max-width: 1200px;
+<style scoped>
+.profile-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
 
-  .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
+.page-header {
+  margin-bottom: 32px;
+}
 
-  .card-title {
-    font-size: 18px;
-    font-weight: 600;
-    color: #333;
-  }
+.page-header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #2a2a2a;
+  margin: 0 0 8px 0;
+}
 
-  .profile-content {
-    padding: 20px 0;
-  }
+.subtitle {
+  color: #666;
+  font-size: 14px;
+  margin: 0;
+}
 
-  .avatar-section {
-    text-align: center;
-    padding: 30px 0;
-    border-bottom: 1px solid #f0f0f0;
-    margin-bottom: 40px;
+.content-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 32px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  border: 1px solid #e5e7eb;
+}
 
-    .upload-avatar {
-      display: block;
-      margin: 15px auto 0;
-    }
+.card-header {
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
 
-    .user-basic {
-      margin-top: 20px;
+.avatar-section {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
 
-      h2 {
-        font-size: 24px;
-        color: #333;
-        margin-bottom: 8px;
-      }
+.avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #FFD300;
+}
 
-      p {
-        color: #666;
-      }
-    }
-  }
+.btn-change-avatar {
+  padding: 8px 16px;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+}
 
-  .profile-form {
-    max-width: 900px;
-    margin: 0 auto;
-  }
+.btn-change-avatar:hover {
+  background: #f3f4f6;
+}
 
-  .password-card {
-    margin-top: 20px;
-  }
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
 
-  .password-section {
-    .password-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 20px;
-      background: #f5f7fa;
-      border-radius: 8px;
+.form-section h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2a2a2a;
+  margin: 0 0 20px 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
 
-      .password-info {
-        h4 {
-          font-size: 16px;
-          color: #333;
-          margin-bottom: 8px;
-        }
+.form-row {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 20px;
+}
 
-        p {
-          font-size: 14px;
-          color: #666;
-        }
-      }
-    }
+.form-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group.full-width {
+  flex: 1 1 100%;
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2a2a2a;
+  margin-bottom: 8px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 12px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 15px;
+  color: #2a2a2a;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #FFD300;
+  box-shadow: 0 0 0 3px rgba(255, 211, 0, 0.2);
+}
+
+.form-group input.disabled {
+  background: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.form-group textarea {
+  resize: vertical;
+}
+
+.hint {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 4px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  padding-top: 24px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.btn-cancel {
+  padding: 12px 24px;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-cancel:hover {
+  background: #f3f4f6;
+}
+
+.btn-save {
+  padding: 12px 32px;
+  background: #FFD300;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-save:hover {
+  background: #f4ca00;
+}
+
+.btn-save:disabled {
+  background: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .form-row {
+    flex-direction: column;
+    gap: 20px;
   }
 }
 </style>

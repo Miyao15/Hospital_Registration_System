@@ -4,10 +4,33 @@
     <header class="top-bar">
       <div class="nav-left">
         <div class="logo-z">Z</div>
-        <div class="search-bar-composite">
-          <div class="input-group">
+        <div class="search-bar-composite" ref="searchBarRef">
+          <div class="input-group search-input-wrapper">
             <svg class="icon-input" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            <input type="text" placeholder="病情、科室..." v-model="searchCondition" />
+            <input 
+              type="text" 
+              placeholder="病情、科室..." 
+              v-model="searchCondition" 
+              @keyup.enter="handleSearch"
+              @focus="showSearchSuggestions = true"
+              @input="handleSearchInput"
+            />
+            <!-- 搜索建议下拉列表 -->
+            <div v-if="showSearchSuggestions && (filteredSearchSuggestions.length > 0 || searchSuggestions.length > 0)" class="search-suggestions-dropdown">
+              <div 
+                class="suggestion-item" 
+                v-for="(suggestion, index) in filteredSearchSuggestions.length > 0 ? filteredSearchSuggestions : searchSuggestions" 
+                :key="index"
+                @click="selectSearchSuggestion(suggestion)"
+              >
+                <svg class="suggestion-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <span class="suggestion-text">{{ suggestion.label || suggestion.name || suggestion }}</span>
+                <span v-if="suggestion.type" class="suggestion-type">{{ suggestion.type }}</span>
+              </div>
+            </div>
           </div>
           <div class="divider"></div>
           <div class="input-group">
@@ -30,12 +53,113 @@
       </div>
     </header>
 
-    <div class="filter-bar">
-      <button class="filter-pill active">📅 时间灵活</button>
-      <button class="filter-pill">时间段</button>
-      <button class="filter-pill">科室</button>
-      <button class="filter-pill">距离</button>
-      <button class="filter-pill">更多筛选</button>
+    <div class="filter-bar" ref="filterBarRef">
+      <div class="filter-item-wrapper">
+        <button 
+          class="filter-pill" 
+          :class="{ active: activeFilter === 'time' || selectedTimeFilters.length > 0 }"
+          @click="toggleFilterDropdown('time')"
+        >
+          📅 时间灵活
+        </button>
+        <div v-if="activeFilter === 'time'" class="filter-dropdown">
+          <div class="filter-options">
+            <label class="filter-option" v-for="timeOption in timeFilterOptions" :key="timeOption.value">
+              <input 
+                type="checkbox" 
+                :value="timeOption.value"
+                v-model="selectedTimeFilters"
+              />
+              <span class="option-label">{{ timeOption.label }}</span>
+            </label>
+          </div>
+          <div class="filter-actions">
+            <button class="btn-clear" @click="clearTimeFilters">清除</button>
+            <button class="btn-apply" @click="applyFilters">应用</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="filter-item-wrapper">
+        <button 
+          class="filter-pill" 
+          :class="{ active: activeFilter === 'timeslot' || selectedTimeslotFilters.length > 0 }"
+          @click="toggleFilterDropdown('timeslot')"
+        >
+          时间段
+        </button>
+        <div v-if="activeFilter === 'timeslot'" class="filter-dropdown">
+          <div class="filter-options">
+            <label class="filter-option" v-for="timeslotOption in timeslotFilterOptions" :key="timeslotOption.value">
+              <input 
+                type="checkbox" 
+                :value="timeslotOption.value"
+                v-model="selectedTimeslotFilters"
+              />
+              <span class="option-label">{{ timeslotOption.label }}</span>
+            </label>
+          </div>
+          <div class="filter-actions">
+            <button class="btn-clear" @click="clearTimeslotFilters">清除</button>
+            <button class="btn-apply" @click="applyFilters">应用</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="filter-item-wrapper">
+        <button 
+          class="filter-pill" 
+          :class="{ active: activeFilter === 'department' || selectedDepartmentIds.length > 0 }"
+          @click="toggleFilterDropdown('department')"
+        >
+          科室
+        </button>
+        <div v-if="activeFilter === 'department'" class="filter-dropdown">
+          <div class="filter-options">
+            <label class="filter-option" v-for="dept in departments" :key="dept.id">
+              <input 
+                type="checkbox" 
+                :value="dept.id"
+                v-model="selectedDepartmentIds"
+              />
+              <span class="option-label">{{ dept.name }}</span>
+            </label>
+          </div>
+          <div class="filter-actions">
+            <button class="btn-clear" @click="clearDepartmentFilters">清除</button>
+            <button class="btn-apply" @click="applyFilters">应用</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="filter-item-wrapper">
+        <button 
+          class="filter-pill" 
+          :class="{ active: activeFilter === 'distance' || selectedDistanceFilter }"
+          @click="toggleFilterDropdown('distance')"
+        >
+          距离
+        </button>
+        <div v-if="activeFilter === 'distance'" class="filter-dropdown">
+          <div class="filter-options">
+            <label class="filter-option" v-for="distanceOption in distanceFilterOptions" :key="distanceOption.value">
+              <input 
+                type="radio" 
+                name="distance"
+                :value="distanceOption.value"
+                v-model="selectedDistanceFilter"
+              />
+              <span class="option-label">{{ distanceOption.label }}</span>
+            </label>
+          </div>
+          <div class="filter-actions">
+            <button class="btn-clear" @click="clearDistanceFilter">清除</button>
+            <button class="btn-apply" @click="applyFilters">应用</button>
+          </div>
+        </div>
+      </div>
+
+      <button class="filter-pill" @click="handleFilterClick('more')">更多筛选</button>
     </div>
 
     <div class="main-layout">
@@ -98,7 +222,7 @@
                     class="slot-btn-yellow" 
                     @click="openBookingModal(doctor, dayObj)"
                   >
-                    <div class="slot-count">{{ getSlotsForDate(doctor, dayObj.fullDate).length }}</div>
+                    <div class="slot-count">{{ getRemainingSlotsCount(doctor, dayObj.fullDate) }}</div>
                     <div class="slot-label">号源</div>
                   </button>
 
@@ -239,6 +363,7 @@ import { searchDoctors, getAllDoctors } from '@/api/doctor';
 import { getAvailableDates, getTimeSlots } from '@/api/schedule';
 import { getAllMedicalItems } from '@/api/medicalItem'; // Import medical item API
 import { createAppointment } from '@/api/appointment'; // Import createAppointment API
+import { getAllDepartments } from '@/api/department'; // Import department API
 import { ElMessage } from 'element-plus'; // Import ElMessage for notifications
 
 const route = useRoute();
@@ -260,6 +385,40 @@ const preselectedMedicalItemId = ref(null); // To store ID from route
 const showMedicalItemSelect = ref(false); // Controls visibility of custom select options
 const medicalItemSelectRef = ref(null); // Ref for the custom select wrapper
 
+// --- 筛选状态 ---
+const activeFilter = ref(null); // 当前打开的筛选器 ('time', 'timeslot', 'department', 'distance')
+const filterBarRef = ref(null); // 筛选栏的ref
+const departments = ref([]); // 科室列表
+const selectedDepartmentIds = ref([]); // 选中的科室ID列表
+const selectedTimeFilters = ref([]); // 选中的时间筛选
+const selectedTimeslotFilters = ref([]); // 选中的时间段筛选
+const selectedDistanceFilter = ref(null); // 选中的距离筛选
+
+// --- 搜索建议状态 ---
+const showSearchSuggestions = ref(false); // 是否显示搜索建议
+const searchBarRef = ref(null); // 搜索栏的ref
+const searchSuggestions = ref([]); // 搜索建议列表
+const filteredSearchSuggestions = ref([]); // 过滤后的搜索建议
+
+// 筛选选项配置
+const timeFilterOptions = [
+  { value: 'flexible', label: '时间灵活' }
+];
+
+const timeslotFilterOptions = [
+  { value: 'morning', label: '早晨 (8:00-12:00)' },
+  { value: 'afternoon', label: '下午 (12:00-18:00)' },
+  { value: 'evening', label: '晚上 (18:00-22:00)' }
+];
+
+const distanceFilterOptions = [
+  { value: '1km', label: '1公里以内' },
+  { value: '3km', label: '3公里以内' },
+  { value: '5km', label: '5公里以内' },
+  { value: '10km', label: '10公里以内' },
+  { value: 'all', label: '不限距离' }
+];
+
 // Methods for custom medical item select
 const toggleMedicalItemSelect = () => {
   // Do not allow opening if an item is pre-selected
@@ -270,6 +429,10 @@ const toggleMedicalItemSelect = () => {
 const selectMedicalItem = (item) => {
   selectedMedicalItem.value = item;
   showMedicalItemSelect.value = false;
+  // 当选择检查项目时，更新 preselectedMedicalItemId 并触发搜索
+  preselectedMedicalItemId.value = item.id;
+  // 触发搜索，根据选择的检查项目筛选医生
+  handleSearch();
 };
 
 // Handle click outside to close the dropdown
@@ -277,9 +440,146 @@ const handleClickOutside = (event) => {
   if (medicalItemSelectRef.value && !medicalItemSelectRef.value.contains(event.target)) {
     showMedicalItemSelect.value = false;
   }
+  // 关闭搜索建议下拉列表
+  if (searchBarRef.value && !searchBarRef.value.contains(event.target)) {
+    showSearchSuggestions.value = false;
+  }
 };
 
-onMounted(() => {
+// Handle click outside to close filter dropdown
+const handleFilterClickOutside = (event) => {
+  if (filterBarRef.value && !filterBarRef.value.contains(event.target)) {
+    activeFilter.value = null;
+  }
+};
+
+// 切换筛选下拉菜单
+const toggleFilterDropdown = (filterType) => {
+  if (activeFilter.value === filterType) {
+    activeFilter.value = null; // 如果点击的是已打开的，则关闭
+  } else {
+    activeFilter.value = filterType; // 打开新的筛选器
+  }
+};
+
+// 清除筛选
+const clearTimeFilters = () => {
+  selectedTimeFilters.value = [];
+};
+
+const clearTimeslotFilters = () => {
+  selectedTimeslotFilters.value = [];
+};
+
+const clearDepartmentFilters = () => {
+  selectedDepartmentIds.value = [];
+};
+
+const clearDistanceFilter = () => {
+  selectedDistanceFilter.value = null;
+};
+
+// 应用筛选
+const applyFilters = () => {
+  activeFilter.value = null; // 关闭下拉菜单
+  // 时间段筛选在前端实现，不需要重新搜索，只需要更新显示
+  // 号源数量会根据 selectedTimeslotFilters 自动更新
+  // 其他筛选（如科室）需要重新搜索
+  // 总是调用 handleSearch，让它自己判断是搜索还是显示所有医生
+  handleSearch();
+};
+
+// 获取科室列表
+const fetchDepartments = async () => {
+  try {
+    const data = await getAllDepartments();
+    departments.value = Array.isArray(data) ? data : (data?.content || []);
+    // 更新搜索建议：添加科室选项
+    updateSearchSuggestions();
+  } catch (e) {
+    console.error('Failed to fetch departments:', e);
+    departments.value = [];
+  }
+};
+
+// 更新搜索建议列表
+const updateSearchSuggestions = () => {
+  const suggestions = [];
+  
+  // 添加科室选项
+  departments.value.forEach(dept => {
+    suggestions.push({
+      label: dept.name,
+      value: dept.name,
+      type: '科室',
+      id: dept.id
+    });
+  });
+  
+  // 添加医疗项目选项
+  medicalItems.value.forEach(item => {
+    suggestions.push({
+      label: item.name,
+      value: item.name,
+      type: '检查项目',
+      id: item.id
+    });
+  });
+  
+  // 添加常见疾病/症状（可选）
+  const commonConditions = [
+    { label: '感冒', type: '常见症状' },
+    { label: '发烧', type: '常见症状' },
+    { label: '咳嗽', type: '常见症状' },
+    { label: '头痛', type: '常见症状' },
+    { label: '胃痛', type: '常见症状' },
+    { label: '体检', type: '检查项目' },
+    { label: '复查', type: '检查项目' }
+  ];
+  
+  suggestions.push(...commonConditions);
+  
+  searchSuggestions.value = suggestions;
+};
+
+// 处理搜索输入
+const handleSearchInput = () => {
+  const query = searchCondition.value.trim().toLowerCase();
+  if (query) {
+    filteredSearchSuggestions.value = searchSuggestions.value.filter(item => {
+      const label = (item.label || item.name || item).toLowerCase();
+      return label.includes(query);
+    });
+  } else {
+    filteredSearchSuggestions.value = [];
+  }
+};
+
+// 选择搜索建议
+const selectSearchSuggestion = (suggestion) => {
+  const value = suggestion.label || suggestion.name || suggestion;
+  searchCondition.value = value;
+  showSearchSuggestions.value = false;
+  
+  // 如果选择的是科室，也可以设置科室筛选
+  if (suggestion.type === '科室' && suggestion.id) {
+    selectedDepartmentIds.value = [suggestion.id];
+  }
+  
+  // 如果选择的是医疗项目，设置医疗项目筛选
+  if (suggestion.type === '检查项目' && suggestion.id) {
+    preselectedMedicalItemId.value = suggestion.id;
+    const selectedItem = medicalItems.value.find(item => item.id === suggestion.id);
+    if (selectedItem) {
+      selectedMedicalItem.value = selectedItem;
+    }
+  }
+  
+  // 触发搜索
+  handleSearch();
+};
+
+onMounted(async () => {
   const { specialty, departmentId, medicalItemId } = route.query;
   preselectedMedicalItemId.value = medicalItemId;
 
@@ -290,8 +590,14 @@ onMounted(() => {
   }
   if (departmentId) {
     params.departmentId = departmentId;
+    selectedDepartmentIds.value = [departmentId]; // 设置初始选中的科室
+  }
+  // 重要：如果有 medicalItemId，必须传递到搜索参数中
+  if (medicalItemId) {
+    params.medicalItemId = medicalItemId;
   }
 
+  // 如果有任何搜索条件（包括 medicalItemId），使用 fetchDoctors
   if (Object.keys(params).length > 0) {
     fetchDoctors(params);
   } else {
@@ -299,11 +605,15 @@ onMounted(() => {
   }
   
   fetchMedicalItems(); // Call to fetch medical items
+  fetchDepartments(); // Fetch departments for filter
+  
   document.addEventListener('click', handleClickOutside);
+  document.addEventListener('click', handleFilterClickOutside);
 });
 
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside);
+  document.removeEventListener('click', handleFilterClickOutside);
 });
 
 
@@ -346,6 +656,27 @@ const selectedDateDisplay = ref('');
 const selectedDateForBooking = ref(''); // 用于传递给预约页面的日期
 
 const openBookingModal = (doctor, dayObj = null) => {
+  // 检查是否登录
+  if (!userStore.isLoggedIn) {
+    ElMessage.warning('请先登录后再进行预约');
+    // 保存当前预约信息到 localStorage，登录后可以恢复
+    const bookingData = {
+      doctorId: doctor.id,
+      doctorName: doctor.name,
+      doctorTitle: doctor.title,
+      departmentName: doctor.departmentName,
+      date: dayObj ? dayObj.fullDate : null,
+      medicalItemId: preselectedMedicalItemId.value || selectedMedicalItem.value?.id || null
+    };
+    localStorage.setItem('pendingBooking', JSON.stringify(bookingData));
+    // 跳转到登录页
+    router.push({
+      path: '/login',
+      query: { redirect: route.fullPath }
+    });
+    return;
+  }
+  
   selectedDoctor.value = doctor;
   
   if (dayObj) {
@@ -424,8 +755,33 @@ const closeModal = () => {
 };
 
 const confirmBooking = (slot) => {
+  // 检查是否登录
+  if (!userStore.isLoggedIn) {
+    closeModal();
+    ElMessage.warning('请先登录后再进行预约');
+    // 保存当前预约信息到 localStorage，登录后可以恢复
+    const bookingData = {
+      doctorId: selectedDoctor.value.id,
+      doctorName: selectedDoctor.value.name,
+      doctorTitle: selectedDoctor.value.title,
+      departmentName: selectedDoctor.value.departmentName,
+      date: selectedDateForBooking.value,
+      time: slot.displayTime,
+      slotId: slot.originalSlotId,
+      period: slot.period,
+      medicalItemId: selectedMedicalItem.value?.id || preselectedMedicalItemId.value || null
+    };
+    localStorage.setItem('pendingBooking', JSON.stringify(bookingData));
+    // 跳转到登录页，并保存当前路由以便登录后返回
+    router.push({
+      path: '/login',
+      query: { redirect: route.fullPath }
+    });
+    return;
+  }
+  
   closeModal();
-  // 无论登录与否都跳转到预约信息填写页面
+  // 已登录，跳转到预约信息填写页面
   router.push({
     path: '/booking/info',
     query: {
@@ -437,7 +793,7 @@ const confirmBooking = (slot) => {
       time: slot.displayTime,
       slotId: slot.originalSlotId,
       period: slot.period,
-      medicalItemId: selectedMedicalItem.value?.id
+      medicalItemId: selectedMedicalItem.value?.id || preselectedMedicalItemId.value || null
     }
   });
 };
@@ -448,9 +804,43 @@ const getSlotsForDate = (doctor, dateString) => {
   return doctor.availabilityMap[dateString] || [];
 };
 
-const hasSlots = (doctor, dateString) => {
+// 将前端筛选选项映射到后端时间段枚举
+const mapTimeslotFilterToPeriod = (filterValue) => {
+  const mapping = {
+    'morning': 'MORNING',
+    'afternoon': 'AFTERNOON',
+    'evening': 'EVENING'
+  };
+  return mapping[filterValue];
+};
+
+// 获取某日期的剩余号源总数（考虑时间段筛选）
+const getRemainingSlotsCount = (doctor, dateString) => {
   const slots = getSlotsForDate(doctor, dateString);
-  return slots && slots.length > 0;
+  if (!slots || slots.length === 0) return 0;
+  
+  // 如果选择了时间段筛选，只计算选中时间段的号源
+  if (selectedTimeslotFilters.value.length > 0) {
+    const selectedPeriods = selectedTimeslotFilters.value.map(mapTimeslotFilterToPeriod);
+    return slots
+      .filter(slot => {
+        // slot.period 是字符串（如 'MORNING'），从后端 TimeSlotDTO 返回
+        const period = slot.period;
+        return selectedPeriods.includes(period);
+      })
+      .reduce((total, slot) => {
+        return total + (slot.remainingSlots || 0);
+      }, 0);
+  }
+  
+  // 如果没有选择时间段筛选，计算所有时间段的剩余号源总和
+  return slots.reduce((total, slot) => {
+    return total + (slot.remainingSlots || 0);
+  }, 0);
+};
+
+const hasSlots = (doctor, dateString) => {
+  return getRemainingSlotsCount(doctor, dateString) > 0;
 };
 
 const formatTime = (slot) => {
@@ -483,16 +873,59 @@ const fetchMedicalItems = async () => {
         selectedMedicalItem.value = preselected;
       }
     }
+    // 更新搜索建议：添加医疗项目选项
+    updateSearchSuggestions();
   } catch (e) {
     console.error('Failed to fetch medical items:', e);
   }
 };
 
+// 处理筛选按钮点击（用于"更多筛选"等尚未实现的筛选器）
+const handleFilterClick = (filterType) => {
+  console.log('Filter clicked:', filterType);
+  if (filterType === 'more') {
+    // 更多筛选功能待实现
+    ElMessage.info('更多筛选功能开发中');
+  }
+};
 
 const handleSearch = () => {
+  console.log('handleSearch called'); // 调试信息
   dayOffset.value = 0;
-  if (searchCondition.value.trim()) fetchDoctors({ keyword: searchCondition.value });
-  else fetchAllDoctors();
+  const params = {};
+  if (searchCondition.value && searchCondition.value.trim()) {
+    params.keyword = searchCondition.value.trim();
+  }
+  // 如果有 medicalItemId（来自路由或用户选择），必须包含在搜索参数中
+  if (preselectedMedicalItemId.value || selectedMedicalItem.value?.id) {
+    params.medicalItemId = preselectedMedicalItemId.value || selectedMedicalItem.value?.id;
+  }
+  
+  // 添加科室筛选
+  if (selectedDepartmentIds.value.length > 0) {
+    // 如果有多个科室，使用第一个（后端当前只支持单个科室筛选）
+    // 如果需要支持多科室，需要修改后端API
+    params.departmentId = selectedDepartmentIds.value[0];
+  }
+  
+  // TODO: 添加时间段筛选（需要后端支持）
+  // if (selectedTimeslotFilters.value.length > 0) {
+  //   params.timeslots = selectedTimeslotFilters.value;
+  // }
+  
+  // TODO: 添加距离筛选（需要后端支持）
+  // if (selectedDistanceFilter.value) {
+  //   params.distance = selectedDistanceFilter.value;
+  // }
+  
+  console.log('Search params:', params); // 调试信息
+  
+  // 只要有参数就调用搜索API，否则调用获取所有医生
+  if (Object.keys(params).length > 0) {
+    fetchDoctors(params);
+  } else {
+    fetchAllDoctors();
+  }
 };
 
 const fetchAllDoctors = async () => {
@@ -505,10 +938,17 @@ const fetchAllDoctors = async () => {
 
 const fetchDoctors = async (params) => {
   try {
+    console.log('fetchDoctors called with params:', params); // 调试信息
+    errorMessage.value = '';
     const data = await searchDoctors(params);
+    console.log('Search doctors response:', data); // 调试信息
     // request.js 响应拦截器已经解析了数据
-    processDoctorsData(data?.content || []);
-  } catch (e) { console.error(e); errorMessage.value = '搜索失败'; }
+    const doctorsList = data?.content || data || [];
+    processDoctorsData(doctorsList);
+  } catch (e) { 
+    console.error('Error fetching doctors:', e); 
+    errorMessage.value = '搜索失败：' + (e.message || '未知错误');
+  }
 };
 
 const processDoctorsData = async (fetchedDoctors) => {
@@ -555,17 +995,190 @@ const fetchSlotsForVisibleDays = async (doctor) => {
 .input-group { flex: 1; display: flex; align-items: center; padding: 0 12px; height: 100%; background: #F8F8F8; }
 .input-group:hover { background: #fff; }
 .input-group input { border: none; width: 100%; outline: none; font-size: 14px; background: transparent; }
+.search-input-wrapper {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+.search-suggestions-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #DDD;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 1001;
+  margin-top: 4px;
+}
+.suggestion-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background 0.2s;
+  border-bottom: 1px solid #F0F0F0;
+}
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+.suggestion-item:hover {
+  background: #F8F8F8;
+}
+.suggestion-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 12px;
+  color: #666;
+  flex-shrink: 0;
+}
+.suggestion-text {
+  flex: 1;
+  font-size: 14px;
+  color: #2A2A2A;
+}
+.suggestion-type {
+  font-size: 12px;
+  color: #999;
+  background: #F0F0F0;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-left: 8px;
+}
 .icon-input { width: 18px; margin-right: 8px; color: #666; }
 .divider { width: 1px; height: 60%; background: #DDD; }
-.search-btn { width: 48px; height: 100%; background: #FFD300; border: none; cursor: pointer; display: flex; justify-content: center; align-items: center; }
+.search-btn { width: 48px; height: 100%; background: #FFD300; border: none; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: background 0.2s; }
+.search-btn:hover { background: #FFC000; }
+.search-btn:active { background: #FFB000; }
 .nav-right { display: flex; gap: 16px; align-items: center; }
 .nav-link { text-decoration: none; color: #2A2A2A; font-weight: 600; font-size: 14px; }
 .btn-signup { padding: 8px 16px; background: #FFD300; border: none; border-radius: 4px; font-weight: 700; cursor: pointer; text-decoration: none; color: #000; font-size: 14px; }
 
 /* === 筛选栏 === */
-.filter-bar { padding: 12px 24px; border-bottom: 1px solid #EEE; display: flex; gap: 10px; background: #fff; }
-.filter-pill { padding: 8px 16px; border: 1px solid #CCC; border-radius: 20px; background: #fff; font-size: 14px; cursor: pointer; font-weight: 500; }
-.filter-pill.active { background: #F0F0F0; border-color: #999; }
+.filter-bar { 
+  padding: 12px 24px; 
+  border-bottom: 1px solid #EEE; 
+  display: flex; 
+  gap: 10px; 
+  background: #fff; 
+  position: relative;
+  flex-wrap: wrap;
+}
+.filter-item-wrapper {
+  position: relative;
+}
+
+.filter-pill { 
+  padding: 8px 16px; 
+  border: 1px solid #CCC; 
+  border-radius: 20px; 
+  background: #fff; 
+  font-size: 14px; 
+  cursor: pointer; 
+  font-weight: 500; 
+  transition: all 0.2s; 
+  user-select: none; 
+}
+.filter-pill:hover { 
+  background: #F8F8F8; 
+  border-color: #999; 
+}
+.filter-pill.active { 
+  background: #2A2A2A; 
+  color: #fff; 
+  border-color: #2A2A2A; 
+}
+.filter-pill:active { 
+  transform: scale(0.98); 
+}
+
+.filter-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  background: #fff;
+  border: 1px solid #DDD;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 280px;
+  max-width: 320px;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.filter-options {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 16px;
+}
+
+.filter-option {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+  cursor: pointer;
+  user-select: none;
+}
+
+.filter-option input[type="checkbox"],
+.filter-option input[type="radio"] {
+  margin-right: 12px;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.option-label {
+  flex: 1;
+  font-size: 14px;
+  color: #2A2A2A;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 8px;
+  border-top: 1px solid #EEE;
+  padding-top: 16px;
+}
+
+.btn-clear {
+  flex: 1;
+  padding: 8px 16px;
+  background: #fff;
+  border: 1px solid #CCC;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  color: #2A2A2A;
+  transition: all 0.2s;
+}
+
+.btn-clear:hover {
+  background: #F8F8F8;
+  border-color: #999;
+}
+
+.btn-apply {
+  flex: 1;
+  padding: 8px 16px;
+  background: #FFD300;
+  border: 1px solid #FFD300;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #2A2A2A;
+  transition: all 0.2s;
+}
+
+.btn-apply:hover {
+  background: #FFC000;
+  border-color: #FFC000;
+}
 
 /* === 主体布局 === */
 .main-layout { display: flex; flex: 1; overflow: hidden; }
