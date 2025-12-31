@@ -23,4 +23,11 @@ public class DoctorListDTO {
     private String phone;         // 手机号
     private Double rating;        // 平均评分
     private Integer reviewCount;  // 评价数量
+    
+    // 医院信息
+    private String hospitalId;
+    private String hospitalName;
+    private String hospitalAddress;
+    private Double hospitalLongitude;
+    private Double hospitalLatitude;
 }

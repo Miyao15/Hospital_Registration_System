@@ -1,7 +1,7 @@
 <template>
-  <div class="search-results-page">
+  <div class="search-results-page page-animate">
     
-    <header class="top-bar">
+    <header class="top-bar slide-down">
       <div class="nav-left">
         <div class="logo-z">Z</div>
         <div class="search-bar-composite" ref="searchBarRef">
@@ -14,11 +14,12 @@
               @keyup.enter="handleSearch"
               @focus="showSearchSuggestions = true"
               @input="handleSearchInput"
+              class="input-focus"
             />
             <!-- 搜索建议下拉列表 -->
-            <div v-if="showSearchSuggestions && (filteredSearchSuggestions.length > 0 || searchSuggestions.length > 0)" class="search-suggestions-dropdown">
+            <div v-if="showSearchSuggestions && (filteredSearchSuggestions.length > 0 || searchSuggestions.length > 0)" class="search-suggestions-dropdown scale-in">
               <div 
-                class="suggestion-item" 
+                class="suggestion-item stagger-item" 
                 v-for="(suggestion, index) in filteredSearchSuggestions.length > 0 ? filteredSearchSuggestions : searchSuggestions" 
                 :key="index"
                 @click="selectSearchSuggestion(suggestion)"
@@ -34,9 +35,9 @@
           </div>
           <div class="divider"></div>
           <div class="input-group">
-            <input type="text" placeholder="地点" v-model="searchLocation" />
+            <input type="text" placeholder="地点" v-model="searchLocation" class="input-focus" />
           </div>
-          <button class="search-btn" @click="handleSearch">
+          <button class="search-btn btn-hover ripple" @click="handleSearch">
             <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="3" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
           </button>
         </div>
@@ -44,10 +45,10 @@
       <div class="nav-right">
         <template v-if="userStore.isLoggedIn">
           <span class="user-greeting">Hi, {{ userStore.userInfo?.username }}</span>
-          <a href="#" class="nav-link" @click.prevent="userStore.logout()">退出</a>
+          <a href="#" class="nav-link link-underline" @click.prevent="userStore.logout()">退出</a>
         </template>
         <template v-else>
-          <router-link to="/login" class="nav-link">登录</router-link>
+          <router-link to="/login" class="nav-link link-underline">登录</router-link>
           <router-link to="/register" class="btn-signup">注册</router-link>
         </template>
       </div>
@@ -245,14 +246,11 @@
       </div>
 
       <div class="map-column">
-        <div class="map-container">
-          <div class="map-bg"></div> 
-          <div class="map-pin" v-for="(doc, i) in doctors" :key="doc.id" :style="getPinStyle(i)">
-            {{ i + 1 }}
-          </div>
-          <div class="map-controls">
-            <button>+</button>
-            <button>-</button>
+        <div class="map-container" id="amap-container">
+          <!-- 高德地图将渲染在这里 -->
+          <div v-if="!mapLoaded" class="map-loading">
+            <div class="loading-spinner"></div>
+            <span>地图加载中...</span>
           </div>
         </div>
       </div>
@@ -356,7 +354,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/user';
 import { searchDoctors, getAllDoctors } from '@/api/doctor';
@@ -372,6 +370,7 @@ const userStore = useUserStore();
 
 // --- Constants ---
 const DAYS_TO_SHOW = 12;
+const AMAP_KEY = '7621055765e5ea433a56367bccc10c7e'; // 高德Web端JS API Key
 
 // --- 基础状态 ---
 const searchCondition = ref('');
@@ -384,6 +383,11 @@ const selectedMedicalItem = ref(null); // To store the selected medical item
 const preselectedMedicalItemId = ref(null); // To store ID from route
 const showMedicalItemSelect = ref(false); // Controls visibility of custom select options
 const medicalItemSelectRef = ref(null); // Ref for the custom select wrapper
+
+// --- 地图状态 ---
+const mapLoaded = ref(false);
+let mapInstance = null;
+let markers = [];
 
 // --- 筛选状态 ---
 const activeFilter = ref(null); // 当前打开的筛选器 ('time', 'timeslot', 'department', 'distance')
@@ -418,6 +422,134 @@ const distanceFilterOptions = [
   { value: '10km', label: '10公里以内' },
   { value: 'all', label: '不限距离' }
 ];
+
+// --- 高德地图初始化 ---
+const initAMap = () => {
+  // 设置安全密钥（高德地图 JS API 2.0 必需）
+  // 注意：需要在高德控制台获取安全密钥
+  window._AMapSecurityConfig = {
+    securityJsCode: '3b9c3c865a78dc8831faac2225035022'
+  };
+  
+  // 动态加载高德地图JS API
+  if (window.AMap) {
+    createMap();
+    return;
+  }
+  
+  const script = document.createElement('script');
+  script.src = `https://webapi.amap.com/maps?v=2.0&key=${AMAP_KEY}`;
+  script.onload = () => {
+    createMap();
+  };
+  script.onerror = () => {
+    console.error('高德地图加载失败');
+    mapLoaded.value = true; // 即使失败也标记为已加载，避免一直显示loading
+  };
+  document.head.appendChild(script);
+};
+
+const createMap = () => {
+  nextTick(() => {
+    const container = document.getElementById('amap-container');
+    if (!container || !window.AMap) return;
+    
+    // 默认中心点（天津医科大学总医院）
+    const DEFAULT_CENTER = [117.195907, 39.104027];
+    
+    // 创建地图实例
+    mapInstance = new window.AMap.Map('amap-container', {
+      zoom: 15,
+      center: DEFAULT_CENTER,
+      mapStyle: 'amap://styles/light' // 浅色主题
+    });
+    
+    mapLoaded.value = true;
+    
+    // 如果有医生数据，添加标记
+    if (doctors.value.length > 0) {
+      addDoctorMarkers();
+    }
+  });
+};
+
+// 添加医生位置标记
+const addDoctorMarkers = () => {
+  if (!mapInstance || !window.AMap) return;
+  
+  // 清除旧标记
+  markers.forEach(m => mapInstance.remove(m));
+  markers = [];
+  
+  // 默认中心点（天津医科大学总医院）
+  const DEFAULT_CENTER = [117.195907, 39.104027];
+  
+  // 按医院分组医生
+  const hospitalGroups = {};
+  doctors.value.forEach((doc, index) => {
+    // 使用后端返回的医院位置，如果没有则使用默认位置
+    const hospitalKey = doc.hospitalId || 'default';
+    if (!hospitalGroups[hospitalKey]) {
+      hospitalGroups[hospitalKey] = {
+        center: [
+          doc.hospitalLongitude || DEFAULT_CENTER[0],
+          doc.hospitalLatitude || DEFAULT_CENTER[1]
+        ],
+        name: doc.hospitalName || '天津医科大学总医院',
+        doctors: []
+      };
+    }
+    hospitalGroups[hospitalKey].doctors.push({ ...doc, originalIndex: index });
+  });
+  
+  // 为每个医生添加标记
+  Object.values(hospitalGroups).forEach(group => {
+    group.doctors.forEach((doc, groupIndex) => {
+      // 在医院周围小范围偏移，模拟不同科室位置
+      const offset = 0.0005; // 约50米偏移
+      const angle = (groupIndex * 45) * Math.PI / 180;
+      const lng = group.center[0] + Math.cos(angle) * offset * (groupIndex % 3 + 1);
+      const lat = group.center[1] + Math.sin(angle) * offset * (groupIndex % 3 + 1);
+      
+      const marker = new window.AMap.Marker({
+        position: [lng, lat],
+        content: `<div class="custom-marker">${doc.originalIndex + 1}</div>`,
+        offset: new window.AMap.Pixel(-15, -15)
+      });
+      
+      // 点击标记显示医生信息
+      marker.on('click', () => {
+        const infoWindow = new window.AMap.InfoWindow({
+          content: `
+            <div style="padding: 10px; min-width: 150px;">
+              <h4 style="margin: 0 0 5px; font-size: 14px;">${doc.name}</h4>
+              <p style="margin: 0; font-size: 12px; color: #666;">${doc.title || ''}</p>
+              <p style="margin: 5px 0 0; font-size: 12px; color: #999;">${doc.departmentName || ''}</p>
+              <p style="margin: 5px 0 0; font-size: 12px; color: #333;">📍 ${group.name}</p>
+            </div>
+          `,
+          offset: new window.AMap.Pixel(0, -20)
+        });
+        infoWindow.open(mapInstance, marker.getPosition());
+      });
+      
+      markers.push(marker);
+      mapInstance.add(marker);
+    });
+  });
+  
+  // 自动调整视野以包含所有标记
+  if (markers.length > 0) {
+    mapInstance.setFitView(markers, false, [50, 50, 50, 50]);
+  }
+};
+
+// 监听医生数据变化，更新地图标记
+watch(doctors, () => {
+  if (mapLoaded.value && mapInstance) {
+    addDoctorMarkers();
+  }
+}, { deep: true });
 
 // Methods for custom medical item select
 const toggleMedicalItemSelect = () => {
@@ -580,13 +712,25 @@ const selectSearchSuggestion = (suggestion) => {
 };
 
 onMounted(async () => {
-  const { specialty, departmentId, medicalItemId, minRating, priorityDoctorId } = route.query;
+  const { specialty, keyword, location, departmentId, medicalItemId, minRating, priorityDoctorId } = route.query;
   preselectedMedicalItemId.value = medicalItemId;
 
   const params = {};
-  if (specialty) {
-    searchCondition.value = specialty;
-    params.keyword = specialty;
+  // 支持 specialty 和 keyword 两种参数名
+  const searchKeyword = keyword || specialty;
+  if (searchKeyword) {
+    searchCondition.value = searchKeyword;
+    params.keyword = searchKeyword;
+  }
+  // 支持地区搜索
+  if (location) {
+    searchLocation.value = location;
+    // 地区作为关键词的一部分进行搜索
+    if (params.keyword) {
+      params.keyword = params.keyword + ' ' + location;
+    } else {
+      params.keyword = location;
+    }
   }
   if (departmentId) {
     params.departmentId = departmentId;
@@ -613,6 +757,7 @@ onMounted(async () => {
   
   fetchMedicalItems(); // Call to fetch medical items
   fetchDepartments(); // Fetch departments for filter
+  initAMap(); // 初始化高德地图
   
   document.addEventListener('click', handleClickOutside);
   document.addEventListener('click', handleFilterClickOutside);
@@ -621,6 +766,11 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside);
   document.removeEventListener('click', handleFilterClickOutside);
+  // 销毁地图实例
+  if (mapInstance) {
+    mapInstance.destroy();
+    mapInstance = null;
+  }
 });
 
 
@@ -1266,12 +1416,55 @@ const fetchSlotsForVisibleDays = async (doctor) => {
 .btn-more { border: 1px solid #DDD; background: #fff; padding: 8px 4px; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: pre-wrap; }
 
 /* === 地图 === */
-.map-column { flex: 35%; background: #E5E3DF; position: relative; border-left: 1px solid #DDD; }
-.map-container { height: 100%; width: 100%; position: relative; }
-.map-bg { width: 100%; height: 100%; background-image: url('https://upload.wikimedia.org/wikipedia/commons/e/ec/Map_placeholder.svg'); background-size: cover; opacity: 0.6; }
-.map-pin { position: absolute; width: 28px; height: 28px; background: #2A2A2A; color: #fff; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 12px; font-weight: bold; cursor: pointer; }
-.map-controls { position: absolute; top: 16px; right: 16px; background: #fff; border-radius: 4px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
-.map-controls button { display: block; width: 32px; height: 32px; border: none; background: #fff; font-size: 18px; cursor: pointer; border-bottom: 1px solid #EEE; }
+.map-column { flex: 35%; background: #f5f5f5; position: relative; border-left: 1px solid #DDD; min-height: 600px; }
+.map-container { height: 100%; width: 100%; position: relative; min-height: 600px; }
+.map-loading { 
+  position: absolute; 
+  top: 50%; 
+  left: 50%; 
+  transform: translate(-50%, -50%); 
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  gap: 10px;
+  color: #666;
+  font-size: 14px;
+}
+.map-loading .loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #FFD300;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+/* 自定义地图标记样式 */
+:deep(.custom-marker) {
+  width: 30px;
+  height: 30px;
+  background: linear-gradient(135deg, #FFD300 0%, #FF9800 100%);
+  color: #2A2A2A;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 12px;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+:deep(.custom-marker:hover) {
+  transform: scale(1.2);
+}
+:deep(.amap-info-content) {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
 
 /* === 弹窗样式 (Zocdoc 风格复刻) === */
 .modal-overlay {

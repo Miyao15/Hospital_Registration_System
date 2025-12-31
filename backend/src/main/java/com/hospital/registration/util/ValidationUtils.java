@@ -28,23 +28,12 @@ public class ValidationUtils {
     }
 
     /**
-     * 验证身份证号格式（包含校验码验证）
+     * 验证身份证号格式（简化验证，只检查格式）
      */
     public static boolean isValidIdCard(String idCard) {
         if (idCard == null || idCard.isEmpty()) return false;
-        if (!ID_CARD_PATTERN.matcher(idCard).matches()) return false;
-        
-        // 校验码验证
-        int[] weights = {7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2};
-        char[] checkCodes = {'1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2'};
-        
-        int sum = 0;
-        for (int i = 0; i < 17; i++) {
-            sum += (idCard.charAt(i) - '0') * weights[i];
-        }
-        
-        char expectedCheckCode = checkCodes[sum % 11];
-        return Character.toUpperCase(idCard.charAt(17)) == expectedCheckCode;
+        // 只验证格式：17位数字+1位校验码(数字或X)
+        return ID_CARD_PATTERN.matcher(idCard).matches();
     }
 
     /**

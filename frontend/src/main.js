@@ -10,6 +10,7 @@ import App from './App.vue'
 import router from './router'
 import { useUserStore } from './stores/user'
 import './styles/global.scss'
+import './assets/styles/animations.css' // 全局动效样式
 
 const app = createApp(App)
 const pinia = createPinia()

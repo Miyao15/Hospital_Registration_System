@@ -1,6 +1,6 @@
 <template>
-  <div class="auth-page">
-    <div class="cream-wrapper">
+  <div class="auth-page page-animate">
+    <div class="cream-wrapper slide-down">
       <header class="main-header">
         <div class="container nav-container">
           <div class="logo-area" @click="goHome">
@@ -9,44 +9,44 @@
           </div>
           <nav class="main-nav">
             <span class="nav-text">已有账户？</span>
-            <a href="#" class="nav-link login-link" @click.prevent="goLogin">登录</a>
-            <button class="btn-signup" @click="goHome">返回首页</button>
+            <a href="#" class="nav-link login-link link-underline" @click.prevent="goLogin">登录</a>
+            <button class="btn-signup btn-hover ripple" @click="goHome">返回首页</button>
           </nav>
         </div>
       </header>
     </div>
 
     <main class="auth-main">
-      <div class="auth-card">
+      <div class="auth-card card-hover scale-in">
         <h1 class="auth-title">创建您的专属账户</h1>
         <p class="auth-subtitle">加入优医，享受便捷的在线医疗服务</p>
 
         <div class="role-selector">
           <button 
-            :class="['role-btn', { active: role === 'patient' }]" 
+            :class="['role-btn btn-hover', { active: role === 'patient' }]" 
             @click="role = 'patient'">
             我是患者
           </button>
           <button 
-            :class="['role-btn', { active: role === 'doctor' }]" 
+            :class="['role-btn btn-hover', { active: role === 'doctor' }]" 
             @click="role = 'doctor'">
             我是医生
           </button>
           <button 
-            :class="['role-btn', { active: role === 'admin' }]" 
+            :class="['role-btn btn-hover', { active: role === 'admin' }]" 
             @click="role = 'admin'">
             管理员注册
           </button>
         </div>
 
         <!-- Patient Registration Form -->
-        <form v-if="role === 'patient'" @submit.prevent="handleRegister">
+        <form v-if="role === 'patient'" @submit.prevent="handleRegister" class="fade-in">
           <div class="form-grid">
-            <div class="form-group">
+            <div class="form-group stagger-item">
               <label for="patient-name">姓名</label>
-              <input type="text" id="patient-name" v-model="patientForm.name" placeholder="请输入您的真实姓名" required>
+              <input type="text" id="patient-name" v-model="patientForm.name" placeholder="请输入您的真实姓名" required class="input-focus">
             </div>
-            <div class="form-group">
+            <div class="form-group stagger-item">
               <label for="patient-phone">手机号</label>
               <input type="tel" id="patient-phone" v-model="patientForm.phone" placeholder="用于登录和接收通知" required>
             </div>

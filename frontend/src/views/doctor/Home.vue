@@ -1,13 +1,13 @@
 <template>
-  <div class="doctor-home">
+  <div class="doctor-home page-animate">
     <!-- Hero区域 - Oatmeal风格 -->
-    <div class="hero-section">
+    <div class="hero-section slide-down">
       <div class="hero-content">
-        <div class="hero-text">
+        <div class="hero-text fade-in">
           <h1 class="hero-title">早上好，{{ doctorName }} 医生</h1>
           <p class="hero-subtitle">{{ todayDate }} · 今天又是充满希望的一天</p>
         </div>
-        <div class="hero-image">
+        <div class="hero-image scale-in">
           <div class="hero-image-overlay"></div>
           <img src="https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=500&h=400&fit=crop&q=80" alt="医疗健康" />
         </div>
@@ -16,7 +16,7 @@
 
     <!-- 统计卡片 - Zocdoc 风格 -->
     <div class="stats-grid">
-      <div class="stat-card">
+      <div class="stat-card card-hover stagger-item">
         <div class="stat-header">
           <span class="stat-label">今日预约</span>
           <div class="stat-icon today">
@@ -34,7 +34,7 @@
         </div>
       </div>
 
-      <div class="stat-card">
+      <div class="stat-card card-hover stagger-item">
         <div class="stat-header">
           <span class="stat-label">本周完成</span>
           <div class="stat-icon completed">

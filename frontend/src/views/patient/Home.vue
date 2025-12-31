@@ -1,23 +1,23 @@
 <template>
-  <div class="dashboard-page">
+  <div class="dashboard-page page-animate">
     
-    <section class="dashboard-hero">
+    <section class="dashboard-hero slide-down">
       <div class="container hero-container">
-        <p class="hero-subtitle">Find and book appointments with local doctors.</p>        
-        <div class="search-bar-wrapper">
-          <div class="search-bar">
+        <p class="hero-subtitle fade-in">Find and book appointments with local doctors.</p>        
+        <div class="search-bar-wrapper scale-in">
+          <div class="search-bar card-hover">
             <div class="input-group">
               <el-icon class="input-icon"><Search /></el-icon>
-              <input type="text" v-model="searchForm.specialty" placeholder="病情、治疗或医生姓名..." />
+              <input type="text" v-model="searchForm.specialty" placeholder="病情、治疗或医生姓名..." class="input-focus" />
             </div>
             <div class="divider"></div>
             <div class="input-group">
               <el-icon class="input-icon"><MapLocation /></el-icon>
-              <input type="text" v-model="searchForm.location" placeholder="城市、街道或邮编" />
+              <input type="text" v-model="searchForm.location" placeholder="城市、街道或邮编" class="input-focus" />
             </div>
             <div class="divider"></div>
 
-            <button class="btn-search-submit" @click="goToSearch">
+            <button class="btn-search-submit btn-hover ripple" @click="goToSearch">
               <el-icon><Search /></el-icon>
             </button>
           </div>
@@ -27,23 +27,23 @@
 
     <div class="container main-content">
       
-      <div class="left-col">
+      <div class="left-col slide-up">
         <MedicalItems />
       </div>
 
       <div class="right-col">
-        <div class="sidebar-card medical-card">
+        <div class="sidebar-card medical-card card-hover stagger-item">
           <div class="medical-card-image">
             <img src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=400&h=300&fit=crop" alt="医疗健康" />
           </div>
           <div class="medical-card-content">
             <h3 class="sidebar-title">您的健康档案</h3>
             <p class="medical-card-desc">管理您的医疗记录，随时查看就诊历史</p>
-            <button class="btn-medical-card" @click="$router.push('/patient/medical-records')">查看档案</button>
+            <button class="btn-medical-card btn-hover" @click="$router.push('/patient/medical-records')">查看档案</button>
           </div>
         </div>
 
-        <div class="sidebar-card">
+        <div class="sidebar-card card-hover stagger-item">
           <h3 class="sidebar-title">您的医疗团队</h3>
           <div class="care-list">
             <div class="care-item">

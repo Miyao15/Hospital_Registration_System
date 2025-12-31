@@ -58,6 +58,9 @@ public class Doctor {
     @Column(name = "schedule_info", length = 255)
     private String scheduleInfo;
 
+    @Column(name = "hospital_id", length = 36)
+    private String hospitalId;
+
     @Column(name = "approved_at")
     private LocalDateTime approvedAt;
 

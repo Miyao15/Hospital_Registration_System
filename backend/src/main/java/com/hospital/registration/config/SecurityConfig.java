@@ -36,6 +36,7 @@ public class SecurityConfig {
         .authorizeHttpRequests(auth -> auth
             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // 必须放行所有 OPTIONS 请求
             .requestMatchers("/api/auth/**").permitAll()
+            .requestMatchers("/api/ai/**").permitAll() // AI聊天接口公开访问
             .requestMatchers(HttpMethod.GET, "/api/specialties/**", "/api/specialties").permitAll()
             .requestMatchers(HttpMethod.GET, "/api/departments/**", "/api/departments").permitAll()
             .requestMatchers(HttpMethod.GET, "/api/doctors/**", "/api/doctors").permitAll()
@@ -63,7 +64,12 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
+        configuration.setAllowedOrigins(Arrays.asList(
+            "http://localhost:3000",
+            "http://localhost:8081",
+            "http://152.136.13.236:8081",
+            "http://152.136.13.236"
+        ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);

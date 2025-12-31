@@ -2,6 +2,7 @@ package com.hospital.registration.service;
 
 import com.hospital.registration.dto.*;
 import com.hospital.registration.entity.Doctor;
+import com.hospital.registration.entity.Hospital;
 import com.hospital.registration.entity.User;
 import com.hospital.registration.enums.DoctorTitle;
 import com.hospital.registration.enums.UserStatus;
@@ -10,6 +11,7 @@ import com.hospital.registration.repository.DepartmentRepository;
 import com.hospital.registration.repository.DoctorRepository;
 import com.hospital.registration.repository.DoctorReviewRepository;
 import com.hospital.registration.repository.ExaminationItemDepartmentRepository;
+import com.hospital.registration.repository.HospitalRepository;
 import com.hospital.registration.repository.UserRepository;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +36,7 @@ public class DoctorProfileService {
     private final DoctorReviewRepository doctorReviewRepository;
     private final UserRepository userRepository;
     private final ExaminationItemDepartmentRepository examinationItemDepartmentRepository;
+    private final HospitalRepository hospitalRepository;
     
     public List<DoctorListDTO> getDoctorsByDepartment(String departmentId) {
         try {
@@ -172,26 +175,25 @@ public class DoctorProfileService {
     
     public List<DoctorListDTO> getTopDoctors(Integer limit) {
         try {
-            log.info("Fetching top doctors (5 stars only) with limit: {}", limit);
+            log.info("Fetching top doctors with limit: {}", limit);
             // 获取所有医生并转换为DTO
             List<Doctor> allDoctors = doctorRepository.findAll();
+            log.info("Found {} doctors in database", allDoctors.size());
+            
             List<DoctorListDTO> allDoctorsDTO = allDoctors.stream()
                     .map(this::safeConvertToListDTO)
+                    .filter(dto -> dto != null) // 过滤掉转换失败的
                     .collect(Collectors.toList());
             
-            // 筛选出5星医生（rating >= 5.0）
-            List<DoctorListDTO> fiveStarDoctors = allDoctorsDTO.stream()
-                    .filter(doctor -> {
-                        Double rating = doctor.getRating();
-                        // 只返回评分为5.0的医生（允许null或5.0）
-                        return rating != null && rating >= 5.0;
-                    })
+            log.info("Converted {} doctors to DTO", allDoctorsDTO.size());
+            
+            // 按评分降序排序，返回评分最高的医生
+            List<DoctorListDTO> topDoctors = allDoctorsDTO.stream()
                     .sorted((a, b) -> {
                         // 按评分降序，然后按评价数量降序
-                        int ratingCompare = Double.compare(
-                            b.getRating() != null ? b.getRating() : 0.0,
-                            a.getRating() != null ? a.getRating() : 0.0
-                        );
+                        double ratingA = a.getRating() != null ? a.getRating() : 5.0;
+                        double ratingB = b.getRating() != null ? b.getRating() : 5.0;
+                        int ratingCompare = Double.compare(ratingB, ratingA);
                         if (ratingCompare != 0) return ratingCompare;
                         return Integer.compare(
                             b.getReviewCount() != null ? b.getReviewCount() : 0,
@@ -201,8 +203,8 @@ public class DoctorProfileService {
                     .limit(limit != null ? limit : 10)
                     .collect(Collectors.toList());
             
-            log.info("Found {} five-star doctors out of {} total doctors", fiveStarDoctors.size(), allDoctorsDTO.size());
-            return fiveStarDoctors;
+            log.info("Returning {} top doctors", topDoctors.size());
+            return topDoctors;
         } catch (Exception e) {
             log.error("Error fetching top doctors: {}", e.getMessage(), e);
             return new ArrayList<>(); // 返回空列表
@@ -336,6 +338,21 @@ public class DoctorProfileService {
             log.warn("Could not get review stats for doctor: {}, error: {}", doctor.getId(), e.getMessage());
             dto.setRating(5.0);
             dto.setReviewCount(0);
+        }
+        
+        // 获取医院信息
+        if (doctor.getHospitalId() != null && !doctor.getHospitalId().isEmpty()) {
+            try {
+                hospitalRepository.findById(doctor.getHospitalId()).ifPresent(hospital -> {
+                    dto.setHospitalId(hospital.getId());
+                    dto.setHospitalName(hospital.getName());
+                    dto.setHospitalAddress(hospital.getAddress());
+                    dto.setHospitalLongitude(hospital.getLongitude());
+                    dto.setHospitalLatitude(hospital.getLatitude());
+                });
+            } catch (Exception e) {
+                log.warn("Could not get hospital info for doctor: {}, error: {}", doctor.getId(), e.getMessage());
+            }
         }
         
         return dto;

@@ -1,13 +1,13 @@
 <template>
-  <div class="admin-home">
+  <div class="admin-home page-animate">
     <!-- Hero区域 - Oatmeal风格 -->
-    <div class="hero-section">
+    <div class="hero-section slide-down">
       <div class="hero-content">
-        <div class="hero-text">
+        <div class="hero-text fade-in">
           <h1 class="hero-title">欢迎回来，{{ adminName }}</h1>
           <p class="hero-subtitle">管理系统概览 · 一切尽在掌握</p>
         </div>
-        <div class="hero-image">
+        <div class="hero-image scale-in">
           <div class="hero-image-overlay"></div>
           <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&h=400&fit=crop&q=80" alt="管理后台" />
         </div>
@@ -16,7 +16,7 @@
 
     <!-- 统计卡片 -->
     <div class="stats-grid">
-      <div class="stat-card">
+      <div class="stat-card card-hover stagger-item">
         <div class="stat-icon" style="background: #E3F2FD;">
           <svg viewBox="0 0 24 24" fill="none" stroke="#1976D2" stroke-width="2" width="24" height="24">
             <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"></path>
@@ -31,7 +31,7 @@
         </div>
       </div>
 
-      <div class="stat-card">
+      <div class="stat-card card-hover stagger-item">
         <div class="stat-icon" style="background: #E8F5E9;">
           <svg viewBox="0 0 24 24" fill="none" stroke="#388E3C" stroke-width="2" width="24" height="24">
             <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
@@ -43,7 +43,7 @@
         </div>
       </div>
 
-      <div class="stat-card">
+      <div class="stat-card card-hover stagger-item">
         <div class="stat-icon" style="background: #FFF3E0;">
           <svg viewBox="0 0 24 24" fill="none" stroke="#F57C00" stroke-width="2" width="24" height="24">
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>

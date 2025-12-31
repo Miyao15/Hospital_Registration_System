@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  # MySQL数据库
+  mysql:
+    image: mysql:8.0
+    container_name: hospital-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: hospital_registration
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/hospital_registration.sql:/docker-entrypoint-initdb.d/init.sql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    networks:
+      - hospital-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  # 后端服务
+  backend:
+    build: ./backend
+    container_name: hospital-backend
+    restart: always
+    ports:
+      - "8082:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/hospital_registration?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai&characterEncoding=UTF-8
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: 123456
+      QWEN_API_KEY: sk-e2402dc10eea46a696f548ab7f909696
+      JAVA_OPTS: -Xms256m -Xmx512m
+    depends_on:
+      - mysql
+    networks:
+      - hospital-network
+    deploy:
+      resources:
+        limits:
+          memory: 600M
+
+  # 前端服务
+  frontend:
+    build: ./frontend
+    container_name: hospital-frontend
+    restart: always
+    ports:
+      - "8081:80"
+    depends_on:
+      - backend
+    networks:
+      - hospital-network
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+volumes:
+  mysql_data:
+
+networks:
+  hospital-network:
+    driver: bridge
