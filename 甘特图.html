@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>项目甘特图 - 全信息直显版</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            margin: 20px;
+            background-color: #f4f6f8;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+        #gantt_chart {
+            width: 100%;
+            height: 850px; /* 增加高度以容纳文字 */
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 20px;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+    <h2>项目开发甘特图 (12月 - 1月)</h2>
+    <div id="gantt_chart"></div>
+
+    <script type="text/javascript">
+        var chartDom = document.getElementById('gantt_chart');
+        var myChart = echarts.init(chartDom);
+        var option;
+
+        // 辅助函数：格式化日期
+        function formatDate(date) {
+            var d = new Date(date);
+            var month = '' + (d.getMonth() + 1);
+            var day = '' + d.getDate();
+            if (month.length < 2) month = '0' + month;
+            if (day.length < 2) day = '0' + day;
+            return [month, day].join('-');
+        }
+
+        // 数据准备 (基于之前的逻辑，12月1日开始)
+        // 状态: 0=关键路径(红色), 1=普通任务(蓝色)
+        var data = [
+            { name: 'T1 需求分析', start: '2024-12-01', end: '2024-12-04', duration: 3, type: 0 },
+            { name: 'T2 系统设计', start: '2024-12-04', end: '2024-12-08', duration: 4, type: 0 },
+            { name: 'T3 数据库设计', start: '2024-12-08', end: '2024-12-10', duration: 2, type: 0 },
+            { name: 'T4 后端框架', start: '2024-12-10', end: '2024-12-12', duration: 2, type: 0 },
+            { name: 'T8 前端框架', start: '2024-12-10', end: '2024-12-12', duration: 2, type: 1 }, // 并行
+            { name: 'T5 用户认证', start: '2024-12-12', end: '2024-12-17', duration: 5, type: 0 },
+            { name: 'T9 患者端',   start: '2024-12-12', end: '2024-12-20', duration: 8, type: 1 }, // 并行
+            { name: 'T10 医生端',  start: '2024-12-12', end: '2024-12-17', duration: 5, type: 1 }, // 并行
+            { name: 'T11 管理员端', start: '2024-12-12', end: '2024-12-17', duration: 5, type: 1 }, // 并行
+            { name: 'T6 预约挂号', start: '2024-12-17', end: '2024-12-25', duration: 8, type: 0 },
+            { name: 'T7 排班管理', start: '2024-12-17', end: '2024-12-23', duration: 6, type: 1 }, // 并行
+            { name: 'T12 AI助手',  start: '2024-12-25', end: '2024-12-28', duration: 3, type: 0 },
+            { name: 'T13 集成测试', start: '2024-12-28', end: '2025-01-02', duration: 5, type: 0 },
+            { name: 'T14 Docker部署', start: '2025-01-02', end: '2025-01-04', duration: 2, type: 0 },
+            { name: 'T15 系统上线', start: '2025-01-04', end: '2025-01-05', duration: 1, type: 0 }
+        ];
+
+        // 颜色配置
+        var colors = ['#d9534f', '#3498db']; // 红色(关键), 蓝色(普通)
+
+        // 处理数据以适配 ECharts Custom Series
+        var categories = data.map(function(item) { return item.name; });
+        var startTime = +new Date('2024-12-01');
+
+        function renderItem(params, api) {
+            var categoryIndex = api.value(0);
+            var start = api.coord([api.value(1), categoryIndex]);
+            var end = api.coord([api.value(2), categoryIndex]);
+            var height = api.size([0, 1])[1] * 0.6; // 条的高度
+            
+            var rectShape = echarts.graphic.clipRectByRect({
+                x: start[0],
+                y: start[1] - height / 2,
+                width: end[0] - start[0],
+                height: height
+            }, {
+                x: params.coordSys.x,
+                y: params.coordSys.y,
+                width: params.coordSys.width,
+                height: params.coordSys.height
+            });
+
+            return rectShape && {
+                type: 'group',
+                children: [
+                    {
+                        type: 'rect',
+                        transition: ['shape'],
+                        shape: rectShape,
+                        style: api.style()
+                    },
+                    {
+                        // 进度条内部显示的文字（任务名）
+                        type: 'text',
+                        style: {
+                            text: data[categoryIndex].name.split(' ')[1], // 只显示名字，去掉T编号
+                            fill: '#fff',
+                            font: '12px Microsoft YaHei',
+                            x: rectShape.x + 5,
+                            y: rectShape.y + rectShape.height / 2,
+                            textVerticalAlign: 'middle',
+                            overflow: 'truncate', // 如果太长则截断
+                            width: rectShape.width - 5 
+                        }
+                    }
+                ]
+            };
+        }
+
+        option = {
+            tooltip: {
+                formatter: function (params) {
+                    var item = data[params.dataIndex];
+                    return item.name + '<br/>' + 
+                           '开始: ' + item.start + '<br/>' + 
+                           '结束: ' + item.end + '<br/>' + 
+                           '工期: ' + item.duration + ' 天';
+                }
+            },
+            title: {
+                text: '红色：关键路径 / 蓝色：并行任务',
+                left: 'center',
+                top: 0,
+                textStyle: {
+                    fontSize: 14,
+                    fontWeight: 'normal',
+                    color: '#777'
+                }
+            },
+            grid: {
+                height: '85%',
+                top: 50,
+                right: 150 // 留出右侧空间显示日期文字
+            },
+            xAxis: {
+                min: startTime,
+                scale: true,
+                axisLabel: {
+                    formatter: function (val) {
+                        return formatDate(val);
+                    },
+                    color: '#666'
+                },
+                splitLine: {
+                    show: true,
+                    lineStyle: { color: '#eee', type: 'dashed' }
+                }
+            },
+            yAxis: {
+                data: categories,
+                inverse: true, // 让T1在最上面
+                axisLabel: {
+                    show: true,
+                    color: '#333',
+                    fontWeight: 'bold'
+                }
+            },
+            series: [{
+                type: 'custom',
+                renderItem: renderItem,
+                itemStyle: {
+                    opacity: 0.85
+                },
+                encode: {
+                    x: [1, 2],
+                    y: 0
+                },
+                data: data.map(function(item, index) {
+                    return {
+                        value: [index, new Date(item.start).getTime(), new Date(item.end).getTime(), item.duration],
+                        itemStyle: {
+                            color: colors[item.type],
+                            borderRadius: 4
+                        },
+                        // 这里是核心：直接在右侧显示标签
+                        label: {
+                            show: true,
+                            position: 'right', 
+                            formatter: function(p) {
+                                // 标签格式： 12-01 ~ 12-04 (3天)
+                                var s = formatDate(item.start);
+                                var e = formatDate(item.end);
+                                return '{date|' + s + ' ~ ' + e + '}  {day|' + item.duration + '天}';
+                            },
+                            rich: {
+                                date: { color: '#666', fontSize: 12 },
+                                day: { color: colors[item.type], fontWeight: 'bold', fontSize: 12 }
+                            }
+                        }
+                    };
+                })
+            }]
+        };
+
+        option && myChart.setOption(option);
+        
+        // 响应式调整
+        window.addEventListener('resize', function() {
+            myChart.resize();
+        });
+    </script>
+</body>
+</html>
