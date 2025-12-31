@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>医院预约挂号系统 - 系统图表</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        @page {
+            size: A4;
+            margin: 1.5cm;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+            font-size: 12pt;
+            line-height: 1.6;
+            color: #000;
+            background: #fff;
+            padding: 20px;
+        }
+        .page {
+            width: 100%;
+            max-width: 21cm;
+            margin: 0 auto;
+            padding: 1cm;
+        }
+        h1 {
+            font-size: 18pt;
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 30pt;
+            padding-bottom: 10pt;
+            border-bottom: 2px solid #000;
+        }
+        h2 {
+            font-size: 14pt;
+            font-weight: bold;
+            margin-top: 30pt;
+            margin-bottom: 15pt;
+            padding-bottom: 5pt;
+            border-bottom: 1px solid #ccc;
+        }
+        h3 {
+            font-size: 12pt;
+            font-weight: bold;
+            margin-top: 20pt;
+            margin-bottom: 10pt;
+        }
+        .diagram-container {
+            margin: 20px 0;
+            padding: 15px;
+            background: #fafafa;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .diagram-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .mermaid {
+            display: flex;
+            justify-content: center;
+        }
+        .page-break {
+            page-break-before: always;
+        }
+        @media print {
+            body { padding: 0; }
+            .page { padding: 0; max-width: none; }
+            .diagram-container { break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+
+<h1>医院预约挂号系统<br>系统图表汇总</h1>
+
+<h2>一、系统架构图</h2>
+
+<h3>1.1 系统逻辑架构图（包图）</h3>
+<div class="diagram-container">
+    <div class="mermaid">
+graph TB
+    subgraph 表现层["表现层 Presentation"]
+        P1[患者端 Vue]
+        P2[医生端 Vue]
+        P3[管理员端 Vue]
+    end
+    
+    subgraph 控制层["控制层 Controller"]
+        C1[AuthController]
+        C2[DoctorController]
+        C3[AppointmentController]
+        C4[AdminController]
+        C5[ScheduleController]
+    end
+    
+    subgraph 业务层["业务层 Service"]
+        S1[AuthService]
+        S2[DoctorProfileService]
+        S3[AppointmentService]
+        S4[ScheduleService]
+        S5[NotificationService]
+    end
+    
+    subgraph 数据访问层["数据访问层 Repository"]
+        R1[UserRepository]
+        R2[DoctorRepository]
+        R3[AppointmentRepository]
+        R4[ScheduleRepository]
+        R5[PatientRepository]
+    end
+    
+    subgraph 数据层["数据层 Database"]
+        DB[(MySQL 8.0)]
+    end
+    
+    P1 & P2 & P3 -->|HTTP/REST| C1 & C2 & C3 & C4 & C5
+    C1 & C2 & C3 & C4 & C5 --> S1 & S2 & S3 & S4 & S5
+    S1 & S2 & S3 & S4 & S5 --> R1 & R2 & R3 & R4 & R5
+    R1 & R2 & R3 & R4 & R5 -->|JPA/Hibernate| DB
+    </div>
+</div>
+
+<h3>1.2 系统物理部署图</h3>
+<div class="diagram-container">
+    <div class="mermaid">
+graph TB
+    subgraph 客户端["客户端 Client"]
+        Browser[浏览器<br/>Chrome/Edge/Firefox]
+    end
+    
+    subgraph 云服务器["云服务器 152.136.13.236"]
+        subgraph Docker["Docker Compose"]
+            Frontend[Frontend Container<br/>Nginx:8081]
+            Backend[Backend Container<br/>Spring Boot:8082]
+            MySQL[MySQL Container<br/>MySQL:3307]
+        end
+    end
+    
+    Browser -->|HTTP:8081| Frontend
+    Frontend -->|API:8082| Backend
+    Backend -->|JDBC:3306| MySQL
+    </div>
+</div>
+
+</div>
+
+
+<div class="page page-break">
+
+<h2>二、类设计图</h2>
+
+<h3>2.1 核心实体类图</h3>
+<div class="diagram-container">
+    <div class="mermaid">
+classDiagram
+    class User {
+        -String id
+        -String phone
+        -String passwordHash
+        -UserRole role
+        -UserStatus status
+        -Integer loginFailures
+        -LocalDateTime createdAt
+        +login()
+        +logout()
+    }
+    
+    class Patient {
+        -String id
+        -String userId
+        -String name
+        -String idCard
+        -Gender gender
+        -LocalDate birthDate
+        -String medicalHistory
+        +getProfile()
+        +updateProfile()
+    }
+    
+    class Doctor {
+        -String id
+        -String userId
+        -String name
+        -String employeeId
+        -DoctorTitle title
+        -String departmentId
+        -String licenseNumber
+        +getSchedule()
+        +createSchedule()
+    }
+    
+    class Department {
+        -String id
+        -String name
+        -String category
+        -String description
+        -Boolean enabled
+        +getDoctors()
+    }
+    
+    class Schedule {
+        -String id
+        -String doctorId
+        -LocalDate scheduleDate
+        -Boolean isWorking
+        +getTimeSlots()
+    }
+    
+    class TimeSlot {
+        -String id
+        -String scheduleId
+        -TimePeriod period
+        -Integer totalSlots
+        -Integer remainingSlots
+        -Integer version
+        +decrementSlot()
+    }
+    
+    class Appointment {
+        -String id
+        -String appointmentNo
+        -String patientId
+        -String doctorId
+        -String timeSlotId
+        -AppointmentStatus status
+        +create()
+        +cancel()
+    }
+    
+    User "1" -- "1" Patient : has
+    User "1" -- "1" Doctor : has
+    Department "1" -- "*" Doctor : contains
+    Doctor "1" -- "*" Schedule : has
+    Schedule "1" -- "*" TimeSlot : contains
+    TimeSlot "1" -- "*" Appointment : books
+    Patient "1" -- "*" Appointment : makes
+    Doctor "1" -- "*" Appointment : receives
+    </div>
+</div>
+
+<h3>2.2 服务层类图</h3>
+<div class="diagram-container">
+    <div class="mermaid">
+classDiagram
+    class AuthService {
+        +login(LoginRequest) LoginResponse
+        +register(RegisterRequest) void
+        +logout() void
+        +validateToken(String) boolean
+    }
+    
+    class PatientService {
+        +getProfile(String) PatientDTO
+        +updateProfile(PatientDTO) void
+        +getAppointments(String) List
+    }
+    
+    class DoctorProfileService {
+        +getProfile(String) DoctorDTO
+        +searchDoctors(SearchDTO) List
+        +getTopDoctors(int) List
+    }
+    
+    class AppointmentService {
+        +createAppointment(CreateDTO) AppointmentDTO
+        +cancelAppointment(String, String) void
+        +getDetail(String) AppointmentDTO
+    }
+    
+    class ScheduleService {
+        +createSchedule(ScheduleDTO) void
+        +getSchedule(String, LocalDate) ScheduleDTO
+        +updateTimeSlot(TimeSlotDTO) void
+    }
+    
+    class NotificationService {
+        +sendNotification(NotificationDTO) void
+        +getNotifications(String) List
+        +markAsRead(String) void
+    }
+    
+    AuthService --> UserRepository
+    PatientService --> PatientRepository
+    DoctorProfileService --> DoctorRepository
+    AppointmentService --> AppointmentRepository
+    ScheduleService --> ScheduleRepository
+    NotificationService --> NotificationRepository
+    </div>
+</div>
+
+</div>
+
+
+<div class="page page-break">
+
+<h2>三、序列图</h2>
+
+<h3>3.1 用户登录序列图</h3>
+<div class="diagram-container">
+    <div class="mermaid">
+sequenceDiagram
+    participant U as 用户
+    participant F as 前端Vue
+    participant C as AuthController
+    participant S as AuthService
+    participant R as UserRepository
+    participant DB as MySQL
+    
+    U->>F: 输入手机号/密码
+    F->>F: 格式验证
+    F->>C: POST /api/auth/login
+    C->>S: login(request)
+    S->>R: findByPhone(phone)
+    R->>DB: SELECT * FROM users
+    DB-->>R: User对象
+    R-->>S: User对象
+    S->>S: 验证密码(BCrypt)
+    alt 密码正确
+        S->>S: 生成JWT Token
+        S-->>C: LoginResponse
+        C-->>F: 200 OK + Token
+        F->>F: 存储Token
+        F-->>U: 跳转首页
+    else 密码错误
+        S->>S: 增加失败次数
+        S-->>C: 抛出异常
+        C-->>F: 401 Unauthorized
+        F-->>U: 显示错误提示
+    end
+    </div>
+</div>
+
+<h3>3.2 预约挂号序列图</h3>
+<div class="diagram-container">
+    <div class="mermaid">
+sequenceDiagram
+    participant P as 患者
+    participant F as 前端Vue
+    participant C as AppointmentController
+    participant AS as AppointmentService
+    participant SS as ScheduleService
+    participant NS as NotificationService
+    participant DB as MySQL
+    
+    P->>F: 选择医生和时段
+    F->>C: GET /api/schedules/{doctorId}
+    C->>SS: getSchedule(doctorId, date)
+    SS->>DB: 查询排班和时段
+    DB-->>SS: Schedule + TimeSlots
+    SS-->>C: ScheduleDTO
+    C-->>F: 排班信息
+    F-->>P: 显示可预约时段
+    
+    P->>F: 填写信息并提交
+    F->>C: POST /api/appointments
+    C->>AS: createAppointment(dto)
+    AS->>DB: 检查号源(乐观锁)
+    alt 号源充足
+        AS->>DB: 扣减号源
+        AS->>DB: 创建预约记录
+        AS->>NS: 发送通知
+        NS->>DB: 保存通知
+        AS-->>C: AppointmentDTO
+        C-->>F: 201 Created
+        F-->>P: 显示预约成功
+    else 号源不足
+        AS-->>C: 抛出异常
+        C-->>F: 400 Bad Request
+        F-->>P: 提示号源已满
+    end
+    </div>
+</div>
+
+</div>
+
+
+<div class="page page-break">
+
+<h3>3.3 AI智能助手序列图</h3>
+<div class="diagram-container">
+    <div class="mermaid">
+sequenceDiagram
+    participant U as 用户
+    participant F as 前端Vue
+    participant C as AIChatController
+    participant S as AIChatService
+    participant AI as 通义千问API
+    
+    U->>F: 输入问题
+    F->>F: 验证非空
+    F->>C: POST /api/ai/chat
+    C->>S: chat(message)
+    S->>S: 构建系统提示词
+    S->>AI: HTTP请求(问题+上下文)
+    AI-->>S: AI回复内容
+    S-->>C: ChatResponse
+    C-->>F: 200 OK
+    F->>F: 打字机效果显示
+    F-->>U: 显示AI回复
+    </div>
+</div>
+
+<h2>四、数据库设计图</h2>
+
+<h3>4.1 数据库ER图</h3>
+<div class="diagram-container">
+    <div class="mermaid">
+erDiagram
+    users ||--o| patients : "1:1"
+    users ||--o| doctors : "1:1"
+    users ||--o| admins : "1:1"
+    users ||--o{ notifications : "1:n"
+    
+    departments ||--o{ doctors : "1:n"
+    doctors ||--o{ schedules : "1:n"
+    doctors ||--o{ doctor_leaves : "1:n"
+    doctors ||--o{ doctor_reviews : "1:n"
+    doctors ||--o{ appointments : "1:n"
+    
+    schedules ||--o{ time_slots : "1:n"
+    time_slots ||--o{ appointments : "1:n"
+    
+    patients ||--o{ appointments : "1:n"
+    patients ||--o{ doctor_reviews : "1:n"
+    
+    hospitals ||--o{ doctors : "1:n"
+    
+    users {
+        varchar id PK
+        varchar phone UK
+        varchar password_hash
+        varchar role
+        varchar status
+        datetime created_at
+    }
+    
+    patients {
+        varchar id PK
+        varchar user_id FK
+        varchar name
+        varchar id_card UK
+        varchar gender
+        date birth_date
+    }
+    
+    doctors {
+        varchar id PK
+        varchar user_id FK
+        varchar name
+        varchar employee_id UK
+        varchar title
+        varchar department_id FK
+        varchar license_number UK
+    }
+    
+    departments {
+        varchar id PK
+        varchar name UK
+        varchar category
+        boolean enabled
+    }
+    
+    schedules {
+        varchar id PK
+        varchar doctor_id FK
+        date schedule_date
+        boolean is_working
+    }
+    
+    time_slots {
+        varchar id PK
+        varchar schedule_id FK
+        varchar period
+        int total_slots
+        int remaining_slots
+        int version
+    }
+    
+    appointments {
+        varchar id PK
+        varchar appointment_no UK
+        varchar patient_id FK
+        varchar doctor_id FK
+        varchar time_slot_id FK
+        date appointment_date
+        varchar status
+    }
+    </div>
+</div>
+
+</div>
+
+
+<div class="page page-break">
+
+<h2>五、测试流程图（控制流图）</h2>
+
+<h3>5.1 用户登录模块控制流图</h3>
+<div class="diagram-container">
+    <div class="mermaid">
+flowchart TD
+    A([1. 开始]) --> B[2. 输入手机号/密码]
+    B --> C{3. 格式验证}
+    C -->|否| D[4. 提示格式错误]
+    D --> M([13. 结束])
+    C -->|是| E[5. 查询用户]
+    E --> F{6. 用户存在?}
+    F -->|否| G[7. 提示用户不存在]
+    G --> M
+    F -->|是| H[8. 验证密码]
+    H --> I{9. 密码正确?}
+    I -->|否| J[10. 提示密码错误]
+    J --> M
+    I -->|是| K[11. 生成JWT Token]
+    K --> L[12. 跳转首页]
+    L --> M
+    
+    style A fill:#90EE90
+    style M fill:#FFB6C1
+    style C fill:#87CEEB
+    style F fill:#87CEEB
+    style I fill:#87CEEB
+    </div>
+</div>
+
+<h3>5.2 预约挂号模块控制流图</h3>
+<div class="diagram-container">
+    <div class="mermaid">
+flowchart TD
+    A([1. 开始]) --> B[2. 选择医生时段]
+    B --> C{3. 检查号源}
+    C -->|无| D[4. 提示号源已满]
+    D --> K([11. 结束])
+    C -->|有| E[5. 填写就诊信息]
+    E --> F{6. 信息完整?}
+    F -->|否| G[7. 提示填写完整]
+    G --> K
+    F -->|是| H[8. 创建预约]
+    H --> I[9. 扣减号源]
+    I --> J[10. 发送通知]
+    J --> K
+    
+    style A fill:#90EE90
+    style K fill:#FFB6C1
+    style C fill:#87CEEB
+    style F fill:#87CEEB
+    </div>
+</div>
+
+<h3>5.3 AI智能助手模块控制流图</h3>
+<div class="diagram-container">
+    <div class="mermaid">
+flowchart TD
+    A([1. 开始]) --> B[2. 输入问题]
+    B --> C{3. 输入非空?}
+    C -->|否| D[4. 提示请输入]
+    D --> I([9. 结束])
+    C -->|是| E[5. 调用AI API]
+    E --> F{6. 响应成功?}
+    F -->|否| G[7. 显示网络错误]
+    G --> I
+    F -->|是| H[8. 显示AI回复]
+    H --> I
+    
+    style A fill:#90EE90
+    style I fill:#FFB6C1
+    style C fill:#87CEEB
+    style F fill:#87CEEB
+    </div>
+</div>
+
+</div>
+
+
+<div class="page page-break">
+
+<h2>六、状态图</h2>
+
+<h3>6.1 预约状态转换图</h3>
+<div class="diagram-container">
+    <div class="mermaid">
+stateDiagram-v2
+    [*] --> PENDING: 创建预约
+    PENDING --> CONFIRMED: 系统确认
+    PENDING --> CANCELLED: 患者取消
+    CONFIRMED --> COMPLETED: 就诊完成
+    CONFIRMED --> CANCELLED: 患者取消
+    COMPLETED --> [*]
+    CANCELLED --> [*]
+    
+    PENDING: 待确认
+    CONFIRMED: 已确认
+    COMPLETED: 已完成
+    CANCELLED: 已取消
+    </div>
+</div>
+
+<h3>6.2 用户状态转换图</h3>
+<div class="diagram-container">
+    <div class="mermaid">
+stateDiagram-v2
+    [*] --> PENDING: 注册(医生)
+    [*] --> ACTIVE: 注册(患者)
+    PENDING --> ACTIVE: 管理员审批通过
+    PENDING --> INACTIVE: 管理员拒绝
+    ACTIVE --> LOCKED: 登录失败5次
+    LOCKED --> ACTIVE: 30分钟后自动解锁
+    ACTIVE --> INACTIVE: 管理员禁用
+    INACTIVE --> ACTIVE: 管理员启用
+    
+    PENDING: 待审批
+    ACTIVE: 正常
+    LOCKED: 已锁定
+    INACTIVE: 已禁用
+    </div>
+</div>
+
+<h3>6.3 医生请假状态转换图</h3>
+<div class="diagram-container">
+    <div class="mermaid">
+stateDiagram-v2
+    [*] --> PENDING: 提交申请
+    PENDING --> APPROVED: 管理员批准
+    PENDING --> REJECTED: 管理员拒绝
+    APPROVED --> [*]
+    REJECTED --> [*]
+    
+    PENDING: 待审批
+    APPROVED: 已批准
+    REJECTED: 已拒绝
+    </div>
+</div>
+
+<h2>七、活动图</h2>
+
+<h3>7.1 患者预约挂号活动图</h3>
+<div class="diagram-container">
+    <div class="mermaid">
+flowchart TD
+    A([开始]) --> B[登录系统]
+    B --> C[搜索医生]
+    C --> D[选择医生]
+    D --> E[查看排班]
+    E --> F{有可用时段?}
+    F -->|否| C
+    F -->|是| G[选择时段]
+    G --> H[填写就诊信息]
+    H --> I[提交预约]
+    I --> J{预约成功?}
+    J -->|否| K[显示错误信息]
+    K --> G
+    J -->|是| L[生成预约单号]
+    L --> M[发送通知]
+    M --> N[显示预约详情]
+    N --> O([结束])
+    
+    style A fill:#90EE90
+    style O fill:#FFB6C1
+    </div>
+</div>
+
+</div>
+
+
+<div class="page page-break">
+
+<h3>7.2 医生排班管理活动图</h3>
+<div class="diagram-container">
+    <div class="mermaid">
+flowchart TD
+    A([开始]) --> B[登录医生端]
+    B --> C[进入排班管理]
+    C --> D[选择日期]
+    D --> E{已有排班?}
+    E -->|是| F[查看/修改排班]
+    E -->|否| G[创建新排班]
+    G --> H[设置时段]
+    H --> I[设置号源数量]
+    I --> J[保存排班]
+    F --> K{需要修改?}
+    K -->|是| H
+    K -->|否| L([结束])
+    J --> L
+    
+    style A fill:#90EE90
+    style L fill:#FFB6C1
+    </div>
+</div>
+
+<h3>7.3 管理员审批医生活动图</h3>
+<div class="diagram-container">
+    <div class="mermaid">
+flowchart TD
+    A([开始]) --> B[登录管理员端]
+    B --> C[查看待审批列表]
+    C --> D{有待审批?}
+    D -->|否| E([结束])
+    D -->|是| F[选择医生]
+    F --> G[查看医生资料]
+    G --> H{审批决定}
+    H -->|通过| I[更新状态为ACTIVE]
+    H -->|拒绝| J[更新状态为INACTIVE]
+    I --> K[发送通知给医生]
+    J --> L[填写拒绝原因]
+    L --> K
+    K --> C
+    
+    style A fill:#90EE90
+    style E fill:#FFB6C1
+    </div>
+</div>
+
+<h2>八、用例图</h2>
+
+<h3>8.1 系统用例图</h3>
+<div class="diagram-container">
+    <div class="mermaid">
+flowchart LR
+    subgraph 患者功能
+        UC1((注册登录))
+        UC2((搜索医生))
+        UC3((预约挂号))
+        UC4((取消预约))
+        UC5((查看预约))
+        UC6((评价医生))
+        UC7((AI问诊))
+    end
+    
+    subgraph 医生功能
+        UC8((注册登录))
+        UC9((管理排班))
+        UC10((查看预约))
+        UC11((申请请假))
+    end
+    
+    subgraph 管理员功能
+        UC12((登录))
+        UC13((审批医生))
+        UC14((管理科室))
+        UC15((系统统计))
+    end
+    
+    Patient[👤 患者]
+    Doctor[👨‍⚕️ 医生]
+    Admin[👨‍💼 管理员]
+    
+    Patient --- UC1
+    Patient --- UC2
+    Patient --- UC3
+    Patient --- UC4
+    Patient --- UC5
+    Patient --- UC6
+    Patient --- UC7
+    
+    Doctor --- UC8
+    Doctor --- UC9
+    Doctor --- UC10
+    Doctor --- UC11
+    
+    Admin --- UC12
+    Admin --- UC13
+    Admin --- UC14
+    Admin --- UC15
+    </div>
+</div>
+
+</div>
+
+<div class="page page-break">
+
+<h2>九、项目管理图</h2>
+
+<h3>9.1 系统功能结构图</h3>
+<div class="diagram-container">
+    <div class="mermaid">
+graph TD
+    A[医院预约挂号系统] --> B[患者端]
+    A --> C[医生端]
+    A --> D[管理员端]
+    A --> E[公共服务]
+    
+    B --> B1[用户注册登录]
+    B --> B2[医生搜索]
+    B --> B3[预约挂号]
+    B --> B4[预约管理]
+    B --> B5[医生评价]
+    B --> B6[AI问诊]
+    
+    C --> C1[医生注册]
+    C --> C2[排班管理]
+    C --> C3[预约查看]
+    C --> C4[请假申请]
+    
+    D --> D1[医生审批]
+    D --> D2[科室管理]
+    D --> D3[请假审批]
+    D --> D4[系统统计]
+    
+    E --> E1[GPS定位]
+    E --> E2[消息通知]
+    E --> E3[文件上传]
+    </div>
+</div>
+
+<h3>9.2 增量迭代开发模型图</h3>
+<div class="diagram-container">
+    <div class="mermaid">
+graph LR
+    subgraph 增量1["增量1: 核心功能"]
+        A1[需求分析] --> A2[设计]
+        A2 --> A3[编码]
+        A3 --> A4[测试]
+    end
+    
+    subgraph 增量2["增量2: 扩展功能"]
+        B1[需求分析] --> B2[设计]
+        B2 --> B3[编码]
+        B3 --> B4[测试]
+    end
+    
+    subgraph 增量3["增量3: 优化部署"]
+        C1[需求分析] --> C2[设计]
+        C2 --> C3[编码]
+        C3 --> C4[测试]
+    end
+    
+    A4 --> B1
+    B4 --> C1
+    C4 --> D[系统交付]
+    
+    style A1 fill:#FFE4B5
+    style A2 fill:#FFE4B5
+    style A3 fill:#FFE4B5
+    style A4 fill:#FFE4B5
+    style B1 fill:#98FB98
+    style B2 fill:#98FB98
+    style B3 fill:#98FB98
+    style B4 fill:#98FB98
+    style C1 fill:#87CEEB
+    style C2 fill:#87CEEB
+    style C3 fill:#87CEEB
+    style C4 fill:#87CEEB
+    style D fill:#DDA0DD
+    </div>
+</div>
+
+<h3>9.3 系统技术架构图</h3>
+<div class="diagram-container">
+    <div class="mermaid">
+graph TB
+    subgraph 客户端
+        Browser[浏览器]
+    end
+    
+    subgraph 前端服务
+        Nginx[Nginx:8081]
+        Vue[Vue 3 SPA]
+    end
+    
+    subgraph 后端服务
+        SpringBoot[Spring Boot:8082]
+        Security[Spring Security]
+        JPA[Spring Data JPA]
+    end
+    
+    subgraph 外部服务
+        AI[通义千问API]
+        Map[高德地图API]
+    end
+    
+    subgraph 数据层
+        MySQL[(MySQL:3306)]
+    end
+    
+    Browser --> Nginx
+    Nginx --> Vue
+    Vue --> SpringBoot
+    SpringBoot --> Security
+    SpringBoot --> JPA
+    SpringBoot --> AI
+    SpringBoot --> Map
+    JPA --> MySQL
+    
+    style Browser fill:#E6E6FA
+    style Nginx fill:#98FB98
+    style Vue fill:#98FB98
+    style SpringBoot fill:#FFB6C1
+    style Security fill:#FFB6C1
+    style JPA fill:#FFB6C1
+    style AI fill:#FFDAB9
+    style Map fill:#FFDAB9
+    style MySQL fill:#87CEEB
+    </div>
+</div>
+
+</div>
+
+<div class="page page-break">
+
+<h3>9.4 项目活动网络图（关键路径）</h3>
+<div class="diagram-container">
+    <div class="mermaid">
+graph LR
+    T1[T1 需求分析<br/>3天] --> T2[T2 系统设计<br/>4天]
+    T2 --> T3[T3 数据库设计<br/>2天]
+    T3 --> T4[T4 后端框架<br/>2天]
+    T3 --> T8[T8 前端框架<br/>2天]
+    T4 --> T5[T5 用户认证<br/>5天]
+    T5 --> T6[T6 预约挂号<br/>8天]
+    T5 --> T7[T7 排班管理<br/>6天]
+    T6 --> T12[T12 AI助手<br/>3天]
+    T8 --> T9[T9 患者端<br/>8天]
+    T8 --> T10[T10 医生端<br/>5天]
+    T8 --> T11[T11 管理员端<br/>5天]
+    T6 --> T13[T13 集成测试<br/>5天]
+    T7 --> T13
+    T9 --> T13
+    T10 --> T13
+    T11 --> T13
+    T12 --> T13
+    T13 --> T14[T14 Docker部署<br/>2天]
+    T14 --> T15[T15 系统上线<br/>1天]
+    
+    style T1 fill:#ff9999
+    style T2 fill:#ff9999
+    style T3 fill:#ff9999
+    style T4 fill:#ff9999
+    style T5 fill:#ff9999
+    style T6 fill:#ff9999
+    style T13 fill:#ff9999
+    style T14 fill:#ff9999
+    style T15 fill:#ff9999
+    style T7 fill:#90EE90
+    style T8 fill:#90EE90
+    style T9 fill:#90EE90
+    style T10 fill:#90EE90
+    style T11 fill:#90EE90
+    style T12 fill:#90EE90
+    </div>
+</div>
+<p class="center">红色：关键路径任务 | 绿色：非关键路径任务</p>
+<p class="center">关键路径：T1→T2→T3→T4→T5→T6→T13→T14→T15（总工期32天）</p>
+
+<h3>9.5 项目甘特图</h3>
+<div class="diagram-container">
+    <div class="mermaid">
+gantt
+    title 医院预约挂号系统开发进度
+    dateFormat  YYYY-MM-DD
+    section 需求与设计
+    需求分析           :crit, t1, 2025-01-01, 3d
+    系统设计           :crit, t2, after t1, 4d
+    数据库设计         :crit, t3, after t2, 2d
+    section 后端开发
+    后端框架搭建       :crit, t4, after t3, 2d
+    用户认证模块       :crit, t5, after t4, 5d
+    预约挂号模块       :crit, t6, after t5, 8d
+    排班管理模块       :t7, after t5, 6d
+    AI智能助手         :t12, after t6, 3d
+    section 前端开发
+    前端框架搭建       :t8, after t3, 2d
+    患者端界面         :t9, after t8, 8d
+    医生端界面         :t10, after t8, 5d
+    管理员端界面       :t11, after t8, 5d
+    section 测试部署
+    系统集成测试       :crit, t13, after t6 t7 t9 t10 t11 t12, 5d
+    Docker部署配置     :crit, t14, after t13, 2d
+    系统上线           :crit, milestone, t15, after t14, 1d
+    </div>
+</div>
+
+<h3>9.6 团队组织结构图</h3>
+<div class="diagram-container">
+    <div class="mermaid">
+graph TD
+    PM[👨‍💼 项目经理<br/>项目规划/进度控制]
+    
+    PM --> BE[👨‍💻 后端开发<br/>Java/Spring Boot]
+    PM --> FE[👩‍💻 前端开发<br/>Vue/JavaScript]
+    PM --> QA[🔍 测试人员<br/>功能测试/集成测试]
+    PM --> OPS[🔧 运维人员<br/>Docker/服务器]
+    
+    BE --> BE1[用户认证模块]
+    BE --> BE2[预约挂号模块]
+    BE --> BE3[排班管理模块]
+    BE --> BE4[AI助手模块]
+    
+    FE --> FE1[患者端界面]
+    FE --> FE2[医生端界面]
+    FE --> FE3[管理员端界面]
+    
+    style PM fill:#FFD700
+    style BE fill:#87CEEB
+    style FE fill:#98FB98
+    style QA fill:#DDA0DD
+    style OPS fill:#FFA07A
+    </div>
+</div>
+
+</div>
+
+<script>
+    mermaid.initialize({
+        startOnLoad: true,
+        theme: 'default',
+        securityLevel: 'loose',
+        flowchart: {
+            useMaxWidth: true,
+            htmlLabels: true,
+            curve: 'basis'
+        },
+        sequence: {
+            useMaxWidth: true,
+            showSequenceNumbers: false
+        },
+        er: {
+            useMaxWidth: true
+        },
+        gantt: {
+            useMaxWidth: true
+        }
+    });
+</script>
+
+</body>
+</html>
