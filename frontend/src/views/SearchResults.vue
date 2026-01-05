@@ -35,7 +35,38 @@
           </div>
           <div class="divider"></div>
           <div class="input-group">
-            <input type="text" placeholder="地点" v-model="searchLocation" class="input-focus" />
+            <select v-model="selectedRegion" @change="handleRegionChange" class="input-focus" style="border: none; outline: none; background: transparent; width: 100%;">
+              <option value="">选择地区</option>
+              <option value="华北">华北</option>
+              <option value="华东">华东</option>
+              <option value="华南">华南</option>
+              <option value="华中">华中</option>
+              <option value="西南">西南</option>
+              <option value="西北">西北</option>
+              <option value="东北">东北</option>
+            </select>
+          </div>
+          <div class="divider"></div>
+          <div class="input-group">
+            <select v-model="selectedDistrict" @change="handleDistrictChange" class="input-focus" style="border: none; outline: none; background: transparent; width: 100%;">
+              <option value="">选择区域</option>
+              <option value="和平区">和平区</option>
+              <option value="河东区">河东区</option>
+              <option value="河西区">河西区</option>
+              <option value="南开区">南开区</option>
+              <option value="河北区">河北区</option>
+              <option value="红桥区">红桥区</option>
+              <option value="东丽区">东丽区</option>
+              <option value="西青区">西青区</option>
+              <option value="津南区">津南区</option>
+              <option value="北辰区">北辰区</option>
+              <option value="武清区">武清区</option>
+              <option value="宝坻区">宝坻区</option>
+              <option value="滨海新区">滨海新区</option>
+              <option value="宁河区">宁河区</option>
+              <option value="静海区">静海区</option>
+              <option value="蓟州区">蓟州区</option>
+            </select>
           </div>
           <button class="search-btn btn-hover ripple" @click="handleSearch">
             <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="3" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -43,6 +74,13 @@
         </div>
       </div>
       <div class="nav-right">
+        <button class="back-btn" @click="handleBack" title="返回">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          返回
+        </button>
         <template v-if="userStore.isLoggedIn">
           <span class="user-greeting">Hi, {{ userStore.userInfo?.username }}</span>
           <a href="#" class="nav-link link-underline" @click.prevent="userStore.logout()">退出</a>
@@ -282,11 +320,6 @@
               <svg class="pin-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
               <span class="address-text">{{ selectedDoctor.hospitalName || '暂无地址信息' }}</span>
             </div>
-            
-            <div class="network-row">
-              <svg class="shield-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-              <a href="#">查看是否在医保范围内</a>
-            </div>
           </div>
         </div>
 
@@ -317,11 +350,6 @@
               </div>
             </div>
           </div>
-
-          <div class="fake-select">
-            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-            <span>查看是否在医保范围内</span>
-          </div>
         </div>
 
         <div class="modal-availability">
@@ -331,20 +359,23 @@
           <div class="time-slots-grid" v-if="selectedDateSlots.length > 0">
             <button 
               class="modal-time-btn" 
+              :class="{ 
+                'disabled': !slot.isAvailable,
+                'low-slots': slot.isAvailable && slot.remainingSlots === 1
+              }"
               v-for="(slot, index) in selectedDateSlots" 
               :key="index"
-              @click="confirmBooking(slot)"
+              @click="slot.isAvailable ? confirmBooking(slot) : null"
+              :disabled="!slot.isAvailable"
             >
-              {{ slot.displayTime }}
+              <span class="time-text">{{ slot.displayTime }}</span>
+              <span v-if="slot.isAvailable" class="slots-count">{{ slot.remainingSlots }}/{{ slot.totalSlots }}</span>
+              <span v-else class="slots-status">已满</span>
             </button>
           </div>
           <div v-else class="no-slots-msg">
             该日期暂无号源，请尝试其他日期。
           </div>
-        </div>
-
-        <div class="modal-footer">
-          <button class="btn-more-avail">更多可预约时间</button>
         </div>
 
       </div>
@@ -368,6 +399,14 @@ const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
 
+const handleBack = () => {
+  if (window.history.length > 1) {
+    router.back();
+  } else {
+    router.push('/landing');
+  }
+};
+
 // --- Constants ---
 const DAYS_TO_SHOW = 12;
 const AMAP_KEY = '7621055765e5ea433a56367bccc10c7e'; // 高德Web端JS API Key
@@ -375,6 +414,9 @@ const AMAP_KEY = '7621055765e5ea433a56367bccc10c7e'; // 高德Web端JS API Key
 // --- 基础状态 ---
 const searchCondition = ref('');
 const searchLocation = ref('');
+const selectedRegion = ref(''); // 选择的地区
+const selectedCity = ref('天津市'); // 默认城市为天津市
+const selectedDistrict = ref(''); // 选择的区
 const doctors = ref([]);
 const errorMessage = ref('');
 const dayOffset = ref(0); // For date pagination
@@ -473,7 +515,7 @@ const createMap = () => {
   });
 };
 
-// 添加医生位置标记
+// 添加医生位置标记（使用真实的医院坐标）
 const addDoctorMarkers = () => {
   if (!mapInstance || !window.AMap) return;
   
@@ -490,58 +532,83 @@ const addDoctorMarkers = () => {
     // 使用后端返回的医院位置，如果没有则使用默认位置
     const hospitalKey = doc.hospitalId || 'default';
     if (!hospitalGroups[hospitalKey]) {
+      // 优先使用医生DTO中的医院坐标
+      const hospitalLng = doc.hospitalLongitude;
+      const hospitalLat = doc.hospitalLatitude;
+      
       hospitalGroups[hospitalKey] = {
-        center: [
-          doc.hospitalLongitude || DEFAULT_CENTER[0],
-          doc.hospitalLatitude || DEFAULT_CENTER[1]
-        ],
-        name: doc.hospitalName || '天津医科大学总医院',
+        center: hospitalLng && hospitalLat 
+          ? [hospitalLng, hospitalLat] 
+          : DEFAULT_CENTER,
+        name: doc.hospitalName || '未知医院',
+        address: doc.hospitalAddress || '',
+        city: doc.hospitalCity || '',
+        region: doc.hospitalRegion || '',
         doctors: []
       };
     }
     hospitalGroups[hospitalKey].doctors.push({ ...doc, originalIndex: index });
   });
   
-  // 为每个医生添加标记
-  Object.values(hospitalGroups).forEach(group => {
-    group.doctors.forEach((doc, groupIndex) => {
-      // 在医院周围小范围偏移，模拟不同科室位置
-      const offset = 0.0005; // 约50米偏移
-      const angle = (groupIndex * 45) * Math.PI / 180;
-      const lng = group.center[0] + Math.cos(angle) * offset * (groupIndex % 3 + 1);
-      const lat = group.center[1] + Math.sin(angle) * offset * (groupIndex % 3 + 1);
-      
-      const marker = new window.AMap.Marker({
-        position: [lng, lat],
-        content: `<div class="custom-marker">${doc.originalIndex + 1}</div>`,
-        offset: new window.AMap.Pixel(-15, -15)
-      });
-      
-      // 点击标记显示医生信息
-      marker.on('click', () => {
-        const infoWindow = new window.AMap.InfoWindow({
-          content: `
-            <div style="padding: 10px; min-width: 150px;">
-              <h4 style="margin: 0 0 5px; font-size: 14px;">${doc.name}</h4>
-              <p style="margin: 0; font-size: 12px; color: #666;">${doc.title || ''}</p>
-              <p style="margin: 5px 0 0; font-size: 12px; color: #999;">${doc.departmentName || ''}</p>
-              <p style="margin: 5px 0 0; font-size: 12px; color: #333;">📍 ${group.name}</p>
-            </div>
-          `,
-          offset: new window.AMap.Pixel(0, -20)
-        });
-        infoWindow.open(mapInstance, marker.getPosition());
-      });
-      
-      markers.push(marker);
-      mapInstance.add(marker);
+  // 为每个医院添加一个标记（显示医院位置）
+  Object.values(hospitalGroups).forEach((group, groupIndex) => {
+    // 只在医院位置添加一个标记，而不是为每个医生添加
+    const marker = new window.AMap.Marker({
+      position: group.center,
+      content: `<div class="custom-marker" style="background: linear-gradient(135deg, #FFD300 0%, #FF9800 100%);">🏥</div>`,
+      offset: new window.AMap.Pixel(-15, -15),
+      title: group.name
     });
+    
+    // 点击标记显示医院信息和该医院的医生列表
+    marker.on('click', () => {
+      const doctorsList = group.doctors.map(doc => 
+        `<div style="padding: 5px 0; border-bottom: 1px solid #eee;">
+          <strong>${doc.name}</strong> - ${doc.title || ''} - ${doc.departmentName || ''}
+        </div>`
+      ).join('');
+      
+      const infoWindow = new window.AMap.InfoWindow({
+        content: `
+          <div style="padding: 10px; min-width: 200px; max-height: 300px; overflow-y: auto;">
+            <h4 style="margin: 0 0 8px; font-size: 16px; color: #2A2A2A;">${group.name}</h4>
+            <p style="margin: 0 0 8px; font-size: 12px; color: #666;">${group.address || ''}</p>
+            ${group.city ? `<p style="margin: 0 0 8px; font-size: 12px; color: #999;">📍 ${group.city}${group.region ? ' · ' + group.region : ''}</p>` : ''}
+            <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee;">
+              <p style="margin: 0 0 5px; font-size: 12px; font-weight: bold; color: #333;">该医院医生 (${group.doctors.length}位):</p>
+              ${doctorsList}
+            </div>
+          </div>
+        `,
+        offset: new window.AMap.Pixel(0, -20)
+      });
+      infoWindow.open(mapInstance, marker.getPosition());
+    });
+    
+    markers.push(marker);
+    mapInstance.add(marker);
   });
   
   // 自动调整视野以包含所有标记
   if (markers.length > 0) {
     mapInstance.setFitView(markers, false, [50, 50, 50, 50]);
+  } else {
+    // 如果没有标记，使用默认中心点
+    mapInstance.setCenter(DEFAULT_CENTER);
+    mapInstance.setZoom(15);
   }
+};
+
+// 地区选择变化处理
+const handleRegionChange = () => {
+  // 地区变化时自动搜索
+  handleSearch();
+};
+
+// 区选择变化处理
+const handleDistrictChange = () => {
+  // 区变化时自动搜索
+  handleSearch();
 };
 
 // 监听医生数据变化，更新地图标记
@@ -712,7 +779,7 @@ const selectSearchSuggestion = (suggestion) => {
 };
 
 onMounted(async () => {
-  const { specialty, keyword, location, departmentId, medicalItemId, minRating, priorityDoctorId } = route.query;
+  const { specialty, keyword, location, district, departmentId, medicalItemId, minRating, priorityDoctorId } = route.query;
   preselectedMedicalItemId.value = medicalItemId;
 
   const params = {};
@@ -725,12 +792,19 @@ onMounted(async () => {
   // 支持地区搜索
   if (location) {
     searchLocation.value = location;
-    // 地区作为关键词的一部分进行搜索
-    if (params.keyword) {
-      params.keyword = params.keyword + ' ' + location;
-    } else {
-      params.keyword = location;
-    }
+  }
+  // 支持区搜索
+  if (district) {
+    selectedDistrict.value = district;
+    params.district = district;
+  }
+  // 只有在有明确搜索条件时才设置默认城市，如果只有priorityDoctorId或只有minRating，不设置城市限制
+  const hasOtherSearchConditions = searchKeyword || district || location || departmentId || medicalItemId;
+  // 如果只有minRating或只有priorityDoctorId，不设置城市限制，以获取所有医生
+  const onlyMinRating = minRating && !hasOtherSearchConditions && !priorityDoctorId;
+  const onlyPriorityDoctor = priorityDoctorId && !hasOtherSearchConditions && !minRating;
+  if (hasOtherSearchConditions && !onlyMinRating && !onlyPriorityDoctor) {
+    params.city = '天津市';
   }
   if (departmentId) {
     params.departmentId = departmentId;
@@ -748,8 +822,20 @@ onMounted(async () => {
     params.priorityDoctorId = priorityDoctorId;
   }
 
-  // 如果有任何搜索条件（包括 medicalItemId），使用 fetchDoctors
-  if (Object.keys(params).length > 0) {
+  // 如果只有priorityDoctorId或只有minRating，使用getAllDoctors获取所有医生（不限制城市）
+  // onlyPriorityDoctor 和 onlyMinRating 已在上面定义
+  if (onlyPriorityDoctor) {
+    // 将priorityDoctorId和minRating保存到params中，供processDoctorsData使用
+    const allParams = { priorityDoctorId };
+    if (minRating) {
+      allParams.minRating = minRating;
+    }
+    fetchAllDoctorsWithPriority(allParams);
+  } else if (onlyMinRating) {
+    // 只有minRating时，获取所有医生，然后在前端筛选
+    const allParams = { minRating };
+    fetchAllDoctorsWithPriority(allParams);
+  } else if (Object.keys(params).length > 0) {
     fetchDoctors(params);
   } else {
     fetchAllDoctors();
@@ -813,27 +899,7 @@ const selectedDateDisplay = ref('');
 const selectedDateForBooking = ref(''); // 用于传递给预约页面的日期
 
 const openBookingModal = (doctor, dayObj = null) => {
-  // 检查是否登录
-  if (!userStore.isLoggedIn) {
-    ElMessage.warning('请先登录后再进行预约');
-    // 保存当前预约信息到 localStorage，登录后可以恢复
-    const bookingData = {
-      doctorId: doctor.id,
-      doctorName: doctor.name,
-      doctorTitle: doctor.title,
-      departmentName: doctor.departmentName,
-      date: dayObj ? dayObj.fullDate : null,
-      medicalItemId: preselectedMedicalItemId.value || selectedMedicalItem.value?.id || null
-    };
-    localStorage.setItem('pendingBooking', JSON.stringify(bookingData));
-    // 跳转到登录页
-    router.push({
-      path: '/login',
-      query: { redirect: route.fullPath }
-    });
-    return;
-  }
-  
+  // 允许未登录用户打开预约模态框，选择时间后再提示登录
   selectedDoctor.value = doctor;
   
   if (dayObj) {
@@ -859,6 +925,9 @@ const openBookingModal = (doctor, dayObj = null) => {
 };
 
 // 生成每半小时的时间段
+// 每个时间点（30分钟）固定2个号源
+const SLOTS_PER_HALF_HOUR = 2;
+
 const generateHalfHourSlots = (doctor, dateString) => {
   const rawSlots = getSlotsForDate(doctor, dateString);
   if (!rawSlots || rawSlots.length === 0) return [];
@@ -888,17 +957,36 @@ const generateHalfHourSlots = (doctor, dateString) => {
     const startMinutes = startHour * 60 + startMin;
     const endMinutes = endHour * 60 + endMin;
     
+    // 计算该时间段有多少个30分钟时间段
+    const halfHourCount = Math.floor((endMinutes - startMinutes) / 30);
+    
+    // 计算每个时间点应该有多少剩余号源
+    // 如果后端剩余号源为0，所有时间点都不可用
+    // 否则，平均分配剩余号源到各个时间点
+    let remainingForPeriod = slot.remainingSlots || 0;
+    const slotsPerTimeSlot = Math.max(0, Math.floor(remainingForPeriod / halfHourCount));
+    const extraSlots = remainingForPeriod % halfHourCount; // 余数分配给前面的时间点
+    
     // 每30分钟生成一个时间槽
-    for (let mins = startMinutes; mins < endMinutes; mins += 30) {
+    for (let i = 0; i < halfHourCount; i++) {
+      const mins = startMinutes + i * 30;
       const hour = Math.floor(mins / 60);
       const minute = mins % 60;
       const displayTime = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+      
+      // 每个时间点的剩余号源 = 基础号源数 + 是否有余数
+      // 前面几个时间点可能会多分配1个号源（如果有余数）
+      const timeSlotRemaining = i < extraSlots 
+        ? Math.min(SLOTS_PER_HALF_HOUR, slotsPerTimeSlot + 1)
+        : Math.min(SLOTS_PER_HALF_HOUR, slotsPerTimeSlot);
       
       halfHourSlots.push({
         displayTime,
         originalSlotId: slot.id,
         period: slot.period,
-        remainingSlots: slot.remainingSlots
+        remainingSlots: timeSlotRemaining,
+        totalSlots: SLOTS_PER_HALF_HOUR,
+        isAvailable: timeSlotRemaining > 0
       });
     }
   }
@@ -912,11 +1000,10 @@ const closeModal = () => {
 };
 
 const confirmBooking = (slot) => {
-  // 检查是否登录
+  // 检查是否登录 - 在选择时间后才检查登录状态
   if (!userStore.isLoggedIn) {
     closeModal();
-    ElMessage.warning('请先登录后再进行预约');
-    // 保存当前预约信息到 localStorage，登录后可以恢复
+    // 保存完整的预约信息到 localStorage，包括选择的医生、日期和时间
     const bookingData = {
       doctorId: selectedDoctor.value.id,
       doctorName: selectedDoctor.value.name,
@@ -926,14 +1013,12 @@ const confirmBooking = (slot) => {
       time: slot.displayTime,
       slotId: slot.originalSlotId,
       period: slot.period,
-      medicalItemId: selectedMedicalItem.value?.id || preselectedMedicalItemId.value || null
+      medicalItemId: selectedMedicalItem.value?.id || preselectedMedicalItemId.value || null,
+      returnPath: '/search-results' // 登录后返回的路径
     };
     localStorage.setItem('pendingBooking', JSON.stringify(bookingData));
-    // 跳转到登录页，并保存当前路由以便登录后返回
-    router.push({
-      path: '/login',
-      query: { redirect: route.fullPath }
-    });
+    // 跳转到登录页，登录后会自动恢复预约信息
+    router.push('/login');
     return;
   }
   
@@ -1058,6 +1143,21 @@ const handleSearch = () => {
     params.medicalItemId = preselectedMedicalItemId.value || selectedMedicalItem.value?.id;
   }
   
+  // 添加地区筛选
+  if (selectedRegion.value) {
+    params.region = selectedRegion.value;
+  }
+  
+  // 添加城市筛选（默认天津市）
+  if (selectedCity.value) {
+    params.city = selectedCity.value;
+  }
+  
+  // 添加区筛选
+  if (selectedDistrict.value) {
+    params.district = selectedDistrict.value;
+  }
+  
   // 添加科室筛选
   if (selectedDepartmentIds.value.length > 0) {
     // 如果有多个科室，使用第一个（后端当前只支持单个科室筛选）
@@ -1093,11 +1193,33 @@ const fetchAllDoctors = async () => {
   } catch (e) { console.error(e); errorMessage.value = '加载失败'; }
 };
 
+// 获取所有医生并处理优先医生
+const fetchAllDoctorsWithPriority = async (params) => {
+  try {
+    // 增大size以获取更多医生，确保优先医生在结果中
+    const data = await getAllDoctors({ size: 100 });
+    // request.js 响应拦截器已经解析了数据
+    processDoctorsData(data?.content || [], params);
+  } catch (e) { 
+    console.error(e); 
+    errorMessage.value = '加载失败'; 
+  }
+};
+
 const fetchDoctors = async (params) => {
   try {
     console.log('fetchDoctors called with params:', params); // 调试信息
     errorMessage.value = '';
-    const data = await searchDoctors(params);
+    
+    // priorityDoctorId只用于前端排序，不应该传递给后端API
+    const { priorityDoctorId, minRating, ...searchParams } = params;
+    
+    // 如果有priorityDoctorId，增大size参数以获取更多医生
+    if (priorityDoctorId && !searchParams.size) {
+      searchParams.size = 100; // 增大size以获取更多医生
+    }
+    
+    const data = await searchDoctors(searchParams);
     console.log('Search doctors response:', data); // 调试信息
     // request.js 响应拦截器已经解析了数据
     const doctorsList = data?.content || data || [];
@@ -1108,10 +1230,10 @@ const fetchDoctors = async (params) => {
   }
 };
 
-const processDoctorsData = async (fetchedDoctors) => {
-  // 从路由参数获取筛选条件
-  const minRating = route.query.minRating ? parseFloat(route.query.minRating) : null;
-  const priorityDoctorId = route.query.priorityDoctorId;
+const processDoctorsData = async (fetchedDoctors, extraParams = {}) => {
+  // 从路由参数或额外参数获取筛选条件
+  const minRating = route.query.minRating ? parseFloat(route.query.minRating) : (extraParams.minRating ? parseFloat(extraParams.minRating) : null);
+  const priorityDoctorId = route.query.priorityDoctorId || extraParams.priorityDoctorId;
   
   let processedDoctors = fetchedDoctors.map(doc => ({ ...doc, availabilityMap: {} }));
   
@@ -1123,7 +1245,7 @@ const processDoctorsData = async (fetchedDoctors) => {
     });
   }
   
-  // 优先显示指定医生
+  // 优先显示指定医生（只排序，不添加新医生，保持数量一致）
   if (priorityDoctorId) {
     const priorityDoctor = processedDoctors.find(doc => doc.id === priorityDoctorId);
     if (priorityDoctor) {
@@ -1131,6 +1253,8 @@ const processDoctorsData = async (fetchedDoctors) => {
       processedDoctors = processedDoctors.filter(doc => doc.id !== priorityDoctorId);
       processedDoctors.unshift(priorityDoctor);
     }
+    // 如果优先医生不在搜索结果中，不添加（保持搜索结果的一致性）
+    // 这样可以确保无论点击哪个医生，显示的医生总数都一致
   }
   
   doctors.value = processedDoctors;
@@ -1236,6 +1360,33 @@ const fetchSlotsForVisibleDays = async (doctor) => {
 .search-btn:hover { background: #FFC000; }
 .search-btn:active { background: #FFB000; }
 .nav-right { display: flex; gap: 16px; align-items: center; }
+.back-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1px solid #DDD;
+  background: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #2A2A2A;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+  
+  &:hover {
+    background: #F5F5F5;
+    border-color: #999;
+  }
+  
+  &:active {
+    transform: scale(0.98);
+  }
+  
+  svg {
+    display: block;
+  }
+}
 .nav-link { text-decoration: none; color: #2A2A2A; font-weight: 600; font-size: 14px; }
 .btn-signup { padding: 8px 16px; background: #FFD300; border: none; border-radius: 4px; font-weight: 700; cursor: pointer; text-decoration: none; color: #000; font-size: 14px; }
 
@@ -1538,8 +1689,33 @@ const fetchSlotsForVisibleDays = async (doctor) => {
 .modal-availability h4 { font-size: 16px; font-weight: 600; margin: 0 0 8px 0; color: #2A2A2A; }
 .date-label { font-size: 14px; font-weight: 600; color: #2A2A2A; margin-bottom: 12px; }
 .time-slots-grid { display: flex; flex-wrap: wrap; gap: 10px; }
-.modal-time-btn { background-color: #FFD300; border: none; border-radius: 4px; padding: 10px 16px; font-size: 14px; font-weight: 600; color: #2A2A2A; cursor: pointer; transition: background 0.2s; min-width: 80px; text-align: center; }
-.modal-time-btn:hover { background-color: #F4CA00; }
+.modal-time-btn { 
+  background-color: #FFD300; 
+  border: none; 
+  border-radius: 4px; 
+  padding: 10px 16px; 
+  font-size: 14px; 
+  font-weight: 600; 
+  color: #2A2A2A; 
+  cursor: pointer; 
+  transition: all 0.2s; 
+  min-width: 90px; 
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.modal-time-btn:hover:not(:disabled) { background-color: #F4CA00; }
+.modal-time-btn.disabled { 
+  background-color: #F5F5F5; 
+  color: #999; 
+  cursor: not-allowed; 
+}
+.modal-time-btn.low-slots { background-color: #FFF9C4; }
+.modal-time-btn .time-text { font-weight: 600; }
+.modal-time-btn .slots-count { font-size: 12px; font-weight: 400; color: #666; }
+.modal-time-btn .slots-status { font-size: 12px; font-weight: 400; color: #999; }
 .no-slots-msg { font-size: 14px; color: #666; padding: 10px 0; }
 
 .modal-footer { padding: 16px 32px 32px 32px; border-top: 1px solid #F0F0F0; }

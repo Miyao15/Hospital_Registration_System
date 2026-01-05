@@ -29,7 +29,7 @@
           </button>
           <button 
             :class="['role-btn btn-hover', { active: role === 'doctor' }]" 
-            @click="role = 'doctor'">
+            @click="role = 'doctor'; loadDepartments();">
             我是医生
           </button>
           <button 
@@ -99,7 +99,50 @@
             </div>
             <div class="form-group">
               <label for="doctor-department">科室</label>
-              <input type="text" id="doctor-department" v-model="doctorForm.departmentId" placeholder="请输入科室ID" required>
+              <el-select
+                id="doctor-department"
+                v-model="doctorForm.departmentId"
+                filterable
+                remote
+                :remote-method="searchDepartments"
+                :loading="departmentLoading"
+                placeholder="请输入科室名称搜索"
+                style="width: 100%"
+                @focus="loadDepartments"
+              >
+                <el-option
+                  v-for="dept in departments"
+                  :key="dept.id"
+                  :label="dept.name"
+                  :value="dept.id"
+                >
+                  <span>{{ dept.name }}</span>
+                  <span style="color: #8492a6; font-size: 13px; margin-left: 10px;">{{ dept.category }}</span>
+                </el-option>
+              </el-select>
+            </div>
+            <div class="form-group">
+              <label for="doctor-hospital">所属医院</label>
+              <el-select
+                id="doctor-hospital"
+                v-model="doctorForm.hospitalId"
+                filterable
+                :loading="hospitalLoading"
+                placeholder="请选择所属医院"
+                style="width: 100%"
+                @focus="loadHospitals"
+                required
+              >
+                <el-option
+                  v-for="hospital in hospitals"
+                  :key="hospital.id"
+                  :label="hospital.name"
+                  :value="hospital.id"
+                >
+                  <span>{{ hospital.name }}</span>
+                  <span style="color: #8492a6; font-size: 13px; margin-left: 10px;">{{ hospital.city }}</span>
+                </el-option>
+              </el-select>
             </div>
             <div class="form-group">
               <label for="doctor-title">职称</label>
@@ -163,15 +206,26 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue';
+import { ref, reactive, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/user';
 import { ElMessage } from 'element-plus';
+import { getAllDepartments } from '@/api/department';
+import { getAllHospitals } from '@/api/hospital';
 
 const router = useRouter();
 const userStore = useUserStore();
 const role = ref('patient'); // 'patient' or 'doctor' or 'admin'
 const loading = ref(false);
+
+// 科室相关
+const departments = ref([]);
+const departmentLoading = ref(false);
+const allDepartments = ref([]); // 存储所有科室用于搜索
+
+// 医院相关
+const hospitals = ref([]);
+const hospitalLoading = ref(false);
 
 const patientForm = reactive({
   phone: '',
@@ -189,6 +243,7 @@ const doctorForm = reactive({
   employeeId: '',
   title: '',
   departmentId: '',
+  hospitalId: '',
   licenseNumber: '',
   specialty: 'General', // Add default for fields not in form
   introduction: 'N/A',   // Add default for fields not in form
@@ -204,6 +259,66 @@ const adminForm = reactive({
 
 const goHome = () => router.push('/');
 const goLogin = () => router.push('/login');
+
+// 加载所有科室
+const loadDepartments = async () => {
+  if (allDepartments.value.length > 0) {
+    departments.value = allDepartments.value;
+    return;
+  }
+  
+  departmentLoading.value = true;
+  try {
+    const data = await getAllDepartments();
+    allDepartments.value = Array.isArray(data) ? data : [];
+    departments.value = allDepartments.value;
+  } catch (error) {
+    console.error('加载科室列表失败:', error);
+    ElMessage.error('加载科室列表失败，请刷新重试');
+  } finally {
+    departmentLoading.value = false;
+  }
+};
+
+// 加载所有医院
+const loadHospitals = async () => {
+  if (hospitals.value.length > 0) {
+    return;
+  }
+  
+  hospitalLoading.value = true;
+  try {
+    const data = await getAllHospitals();
+    hospitals.value = Array.isArray(data) ? data : [];
+  } catch (error) {
+    console.error('加载医院列表失败:', error);
+    ElMessage.error('加载医院列表失败，请刷新重试');
+  } finally {
+    hospitalLoading.value = false;
+  }
+};
+
+// 搜索科室
+const searchDepartments = (query) => {
+  if (!query) {
+    departments.value = allDepartments.value;
+    return;
+  }
+  
+  const keyword = query.toLowerCase();
+  departments.value = allDepartments.value.filter(dept => 
+    dept.name.toLowerCase().includes(keyword) ||
+    (dept.category && dept.category.toLowerCase().includes(keyword))
+  );
+};
+
+// 组件挂载时加载科室列表和医院列表（如果当前是医生注册）
+onMounted(() => {
+  if (role.value === 'doctor') {
+    loadDepartments();
+    loadHospitals();
+  }
+});
 
 const handleRegister = async () => {
   loading.value = true;
@@ -267,6 +382,34 @@ const handleRegister = async () => {
 .form-group label { font-size: 13px; font-weight: 600; color: #333; margin-bottom: 6px; }
 .form-group input, .form-group select { width: 100%; padding: 12px; font-size: 14px; border: 1px solid #E8E8E8; border-radius: 4px; background-color: #FAFAFA; box-sizing: border-box; }
 .form-group input:focus, .form-group select:focus { outline: none; border-color: #FFD300; background-color: #fff; box-shadow: 0 0 0 2px rgba(255, 211, 0, 0.3); }
+
+/* Element Plus Select 样式覆盖 */
+.form-group :deep(.el-select) {
+  width: 100%;
+}
+
+.form-group :deep(.el-input__wrapper) {
+  background-color: #FAFAFA;
+  border: 1px solid #E8E8E8;
+  border-radius: 4px;
+  box-shadow: none;
+  padding: 0 12px;
+}
+
+.form-group :deep(.el-input__wrapper:hover) {
+  border-color: #FFD300;
+}
+
+.form-group :deep(.el-input.is-focus .el-input__wrapper) {
+  border-color: #FFD300;
+  background-color: #fff;
+  box-shadow: 0 0 0 2px rgba(255, 211, 0, 0.3);
+}
+
+.form-group :deep(.el-input__inner) {
+  font-size: 14px;
+  color: #2A2A2A;
+}
 
 .gender-options { display: flex; align-items: center; gap: 24px; height: 45px; }
 .gender-options label { display: flex; align-items: center; gap: 6px; font-weight: normal; }

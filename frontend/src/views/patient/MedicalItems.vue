@@ -110,16 +110,17 @@ const handleBook = (item) => {
 .medical-items-section {
   background: #fff;
   border-radius: 12px;
-  padding: 24px;
+  padding: 20px;
   border: 1px solid #E5E5E5;
+  max-width: 100%;
 }
 
 .section-header {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .section-header h2 {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
   color: #2A2A2A;
   margin: 0 0 6px 0;
@@ -166,8 +167,8 @@ const handleBook = (item) => {
 .item-card {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 20px;
+  gap: 14px;
+  padding: 16px;
   background: #fff;
   border: 1px solid #E5E5E5;
   border-radius: 8px;
@@ -183,8 +184,8 @@ const handleBook = (item) => {
 
 /* Icon Wrapper - 米黄色背景 */
 .item-icon-wrapper {
-  width: 56px;
-  height: 56px;
+  width: 50px;
+  height: 50px;
   background-color: #FFF9E5;
   border-radius: 50%;
   display: flex;
@@ -194,8 +195,8 @@ const handleBook = (item) => {
 }
 
 .item-icon {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   color: #2A2A2A;
 }
 
@@ -206,16 +207,16 @@ const handleBook = (item) => {
 }
 
 .item-name {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   color: #2A2A2A;
-  margin: 0 0 6px 0;
+  margin: 0 0 4px 0;
 }
 
 .item-desc {
-  font-size: 14px;
+  font-size: 13px;
   color: #666;
-  margin: 0 0 10px 0;
+  margin: 0 0 8px 0;
   line-height: 1.4;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -253,10 +254,10 @@ const handleBook = (item) => {
   gap: 6px;
   background-color: #FFD300;
   border: none;
-  padding: 10px 20px;
+  padding: 8px 16px;
   border-radius: 6px;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 13px;
   color: #2A2A2A;
   cursor: pointer;
   transition: background-color 0.2s;

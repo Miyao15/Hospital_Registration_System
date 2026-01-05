@@ -56,18 +56,55 @@
             </div>
           </div>
           <nav class="main-nav">
-            <a href="#" class="nav-link">
-              浏览
-              <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </a>
-            <a href="#" class="nav-link">帮助中心</a>
-            <a href="#" class="nav-link">医疗机构入驻</a>
-            <div class="nav-divider"></div>
-            <a href="#" class="nav-link login-link" @click.prevent="goLogin">登录</a>
-            <button class="btn-signup" @click="goRegister">
-              <span>注册</span>
-              <div class="btn-ripple"></div>
-            </button>
+            <!-- 登录前显示登录/注册按钮 -->
+            <template v-if="!isLoggedIn">
+              <a href="#" class="nav-link login-link" @click.prevent="goLogin">登录</a>
+              <button class="btn-signup" @click="goRegister">
+                <span>注册</span>
+                <div class="btn-ripple"></div>
+              </button>
+            </template>
+            <!-- 登录后显示用户信息和菜单 -->
+            <template v-else>
+              <div class="user-menu-wrapper">
+                <div class="user-info-display" @click="toggleUserMenu">
+                  <div class="user-avatar">
+                    <img v-if="userInfo?.avatarUrl" :src="userInfo.avatarUrl" alt="头像" />
+                    <span v-else class="avatar-placeholder">{{ avatarPlaceholderText }}</span>
+                  </div>
+                  <span class="user-role-badge" v-if="userStore.userRole === 'DOCTOR'">医生</span>
+                  <span class="user-role-badge patient" v-else-if="userStore.userRole === 'PATIENT'">患者</span>
+                  <span class="user-role-badge admin" v-else-if="userStore.userRole === 'ADMIN'">管理员</span>
+                </div>
+                <div class="user-dropdown" v-if="showUserMenu" @click.stop>
+                  <!-- 患者菜单 -->
+                  <template v-if="userStore.userRole === 'PATIENT'">
+                    <a href="#" @click.prevent="goToHome">首页</a>
+                    <a href="#" @click.prevent="goToMyHome">我的主页</a>
+                    <a href="#" @click.prevent="goToProfile">个人信息</a>
+                    <a href="#" @click.prevent="goToAppointments">我的预约</a>
+                    <a href="#" @click.prevent="goToSearch">查找医生</a>
+                    <a href="#" @click.prevent="goToRecords">就诊记录</a>
+                    <a href="#" @click.prevent="goToSettings">设置</a>
+                  </template>
+                  <!-- 医生菜单 -->
+                  <template v-else-if="userStore.userRole === 'DOCTOR'">
+                    <a href="#" @click.prevent="goToHome">首页</a>
+                    <a href="#" @click.prevent="goToWorkbench">工作台</a>
+                    <a href="#" @click.prevent="goToProfile">个人资料</a>
+                    <a href="#" @click.prevent="goToSettings">设置</a>
+                  </template>
+                  <!-- 管理员菜单（如果需要） -->
+                  <template v-else-if="userStore.userRole === 'ADMIN'">
+                    <a href="#" @click.prevent="goToHome">首页</a>
+                    <a href="#" @click.prevent="goToAdminHome">管理后台</a>
+                    <a href="#" @click.prevent="goToSettings">设置</a>
+                  </template>
+                  <div class="dropdown-divider"></div>
+                  <a href="#" @click.prevent="handleLogout">退出登录</a>
+                </div>
+              </div>
+            </template>
           </nav>
         </div>
       </header>
@@ -94,8 +131,8 @@
           </div>
           
           <div class="hero-image-box">
-            <div class="image-glow"></div>
-            <img src="@/assets/header-illustration.png" alt="医生插图" class="blended-image" />
+            <div class="hero-image-overlay"></div>
+            <img src="https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=600&h=400&fit=crop&q=80" alt="医疗健康" />
           </div>
           
           <div class="search-bar-wrapper">
@@ -116,7 +153,10 @@
                 </div>
                 <div class="text-area">
                   <label>地区</label>
-                  <input type="text" v-model="searchLocation" placeholder="例如：北京市" />
+                  <select v-model="selectedDistrict" class="district-select" @change="onDistrictChange">
+                    <option value="">选择区域</option>
+                    <option v-for="district in tianjinDistricts" :key="district" :value="district">{{ district }}</option>
+                  </select>
                 </div>
               </div>
               <button class="btn-search" @click="findCare">
@@ -143,7 +183,7 @@
             <h2 class="section-title">评价最高的全科医生</h2>
             <p class="section-subtitle">90% 的患者给这些医生打出了 5 星好评</p>
           </div>
-          <a href="#" class="see-all">查看全部 ›</a>
+          <a href="#" class="see-all" @click.prevent="goToAllDoctors">查看全部 ›</a>
         </div>
         <div class="scroll-container">
           <div class="doctor-card" v-for="(doc, index) in topDoctors" :key="index" :style="{ animationDelay: `${index * 0.1}s` }">
@@ -176,7 +216,7 @@
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
              </div>
              <h3>还有更多</h3>
-             <button class="btn-see-more">浏览列表</button>
+             <button class="btn-see-more" @click="goToAllDoctors">浏览列表</button>
           </div>
         </div>
       </div>
@@ -254,8 +294,8 @@
                   <text x="13" y="10" font-size="5" font-weight="bold" fill="currentColor">M</text>
                   <text x="5" y="18" font-size="5" font-weight="bold" fill="currentColor" text-decoration="underline">O</text>
                   <text x="13" y="18" font-size="5" font-weight="bold" fill="currentColor">S</text>
-                </svg>
-              </div>
+             </svg>
+          </div>
               <span class="download-label">HarmonyOS</span>
             </div>
             <div class="download-item">
@@ -336,17 +376,39 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, h } from 'vue';
+import { ref, onMounted, onUnmounted, h, computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { useUserStore } from '@/stores/user';
 import request from '@/utils/request';
 import { getCurrentLocation, getLocationByIP } from '@/utils/location';
+import { getAllHospitals } from '@/api/hospital';
 
 const router = useRouter();
+const userStore = useUserStore();
 const searchKeyword = ref('');
-const searchLocation = ref('');
+const selectedDistrict = ref('');
+const tianjinDistricts = ref([]);
 const isLocating = ref(false);
 const locationError = ref('');
 const currentLocation = ref(''); // 左上角显示的定位信息
+const showUserMenu = ref(false);
+const userInfo = ref(null);
+
+// 登录状态
+const isLoggedIn = computed(() => userStore.isLoggedIn);
+
+// 头像占位符文字 - 根据用户角色显示
+const avatarPlaceholderText = computed(() => {
+  if (userStore.userRole === 'PATIENT') {
+    return '患';
+  } else if (userStore.userRole === 'DOCTOR') {
+    return '医';
+  } else if (userStore.userRole === 'ADMIN') {
+    return '管';
+  }
+  // 如果没有角色信息，尝试使用用户名称的第一个字
+  return userInfo.value?.name?.charAt(0) || userStore.userInfo?.realName?.charAt(0) || '用';
+});
 
 // 自动获取位置
 const autoLocate = async () => {
@@ -359,7 +421,9 @@ const autoLocate = async () => {
     const locationStr = location.district 
       ? `${location.city}${location.district}` 
       : location.city;
-    searchLocation.value = locationStr;
+    if (location.district) {
+      selectedDistrict.value = location.district;
+    }
     currentLocation.value = locationStr; // 更新左上角显示
   } catch (error) {
     console.warn('精确定位失败，尝试IP定位:', error.message);
@@ -367,7 +431,6 @@ const autoLocate = async () => {
     try {
       const ipLocation = await getLocationByIP();
       if (ipLocation && ipLocation.city) {
-        searchLocation.value = ipLocation.city;
         currentLocation.value = ipLocation.city; // 更新左上角显示
       } else {
         locationError.value = '定位失败';
@@ -437,27 +500,134 @@ const getShootingStarStyle = (n) => {
   };
 };
 
+// 用户菜单相关
+const toggleUserMenu = () => {
+  showUserMenu.value = !showUserMenu.value;
+};
+
+// 点击外部关闭菜单
+const handleClickOutside = (e) => {
+  if (!e.target.closest('.user-menu-wrapper') && !e.target.closest('.user-info-display')) {
+    showUserMenu.value = false;
+  }
+};
+
+// 用户菜单导航
+const goToHome = () => {
+  showUserMenu.value = false;
+  router.push('/landing');
+};
+
+const goToMyHome = () => {
+  showUserMenu.value = false;
+  router.push('/patient/home');
+};
+
+const goToWorkbench = () => {
+  showUserMenu.value = false;
+  router.push('/doctor/home');
+};
+
+const goToAdminHome = () => {
+  showUserMenu.value = false;
+  router.push('/admin/home');
+};
+
+const goToProfile = () => {
+  showUserMenu.value = false;
+  if (userStore.userRole === 'PATIENT') {
+    router.push('/patient/profile');
+  } else if (userStore.userRole === 'DOCTOR') {
+    router.push('/doctor/profile');
+  }
+};
+
+const goToAppointments = () => {
+  showUserMenu.value = false;
+  if (userStore.userRole === 'PATIENT') {
+    router.push('/patient/appointments');
+  } else if (userStore.userRole === 'DOCTOR') {
+    router.push('/doctor/appointments');
+  }
+};
+
+const goToSearch = () => {
+  showUserMenu.value = false;
+  router.push('/search-results');
+};
+
+const goToRecords = () => {
+  showUserMenu.value = false;
+  if (userStore.userRole === 'PATIENT') {
+    router.push('/patient/medical-records');
+  }
+};
+
+const goToSettings = () => {
+  showUserMenu.value = false;
+  if (userStore.userRole === 'PATIENT') {
+    router.push('/patient/settings');
+  } else if (userStore.userRole === 'DOCTOR') {
+    router.push('/doctor/settings');
+  }
+};
+
+const handleLogout = () => {
+  showUserMenu.value = false;
+  userStore.logout();
+  router.push('/landing');
+};
+
 onMounted(() => {
   window.addEventListener('scroll', handleScroll);
+  window.addEventListener('click', handleClickOutside);
   handleScroll();
   fetchLandingData();
+  fetchTianjinDistricts();
   autoLocate(); // 自动获取用户位置
 });
 
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll);
+  window.removeEventListener('click', handleClickOutside);
 });
+
 
 const goLogin = () => router.push('/login');
 const goRegister = () => router.push('/register');
+// 获取天津市各区列表
+const fetchTianjinDistricts = async () => {
+  try {
+    const response = await getAllHospitals();
+    if (response && Array.isArray(response)) {
+      const districts = [...new Set(response
+        .filter(h => h.district && h.district.includes('区'))
+        .map(h => h.district)
+        .sort())];
+      tianjinDistricts.value = districts;
+    }
+  } catch (error) {
+    console.error('获取区列表失败:', error);
+    // 如果获取失败，使用默认的区列表
+    tianjinDistricts.value = ['和平区', '河东区', '河西区', '南开区', '河北区', '红桥区', '东丽区', '西青区', '津南区', '北辰区', '武清区', '宝坻区', '滨海新区'];
+  }
+};
+
+// 区选择变化
+const onDistrictChange = () => {
+  if (selectedDistrict.value) {
+    currentLocation.value = selectedDistrict.value;
+  }
+};
+
 const findCare = () => {
-  // 搜索按钮跳转到搜索结果页面，传递关键词和地区
+  // 搜索按钮跳转到搜索结果页面，传递关键词和区
   const query = {};
   if (searchKeyword.value && searchKeyword.value.trim()) {
     query.keyword = searchKeyword.value.trim();
   }
-  if (searchLocation.value && searchLocation.value.trim()) {
-    query.location = searchLocation.value.trim();
+  if (selectedDistrict.value) {
+    query.district = selectedDistrict.value;
   }
   // 即使没有输入任何内容，也跳转到搜索结果页面显示所有医生
   router.push({ path: '/search-results', query });
@@ -478,13 +648,13 @@ const goToSchedule = () => {
   router.push('/search-triage');
 };
 
-// 预约医生 - 跳转到搜索结果页面，筛选5星医生并优先显示选中的医生
+// 预约医生 - 跳转到搜索结果页面，优先显示选中的医生，只显示5星医生
 const bookDoctor = (doctor) => {
   router.push({
     path: '/search-results',
     query: {
-      minRating: '5.0',
-      priorityDoctorId: doctor.id
+      priorityDoctorId: doctor.id,
+      minRating: '5.0'
     }
   });
 };
@@ -493,6 +663,16 @@ const goToDepartment = (deptId) => {
   router.push({
     path: '/search-results',
     query: { departmentId: deptId }
+  });
+};
+
+// 查看全部医生 - 跳转到搜索结果页面，显示所有5星医生
+const goToAllDoctors = () => {
+  router.push({
+    path: '/search-results',
+    query: {
+      minRating: '5.0'
+    }
   });
 };
 
@@ -695,6 +875,15 @@ const mockAppointments = ref([
   }
 ]);
 
+const handleImageError = (e) => {
+  console.error('图片加载失败:', e);
+  // 如果图片加载失败，隐藏图片容器
+  const imgBox = e.target?.closest('.hero-image-box');
+  if (imgBox) {
+    imgBox.style.display = 'none';
+  }
+};
+
 const fetchLandingData = async () => {
   try {
     // Use allSettled to ensure single interface failure doesn't affect others
@@ -705,7 +894,9 @@ const fetchLandingData = async () => {
     
     // The interceptor in `request` already unwraps the .data property from the response.
     // The value of a fulfilled promise is the data itself.
-    topDoctors.value = (results[0].status === 'fulfilled' && results[0].value) ? results[0].value : [];
+    const allDoctors = (results[0].status === 'fulfilled' && results[0].value) ? results[0].value : [];
+    // 只显示5星医生（rating === 5.0）
+    topDoctors.value = allDoctors.filter(doc => (doc.rating || 0) === 5.0);
     specialties.value = (results[1].status === 'fulfilled' && results[1].value) ? results[1].value : [];
 
     results.forEach((res, i) => {
@@ -735,6 +926,8 @@ body { margin: 0; padding: 0; background-color: #fff; font-family: "Microsoft Ya
   position: relative;
   background: linear-gradient(135deg, #FFF9E5 0%, #FFFDF5 50%, #FFF9E5 100%);
   min-height: 100vh;
+  margin: 0;
+  padding: 0;
 }
 
 /* ========== 星河背景 ========== */
@@ -1324,7 +1517,7 @@ body { margin: 0; padding: 0; background-color: #fff; font-family: "Microsoft Ya
   z-index: 2; 
   max-width: 500px; 
   position: relative;
-  margin-top: 40px;
+  margin-top: 40px; 
 }
 
 /* Hero 徽章 */
@@ -1361,7 +1554,7 @@ body { margin: 0; padding: 0; background-color: #fff; font-family: "Microsoft Ya
   font-weight: 700; 
   color: #2A2A2A; 
   margin: 0 0 16px 0; 
-  letter-spacing: -1px;
+  letter-spacing: -1px; 
 }
 
 .text-line {
@@ -1438,31 +1631,42 @@ body { margin: 0; padding: 0; background-color: #fff; font-family: "Microsoft Ya
   animation-delay: -2s;
 }
 
-/* 插图调整 */
+/* 插图调整 - 参考医生和管理员首页样式 */
 .hero-image-box { 
   position: absolute; 
-  right: 60px; 
-  top: -10px; 
-  width: 380px; 
+  /* 右侧与搜索框对齐：搜索框右边缘距离页面右边缘24px（wrapper的padding） */
+  right: 24px; 
+  /* 底部贴近搜索框：搜索框高度60px + bottom 15px = 75px，图片底部应该在这之上，留5px间距 */
+  bottom: 80px; 
+  width: 480px; 
+  height: 290px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
   z-index: 1; 
-  pointer-events: none;
-  animation: float 6s ease-in-out infinite;
+  pointer-events: none; 
+  background: linear-gradient(135deg, #FFF9E5 0%, #FFFBF0 100%);
 }
 
-.image-glow {
+.hero-image-overlay {
   position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 249, 229, 0.85) 0%, rgba(255, 255, 255, 0.5) 100%);
+  z-index: 2;
+  pointer-events: none;
+  border-radius: 16px;
+}
+
+.hero-image-box img {
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle, rgba(255, 211, 0, 0.3) 0%, transparent 60%);
-  animation: glowPulse 3s ease-in-out infinite;
-}
-
-.blended-image { 
-  width: 100%; 
-  height: auto; 
-  mix-blend-mode: multiply; 
-  display: block; 
-  filter: saturate(1.05) contrast(1.02); 
+  object-fit: cover;
+  opacity: 0.5;
+  filter: sepia(30%) brightness(1.15) contrast(0.9) saturate(0.8);
+  mix-blend-mode: multiply;
 }
 
 /* --- 3. 搜索栏 (完全在黄色区域内部) --- */
@@ -1501,6 +1705,7 @@ body { margin: 0; padding: 0; background-color: #fff; font-family: "Microsoft Ya
 .text-area { display: flex; flex-direction: column; width: 100%; justify-content: center; }
 .text-area label { font-size: 10px; font-weight: 700; color: #666; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
 .text-area input { border: none; font-size: 14px; color: #2A2A2A; width: 100%; outline: none; font-weight: 500; padding: 0; background: transparent; }
+.district-select { border: none; font-size: 14px; color: #2A2A2A; width: 100%; outline: none; font-weight: 500; padding: 0; background: transparent; cursor: pointer; }
 .line { width: 1px; height: 32px; background: #E8E8E8; flex-shrink: 0; }
 
 .btn-search { 
@@ -2053,6 +2258,114 @@ body { margin: 0; padding: 0; background-color: #fff; font-family: "Microsoft Ya
 .footer-col a { display: block; color: #666; text-decoration: none; margin-bottom: 8px; font-size: 13px; transition: color 0.3s ease; }
 .footer-col a:hover { color: #FFD300; }
 .social-col p { font-size: 12px; color: #999; }
+
+/* 用户菜单样式 */
+.user-menu-wrapper {
+  position: relative;
+}
+
+.user-info-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 4px 8px 4px 4px;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+}
+
+.user-info-display:hover {
+  background: rgba(255, 211, 0, 0.1);
+}
+
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid #FFD300;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #FFD300 0%, #FF9800 100%);
+  flex-shrink: 0;
+}
+
+.user-info-display:hover .user-avatar {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(255, 211, 0, 0.4);
+}
+
+.user-role-badge {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: #FFD300;
+  color: #2A2A2A;
+  white-space: nowrap;
+}
+
+.user-role-badge.patient {
+  background: #4CAF50;
+  color: #fff;
+}
+
+.user-role-badge.admin {
+  background: #2196F3;
+  color: #fff;
+}
+
+.user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  color: #2A2A2A;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.user-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  min-width: 160px;
+  z-index: 1000;
+  overflow: hidden;
+  animation: fadeInUp 0.3s ease-out;
+}
+
+.user-dropdown a {
+  display: block;
+  padding: 12px 16px;
+  color: #2A2A2A;
+  text-decoration: none;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  border-bottom: 1px solid #F5F5F5;
+}
+
+.user-dropdown a:last-child {
+  border-bottom: none;
+}
+
+.user-dropdown a:hover {
+  background: #FFF9E5;
+  color: #FF9800;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: #E8E8E8;
+  margin: 4px 0;
+}
 
 @media (max-width: 900px) {
   .hero-image-box { display: none; }

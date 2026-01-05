@@ -3,6 +3,19 @@
     <!-- Zocdoc 风格顶部导航栏 -->
     <header class="top-navbar">
       <div class="navbar-container">
+        <!-- 返回按钮 -->
+        <button 
+          v-if="showBackButton" 
+          class="back-button" 
+          @click="handleBack"
+          title="返回"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+        </button>
+        
         <!-- Logo 区域 -->
         <div class="logo-area" @click="$router.push('/doctor/home')">
           <div class="logo-icon">优</div>
@@ -48,7 +61,8 @@
           <!-- 用户下拉菜单 -->
           <el-dropdown @command="handleCommand" trigger="click" class="user-dropdown">
             <div class="user-trigger">
-              <img :src="doctorInfo.avatarUrl || defaultAvatar" class="user-avatar" />
+              <img v-if="doctorInfo.avatarUrl" :src="doctorInfo.avatarUrl" class="user-avatar" />
+              <div v-else class="user-avatar avatar-placeholder">医</div>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
                 <polyline points="6 9 12 15 18 9"></polyline>
               </svg>
@@ -57,13 +71,29 @@
               <el-dropdown-menu class="custom-dropdown-menu">
                 <div class="dropdown-header">
                   <div class="dropdown-user-info">
-                    <img :src="doctorInfo.avatarUrl || defaultAvatar" class="dropdown-avatar" />
+                    <img v-if="doctorInfo.avatarUrl" :src="doctorInfo.avatarUrl" class="dropdown-avatar" />
+                    <div v-else class="dropdown-avatar avatar-placeholder">医</div>
                     <div class="dropdown-text">
                       <div class="dropdown-name">{{ doctorInfo.name || '医生' }}</div>
                       <div class="dropdown-dept">{{ doctorInfo.departmentName || '科室' }}</div>
                     </div>
                   </div>
                 </div>
+                <el-dropdown-item command="landing">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                  </svg>
+                  首页
+                </el-dropdown-item>
+                <el-dropdown-item command="workbench">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="9" y1="3" x2="9" y2="21"></line>
+                    <line x1="3" y1="9" x2="21" y2="9"></line>
+                  </svg>
+                  工作台
+                </el-dropdown-item>
                 <el-dropdown-item command="profile">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
                     <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"></path>
@@ -114,7 +144,6 @@ const route = useRoute();
 const userStore = useUserStore();
 
 const unreadCount = ref(0);
-const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png';
 
 const doctorInfo = ref({
   name: '',
@@ -141,6 +170,16 @@ const isActive = (path) => {
   return route.path === path || route.path.startsWith(path + '/');
 };
 
+const showBackButton = computed(() => route.path !== '/doctor/home');
+
+const handleBack = () => {
+  if (window.history.length > 1) {
+    router.back();
+  } else {
+    router.push('/doctor/home');
+  }
+};
+
 onMounted(async () => {
   // 获取医生信息 - 先从 userStore 获取基本信息
   if (userStore.userInfo) {
@@ -153,7 +192,7 @@ onMounted(async () => {
     if (data) {
       doctorInfo.value.name = data.name || doctorInfo.value.name;
       doctorInfo.value.departmentName = data.departmentName || '科室';
-      doctorInfo.value.avatarUrl = data.avatarUrl || defaultAvatar;
+      doctorInfo.value.avatarUrl = data.avatarUrl || '';
     }
   } catch (error) {
     console.error('获取医生信息失败:', error);
@@ -168,6 +207,12 @@ onMounted(async () => {
 
 const handleCommand = (command) => {
   switch (command) {
+    case 'landing':
+      router.push('/landing');
+      break;
+    case 'workbench':
+      router.push('/doctor/home');
+      break;
     case 'profile':
       router.push('/doctor/profile');
       break;
@@ -216,6 +261,35 @@ const handleCommand = (command) => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #2A2A2A;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  
+  &:hover {
+    background: #F5F5F5;
+    color: #000;
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+  
+  svg {
+    display: block;
+  }
 }
 
 /* Logo 区域 */
@@ -353,6 +427,17 @@ const handleCommand = (command) => {
   border: 2px solid #FFD300;
 }
 
+.user-avatar.avatar-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #FFD300 0%, #FF9800 100%);
+  color: #2A2A2A;
+  font-weight: 700;
+  font-size: 14px;
+  object-fit: none;
+}
+
 /* 下拉菜单样式 */
 :deep(.custom-dropdown-menu) {
   border-radius: 12px !important;
@@ -380,6 +465,17 @@ const handleCommand = (command) => {
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid #FFD300;
+}
+
+.dropdown-avatar.avatar-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #FFD300 0%, #FF9800 100%);
+  color: #2A2A2A;
+  font-weight: 700;
+  font-size: 16px;
+  object-fit: none;
 }
 
 .dropdown-text {

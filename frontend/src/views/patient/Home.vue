@@ -13,7 +13,25 @@
             <div class="divider"></div>
             <div class="input-group">
               <el-icon class="input-icon"><MapLocation /></el-icon>
-              <input type="text" v-model="searchForm.location" placeholder="城市、街道或邮编" class="input-focus" />
+              <select v-model="searchForm.district" class="input-focus" style="border: none; outline: none; background: transparent; width: 100%; font-size: 15px; color: #333;">
+                <option value="">选择区域</option>
+                <option value="和平区">和平区</option>
+                <option value="河东区">河东区</option>
+                <option value="河西区">河西区</option>
+                <option value="南开区">南开区</option>
+                <option value="河北区">河北区</option>
+                <option value="红桥区">红桥区</option>
+                <option value="东丽区">东丽区</option>
+                <option value="西青区">西青区</option>
+                <option value="津南区">津南区</option>
+                <option value="北辰区">北辰区</option>
+                <option value="武清区">武清区</option>
+                <option value="宝坻区">宝坻区</option>
+                <option value="滨海新区">滨海新区</option>
+                <option value="宁河区">宁河区</option>
+                <option value="静海区">静海区</option>
+                <option value="蓟州区">蓟州区</option>
+              </select>
             </div>
             <div class="divider"></div>
 
@@ -34,7 +52,7 @@
       <div class="right-col">
         <div class="sidebar-card medical-card card-hover stagger-item">
           <div class="medical-card-image">
-            <img src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=400&h=300&fit=crop" alt="医疗健康" />
+            <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=600&h=400&fit=crop&auto=format" alt="健康档案" />
           </div>
           <div class="medical-card-content">
             <h3 class="sidebar-title">您的健康档案</h3>
@@ -54,7 +72,7 @@
                 <span>寻找家庭医生</span>
                 <small>Primary Care</small>
               </div>
-              <button class="btn-xs-outline">添加</button>
+              <button class="btn-xs-outline" @click="goToFamilyDoctor">添加</button>
             </div>
             <div class="care-divider"></div>
             <div class="care-item">
@@ -65,7 +83,7 @@
                 <span>寻找牙医</span>
                 <small>Dentist</small>
               </div>
-              <button class="btn-xs-outline">添加</button>
+              <button class="btn-xs-outline" @click="goToDentist">添加</button>
             </div>
           </div>
         </div>
@@ -85,13 +103,31 @@ const router = useRouter()
 
 const searchForm = ref({
   specialty: '',
-  location: ''
+  district: ''
 });
 
 const goToSearch = () => {
   router.push({
     path: '/search-results',
-    query: { ...searchForm.value }
+    query: { 
+      specialty: searchForm.value.specialty,
+      district: searchForm.value.district,
+      city: '天津市' // 固定为天津市
+    }
+  });
+};
+
+const goToFamilyDoctor = () => {
+  router.push({
+    path: '/search-results',
+    query: { specialty: '家庭医生', keyword: '家庭医生' }
+  });
+};
+
+const goToDentist = () => {
+  router.push({
+    path: '/search-results',
+    query: { specialty: '牙医', keyword: '牙医' }
   });
 };
 </script>
@@ -205,10 +241,21 @@ const goToSearch = () => {
   gap: 40px;
   margin-top: -30px; /* 稍微上移，压在 Hero 区域上一点点（可选） */
   padding-bottom: 60px;
+  align-items: flex-start; /* 顶部对齐 */
 }
 
-.left-col { flex: 65%; }
-.right-col { flex: 35%; }
+.left-col { 
+  flex: 40%; 
+  display: flex;
+  flex-direction: column;
+}
+
+.right-col { 
+  flex: 60%; 
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
 
 /* 左侧 Header */
 .section-header { margin-bottom: 24px; }
@@ -335,33 +382,45 @@ const goToSearch = () => {
 .sidebar-card {
   background: #fff;
   border: 1px solid #E5E5E5;
-  border-radius: 8px;
-  padding: 24px;
+  border-radius: 12px;
+  padding: 28px;
+  margin-bottom: 20px;
 }
 
 .sidebar-title {
-  font-size: 18px;
-  font-weight: 600;
-  margin: 0 0 20px;
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 24px;
+  color: #2A2A2A;
 }
 
 .care-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 0;
+  gap: 14px;
+  padding: 12px 0;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border-radius: 8px;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.care-item:hover {
+  background-color: #FAFAFA;
 }
 
 .avatar-placeholder {
-  width: 40px;
-  height: 40px;
-  background-color: #F0F0F0;
+  width: 44px;
+  height: 44px;
+  background-color: #FFF9E5;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #999;
-  font-size: 20px;
+  color: #2A2A2A;
+  font-size: 22px;
+  flex-shrink: 0;
 }
 
 .care-info {
@@ -371,14 +430,15 @@ const goToSearch = () => {
 }
 
 .care-info span {
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 600;
   color: #2A2A2A;
+  margin-bottom: 2px;
 }
 
 .care-info small {
-  font-size: 12px;
-  color: #777;
+  font-size: 13px;
+  color: #666;
 }
 
 .text-blue { color: #0065D6 !important; cursor: pointer; }
@@ -386,13 +446,19 @@ const goToSearch = () => {
 .btn-xs-outline {
   background: #fff;
   border: 1px solid #DDD;
-  border-radius: 4px;
-  padding: 4px 12px;
-  font-size: 12px;
+  border-radius: 6px;
+  padding: 6px 16px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
 }
-.btn-xs-outline:hover { border-color: #999; }
+.btn-xs-outline:hover { 
+  border-color: #FFD300;
+  background-color: #FFF9E5;
+  color: #2A2A2A;
+}
 
 .care-divider {
   height: 1px;
@@ -409,7 +475,7 @@ const goToSearch = () => {
 
 .medical-card-image {
   width: 100%;
-  height: 180px;
+  height: 200px;
   overflow: hidden;
 }
 
@@ -425,7 +491,7 @@ const goToSearch = () => {
 }
 
 .medical-card-content {
-  padding: 20px;
+  padding: 24px;
 }
 
 .medical-card-desc {
