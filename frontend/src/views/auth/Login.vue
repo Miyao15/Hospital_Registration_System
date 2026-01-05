@@ -67,6 +67,27 @@
             {{ loading ? '登录中...' : '立即登录' }}
           </button>
         </form>
+
+        <!-- 测试快捷登录 -->
+        <div class="quick-login-section">
+          <div class="quick-login-divider">
+            <span>测试快捷登录</span>
+          </div>
+          <div class="quick-login-buttons">
+            <button class="quick-btn patient-btn" @click="quickLogin('patient')" :disabled="loading">
+              <span class="quick-icon">👤</span>
+              <span>患者端</span>
+            </button>
+            <button class="quick-btn doctor-btn" @click="quickLogin('doctor')" :disabled="loading">
+              <span class="quick-icon">👨‍⚕️</span>
+              <span>医生端</span>
+            </button>
+            <button class="quick-btn admin-btn" @click="quickLogin('admin')" :disabled="loading">
+              <span class="quick-icon">⚙️</span>
+              <span>管理员</span>
+            </button>
+          </div>
+        </div>
       </div>
     </main>
   </div>
@@ -111,6 +132,33 @@ const handleLogin = async () => {
     // The store's login action already shows an error message.
     // This catch block can be used for component-specific error logic if needed.
     console.error('Login component caught error:', error);
+  } finally {
+    loading.value = false;
+  }
+};
+
+// 测试快捷登录
+const quickLogin = async (userType) => {
+  // 使用实际测试账号
+  const testAccounts = {
+    patient: { identifier: '13344445555', password: '@Hu060215' },     // 患者
+    doctor: { identifier: '13582227146', password: 'Liu750423' },      // 医生
+    admin: { identifier: '17731862570', password: 'Hu060215' }         // 管理员
+  };
+  
+  const account = testAccounts[userType];
+  role.value = userType;
+  loginForm.identifier = account.identifier;
+  loginForm.password = account.password;
+  
+  loading.value = true;
+  try {
+    await userStore.login({
+      identifier: account.identifier,
+      password: account.password
+    });
+  } catch (error) {
+    console.error('Quick login error:', error);
   } finally {
     loading.value = false;
   }
@@ -353,6 +401,86 @@ const handleLogin = async () => {
 }
 .btn-submit:active { transform: translateY(0); }
 .btn-submit:disabled { background: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* 快捷登录区域 */
+.quick-login-section {
+  margin-top: 24px;
+  animation: fadeIn 0.8s ease-out 0.9s both;
+}
+
+.quick-login-divider {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.quick-login-divider::before,
+.quick-login-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #E8E8E8;
+}
+
+.quick-login-divider span {
+  padding: 0 12px;
+  font-size: 12px;
+  color: #999;
+}
+
+.quick-login-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.quick-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 8px;
+  border: 1px solid #E8E8E8;
+  border-radius: 8px;
+  background: #FAFAFA;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 12px;
+  color: #666;
+}
+
+.quick-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.quick-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.quick-icon {
+  font-size: 20px;
+}
+
+.patient-btn:hover {
+  border-color: #4CAF50;
+  background: #E8F5E9;
+  color: #4CAF50;
+}
+
+.doctor-btn:hover {
+  border-color: #2196F3;
+  background: #E3F2FD;
+  color: #2196F3;
+}
+
+.admin-btn:hover {
+  border-color: #FF9800;
+  background: #FFF3E0;
+  color: #FF9800;
+}
 
 /* 动画关键帧 */
 @keyframes fadeInUp {

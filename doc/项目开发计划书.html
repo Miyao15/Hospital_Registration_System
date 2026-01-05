@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>医院预约挂号系统 - 项目开发计划书</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: "SimSun", "宋体", serif;
+            font-size: 12pt;
+            line-height: 1.8;
+            color: #000;
+            background: #fff;
+            padding: 0;
+        }
+        .page {
+            width: 100%;
+            max-width: 21cm;
+            margin: 0 auto;
+            padding: 1cm;
+        }
+        h1 {
+            font-size: 18pt;
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 30pt;
+            padding-bottom: 10pt;
+            border-bottom: 2px solid #000;
+        }
+        h2 {
+            font-size: 14pt;
+            font-weight: bold;
+            margin-top: 20pt;
+            margin-bottom: 10pt;
+        }
+        h3 {
+            font-size: 12pt;
+            font-weight: bold;
+            margin-top: 15pt;
+            margin-bottom: 8pt;
+        }
+        h4 {
+            font-size: 12pt;
+            font-weight: bold;
+            margin-top: 10pt;
+            margin-bottom: 6pt;
+        }
+        p {
+            text-indent: 2em;
+            margin-bottom: 8pt;
+        }
+        ul, ol {
+            margin-left: 2em;
+            margin-bottom: 10pt;
+        }
+        li {
+            margin-bottom: 4pt;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10pt 0;
+            font-size: 10pt;
+            page-break-inside: avoid;
+        }
+        th, td {
+            border: 1px solid #000;
+            padding: 6pt 8pt;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+            text-align: center;
+        }
+        .center {
+            text-align: center;
+        }
+        .no-indent {
+            text-indent: 0;
+        }
+        .page-break {
+            page-break-before: always;
+        }
+        .diagram-container {
+            margin: 15px 0;
+            padding: 10px;
+            background: #fafafa;
+            border: 1px solid #ddd;
+        }
+        .mermaid {
+            display: flex;
+            justify-content: center;
+        }
+        .gantt-table td {
+            text-align: center;
+            font-size: 9pt;
+            padding: 4pt;
+        }
+        .gantt-bar {
+            background-color: #4CAF50;
+            height: 15px;
+        }
+        .gantt-bar-critical {
+            background-color: #f44336;
+            height: 15px;
+        }
+        @media print {
+            body { padding: 0; }
+            .page { padding: 0; max-width: none; }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+
+<h1>医院预约挂号系统<br>项目开发计划书</h1>
+
+<h2>1. 概述</h2>
+
+<h3>1.1 项目的目的与目标</h3>
+
+<h4>1.1.1 项目目的</h4>
+<p>随着医疗资源需求的不断增长，传统的现场排队挂号方式已无法满足患者的就医需求，存在排队时间长、号源分配不均、信息不透明等问题。本项目旨在开发一套医院预约挂号系统，通过信息化手段优化医疗资源配置，提升患者就医体验，提高医院运营效率。</p>
+
+<h4>1.1.2 项目目标</h4>
+<p class="no-indent">本项目的具体目标如下：</p>
+
+<p class="no-indent center">表1-1 项目目标分解表</p>
+<table>
+    <tr>
+        <th>目标编号</th>
+        <th>目标描述</th>
+        <th>可度量指标</th>
+        <th>对应功能</th>
+    </tr>
+    <tr>
+        <td>G1</td>
+        <td>实现在线预约挂号</td>
+        <td>支持7×24小时在线预约</td>
+        <td>预约挂号模块</td>
+    </tr>
+    <tr>
+        <td>G2</td>
+        <td>提供多角色用户管理</td>
+        <td>支持患者、医生、管理员三种角色</td>
+        <td>用户认证模块</td>
+    </tr>
+    <tr>
+        <td>G3</td>
+        <td>实现医生排班管理</td>
+        <td>支持按日期、时段设置排班</td>
+        <td>排班管理模块</td>
+    </tr>
+    <tr>
+        <td>G4</td>
+        <td>提供智能问诊服务</td>
+        <td>AI响应时间<5秒</td>
+        <td>AI智能助手模块</td>
+    </tr>
+    <tr>
+        <td>G5</td>
+        <td>实现科室信息管理</td>
+        <td>支持科室增删改查</td>
+        <td>科室管理模块</td>
+    </tr>
+    <tr>
+        <td>G6</td>
+        <td>提供消息通知功能</td>
+        <td>预约成功后即时通知</td>
+        <td>通知消息模块</td>
+    </tr>
+    <tr>
+        <td>G7</td>
+        <td>支持GPS定位服务</td>
+        <td>自动获取用户所在城市</td>
+        <td>定位服务模块</td>
+    </tr>
+    <tr>
+        <td>G8</td>
+        <td>实现容器化部署</td>
+        <td>支持Docker一键部署</td>
+        <td>部署运维</td>
+    </tr>
+</table>
+
+<h3>1.2 系统功能范围及过程规划</h3>
+
+<h4>1.2.1 系统功能范围</h4>
+<p>本系统采用B/S架构，分为患者端、医生端、管理员端三个子系统，主要功能范围如下：</p>
+
+<p class="no-indent center">表1-2 系统功能范围表</p>
+<table>
+    <tr>
+        <th>子系统</th>
+        <th>功能模块</th>
+        <th>功能描述</th>
+    </tr>
+    <tr>
+        <td rowspan="6">患者端</td>
+        <td>用户注册登录</td>
+        <td>手机号注册、密码登录、JWT认证</td>
+    </tr>
+    <tr>
+        <td>医生搜索</td>
+        <td>按科室、姓名搜索医生</td>
+    </tr>
+    <tr>
+        <td>预约挂号</td>
+        <td>查看排班、选择时段、创建预约</td>
+    </tr>
+    <tr>
+        <td>预约管理</td>
+        <td>查看预约、取消预约</td>
+    </tr>
+    <tr>
+        <td>医生评价</td>
+        <td>对就诊医生进行评分评价</td>
+    </tr>
+    <tr>
+        <td>AI问诊</td>
+        <td>智能助手健康咨询</td>
+    </tr>
+    <tr>
+        <td rowspan="4">医生端</td>
+        <td>医生注册</td>
+        <td>提交资质信息、等待审批</td>
+    </tr>
+    <tr>
+        <td>排班管理</td>
+        <td>设置出诊日期、时段、号源</td>
+    </tr>
+    <tr>
+        <td>预约查看</td>
+        <td>查看患者预约信息</td>
+    </tr>
+    <tr>
+        <td>请假申请</td>
+        <td>提交请假申请</td>
+    </tr>
+    <tr>
+        <td rowspan="4">管理员端</td>
+        <td>医生审批</td>
+        <td>审核医生注册申请</td>
+    </tr>
+    <tr>
+        <td>科室管理</td>
+        <td>科室增删改查</td>
+    </tr>
+    <tr>
+        <td>请假审批</td>
+        <td>审批医生请假申请</td>
+    </tr>
+    <tr>
+        <td>系统统计</td>
+        <td>查看系统运营数据</td>
+    </tr>
+</table>
+
+<h4>1.2.2 系统功能结构图</h4>
+<div class="diagram-container">
+    <div class="mermaid">
+graph TD
+    A[医院预约挂号系统] --> B[患者端]
+    A --> C[医生端]
+    A --> D[管理员端]
+    A --> E[公共服务]
+    
+    B --> B1[用户注册登录]
+    B --> B2[医生搜索]
+    B --> B3[预约挂号]
+    B --> B4[预约管理]
+    B --> B5[医生评价]
+    B --> B6[AI问诊]
+    
+    C --> C1[医生注册]
+    C --> C2[排班管理]
+    C --> C3[预约查看]
+    C --> C4[请假申请]
+    
+    D --> D1[医生审批]
+    D --> D2[科室管理]
+    D --> D3[请假审批]
+    D --> D4[系统统计]
+    
+    E --> E1[GPS定位]
+    E --> E2[消息通知]
+    E --> E3[文件上传]
+    </div>
+</div>
+
+</div>
+
+
+<div class="page page-break">
+
+<h4>1.2.3 过程模型</h4>
+<p>本项目采用增量迭代开发模型，将系统功能分为多个增量进行开发，每个增量包含需求分析、设计、编码、测试四个阶段。</p>
+
+<div class="diagram-container">
+    <div class="mermaid">
+graph LR
+    subgraph 增量1["增量1: 核心功能"]
+        A1[需求分析] --> A2[设计]
+        A2 --> A3[编码]
+        A3 --> A4[测试]
+    end
+    
+    subgraph 增量2["增量2: 扩展功能"]
+        B1[需求分析] --> B2[设计]
+        B2 --> B3[编码]
+        B3 --> B4[测试]
+    end
+    
+    subgraph 增量3["增量3: 优化部署"]
+        C1[需求分析] --> C2[设计]
+        C2 --> C3[编码]
+        C3 --> C4[测试]
+    end
+    
+    A4 --> B1
+    B4 --> C1
+    C4 --> D[系统交付]
+    </div>
+</div>
+
+<p class="no-indent center">表1-3 增量规划表</p>
+<table>
+    <tr>
+        <th>增量</th>
+        <th>功能内容</th>
+        <th>计划周期</th>
+    </tr>
+    <tr>
+        <td>增量1</td>
+        <td>用户认证、预约挂号、排班管理</td>
+        <td>第1-4周</td>
+    </tr>
+    <tr>
+        <td>增量2</td>
+        <td>科室管理、医生审批、消息通知、AI问诊</td>
+        <td>第5-7周</td>
+    </tr>
+    <tr>
+        <td>增量3</td>
+        <td>GPS定位、系统优化、Docker部署</td>
+        <td>第8-10周</td>
+    </tr>
+</table>
+
+<h2>2. 可行性分析</h2>
+
+<h3>2.1 社会可行性</h3>
+
+<h4>2.1.1 政策法规</h4>
+<p>本系统开发符合国家"互联网+医疗健康"政策导向，遵循《中华人民共和国网络安全法》、《个人信息保护法》等法律法规要求，对用户个人信息进行加密存储和传输。</p>
+
+<h4>2.1.2 安全因素</h4>
+<p class="no-indent center">表2-1 安全措施表</p>
+<table>
+    <tr>
+        <th>安全风险</th>
+        <th>应对措施</th>
+    </tr>
+    <tr>
+        <td>用户密码泄露</td>
+        <td>采用BCrypt加密存储，不存储明文密码</td>
+    </tr>
+    <tr>
+        <td>SQL注入攻击</td>
+        <td>使用JPA参数化查询，防止SQL注入</td>
+    </tr>
+    <tr>
+        <td>XSS跨站脚本</td>
+        <td>前端输入过滤，后端输出转义</td>
+    </tr>
+    <tr>
+        <td>未授权访问</td>
+        <td>JWT Token认证，角色权限控制</td>
+    </tr>
+    <tr>
+        <td>暴力破解</td>
+        <td>登录失败5次锁定账户30分钟</td>
+    </tr>
+</table>
+
+<h4>2.1.3 环境因素</h4>
+<p>系统采用云服务器部署，无需购置物理服务器，减少能源消耗和电子废弃物产生，符合绿色环保理念。</p>
+
+<h3>2.2 经济可行性</h3>
+
+<h4>2.2.1 项目规模估算</h4>
+<p class="no-indent center">表2-2 项目规模估算表</p>
+<table>
+    <tr>
+        <th>模块</th>
+        <th>功能点数</th>
+        <th>预估代码行数</th>
+        <th>预估工时(人天)</th>
+    </tr>
+    <tr>
+        <td>用户认证模块</td>
+        <td>8</td>
+        <td>1500</td>
+        <td>5</td>
+    </tr>
+    <tr>
+        <td>预约挂号模块</td>
+        <td>12</td>
+        <td>2500</td>
+        <td>8</td>
+    </tr>
+    <tr>
+        <td>排班管理模块</td>
+        <td>10</td>
+        <td>2000</td>
+        <td>6</td>
+    </tr>
+    <tr>
+        <td>科室管理模块</td>
+        <td>6</td>
+        <td>1000</td>
+        <td>3</td>
+    </tr>
+    <tr>
+        <td>AI智能助手模块</td>
+        <td>5</td>
+        <td>800</td>
+        <td>3</td>
+    </tr>
+    <tr>
+        <td>消息通知模块</td>
+        <td>4</td>
+        <td>600</td>
+        <td>2</td>
+    </tr>
+    <tr>
+        <td>前端界面</td>
+        <td>20</td>
+        <td>5000</td>
+        <td>15</td>
+    </tr>
+    <tr>
+        <td><strong>合计</strong></td>
+        <td><strong>65</strong></td>
+        <td><strong>13400</strong></td>
+        <td><strong>42</strong></td>
+    </tr>
+</table>
+
+<h4>2.2.2 成本估算</h4>
+<p class="no-indent center">表2-3 成本估算表</p>
+<table>
+    <tr>
+        <th>成本项目</th>
+        <th>单价</th>
+        <th>数量</th>
+        <th>金额(元)</th>
+    </tr>
+    <tr>
+        <td>开发人员工资</td>
+        <td>500元/人天</td>
+        <td>42人天</td>
+        <td>21,000</td>
+    </tr>
+    <tr>
+        <td>云服务器(1年)</td>
+        <td>100元/月</td>
+        <td>12月</td>
+        <td>1,200</td>
+    </tr>
+    <tr>
+        <td>域名(1年)</td>
+        <td>-</td>
+        <td>1个</td>
+        <td>60</td>
+    </tr>
+    <tr>
+        <td>AI API调用费</td>
+        <td>-</td>
+        <td>-</td>
+        <td>500</td>
+    </tr>
+    <tr>
+        <td>其他费用</td>
+        <td>-</td>
+        <td>-</td>
+        <td>500</td>
+    </tr>
+    <tr>
+        <td><strong>合计</strong></td>
+        <td>-</td>
+        <td>-</td>
+        <td><strong>23,260</strong></td>
+    </tr>
+</table>
+
+<h4>2.2.3 效益分析</h4>
+<ul>
+    <li>减少患者排队等待时间，提升就医体验</li>
+    <li>优化医疗资源配置，提高医生工作效率</li>
+    <li>降低医院人工成本，减少窗口服务人员</li>
+    <li>积累患者数据，为医院决策提供支持</li>
+</ul>
+
+</div>
+
+
+<div class="page page-break">
+
+<h3>2.3 技术可行性</h3>
+
+<h4>2.3.1 技术需求分析</h4>
+<p class="no-indent center">表2-4 技术需求分析表</p>
+<table>
+    <tr>
+        <th>技术领域</th>
+        <th>技术需求</th>
+        <th>解决方案</th>
+        <th>成熟度</th>
+    </tr>
+    <tr>
+        <td>后端开发</td>
+        <td>RESTful API、数据持久化</td>
+        <td>Spring Boot 3.2 + JPA</td>
+        <td>成熟</td>
+    </tr>
+    <tr>
+        <td>前端开发</td>
+        <td>响应式界面、组件化开发</td>
+        <td>Vue 3 + Element Plus</td>
+        <td>成熟</td>
+    </tr>
+    <tr>
+        <td>数据库</td>
+        <td>关系型数据存储</td>
+        <td>MySQL 8.0</td>
+        <td>成熟</td>
+    </tr>
+    <tr>
+        <td>身份认证</td>
+        <td>无状态认证</td>
+        <td>JWT Token</td>
+        <td>成熟</td>
+    </tr>
+    <tr>
+        <td>AI服务</td>
+        <td>自然语言处理</td>
+        <td>通义千问API</td>
+        <td>成熟</td>
+    </tr>
+    <tr>
+        <td>定位服务</td>
+        <td>GPS定位、逆地理编码</td>
+        <td>高德地图API</td>
+        <td>成熟</td>
+    </tr>
+    <tr>
+        <td>容器化部署</td>
+        <td>环境隔离、快速部署</td>
+        <td>Docker + Docker Compose</td>
+        <td>成熟</td>
+    </tr>
+</table>
+
+<h4>2.3.2 开发工具</h4>
+<p class="no-indent center">表2-5 开发工具表</p>
+<table>
+    <tr>
+        <th>工具类型</th>
+        <th>工具名称</th>
+        <th>用途</th>
+    </tr>
+    <tr>
+        <td>IDE</td>
+        <td>IntelliJ IDEA / VS Code</td>
+        <td>代码编写与调试</td>
+    </tr>
+    <tr>
+        <td>版本控制</td>
+        <td>Git + GitHub</td>
+        <td>代码版本管理</td>
+    </tr>
+    <tr>
+        <td>数据库工具</td>
+        <td>Navicat</td>
+        <td>数据库管理</td>
+    </tr>
+    <tr>
+        <td>API测试</td>
+        <td>Postman</td>
+        <td>接口测试</td>
+    </tr>
+    <tr>
+        <td>构建工具</td>
+        <td>Maven / npm</td>
+        <td>项目构建</td>
+    </tr>
+    <tr>
+        <td>远程连接</td>
+        <td>WinSCP / SSH</td>
+        <td>服务器管理</td>
+    </tr>
+</table>
+
+<p>综上所述，本项目所需技术均为业界成熟技术，开发团队具备相关技术能力，技术可行性高。</p>
+
+<h2>3. 方案选择</h2>
+
+<h3>3.1 可选方案对比</h3>
+
+<p class="no-indent center">表3-1 技术方案对比表</p>
+<table>
+    <tr>
+        <th>对比项</th>
+        <th>方案A（推荐）</th>
+        <th>方案B</th>
+    </tr>
+    <tr>
+        <td>后端框架</td>
+        <td>Spring Boot 3.2</td>
+        <td>Django 4.0</td>
+    </tr>
+    <tr>
+        <td>前端框架</td>
+        <td>Vue 3 + Element Plus</td>
+        <td>React + Ant Design</td>
+    </tr>
+    <tr>
+        <td>数据库</td>
+        <td>MySQL 8.0</td>
+        <td>PostgreSQL 15</td>
+    </tr>
+    <tr>
+        <td>部署方式</td>
+        <td>Docker Compose</td>
+        <td>Kubernetes</td>
+    </tr>
+    <tr>
+        <td>开发语言</td>
+        <td>Java 17 + JavaScript</td>
+        <td>Python + TypeScript</td>
+    </tr>
+    <tr>
+        <td>学习成本</td>
+        <td>中等</td>
+        <td>较高</td>
+    </tr>
+    <tr>
+        <td>开发效率</td>
+        <td>高</td>
+        <td>中等</td>
+    </tr>
+    <tr>
+        <td>运维复杂度</td>
+        <td>低</td>
+        <td>高</td>
+    </tr>
+    <tr>
+        <td>社区支持</td>
+        <td>丰富</td>
+        <td>丰富</td>
+    </tr>
+</table>
+
+<h3>3.2 选定方案</h3>
+<p>经过综合评估，选择方案A作为本项目的技术方案，理由如下：</p>
+<ul>
+    <li>Spring Boot生态成熟，文档丰富，问题易于解决</li>
+    <li>Vue 3学习曲线平缓，开发效率高</li>
+    <li>MySQL使用广泛，运维成本低</li>
+    <li>Docker Compose部署简单，适合中小型项目</li>
+    <li>团队成员对Java和Vue技术栈更为熟悉</li>
+</ul>
+
+<h3>3.3 系统架构设计</h3>
+<div class="diagram-container">
+    <div class="mermaid">
+graph TB
+    subgraph 客户端
+        Browser[浏览器]
+    end
+    
+    subgraph 前端服务
+        Nginx[Nginx:8081]
+        Vue[Vue 3 SPA]
+    end
+    
+    subgraph 后端服务
+        SpringBoot[Spring Boot:8082]
+        Security[Spring Security]
+        JPA[Spring Data JPA]
+    end
+    
+    subgraph 外部服务
+        AI[通义千问API]
+        Map[高德地图API]
+    end
+    
+    subgraph 数据层
+        MySQL[(MySQL:3306)]
+    end
+    
+    Browser --> Nginx
+    Nginx --> Vue
+    Vue --> SpringBoot
+    SpringBoot --> Security
+    SpringBoot --> JPA
+    SpringBoot --> AI
+    SpringBoot --> Map
+    JPA --> MySQL
+    </div>
+</div>
+
+</div>
+
+
+<div class="page page-break">
+
+<h2>4. 项目进度计划</h2>
+
+<h3>4.1 任务分解(WBS)</h3>
+
+<p class="no-indent center">表4-1 任务分解表</p>
+<table>
+    <tr>
+        <th>任务编号</th>
+        <th>任务名称</th>
+        <th>前置任务</th>
+        <th>工期(天)</th>
+        <th>里程碑</th>
+    </tr>
+    <tr>
+        <td>T1</td>
+        <td>需求分析</td>
+        <td>-</td>
+        <td>3</td>
+        <td>需求文档</td>
+    </tr>
+    <tr>
+        <td>T2</td>
+        <td>系统设计</td>
+        <td>T1</td>
+        <td>4</td>
+        <td>设计文档</td>
+    </tr>
+    <tr>
+        <td>T3</td>
+        <td>数据库设计</td>
+        <td>T2</td>
+        <td>2</td>
+        <td>数据库脚本</td>
+    </tr>
+    <tr>
+        <td>T4</td>
+        <td>后端框架搭建</td>
+        <td>T3</td>
+        <td>2</td>
+        <td>项目骨架</td>
+    </tr>
+    <tr>
+        <td>T5</td>
+        <td>用户认证模块开发</td>
+        <td>T4</td>
+        <td>5</td>
+        <td>登录注册功能</td>
+    </tr>
+    <tr>
+        <td>T6</td>
+        <td>预约挂号模块开发</td>
+        <td>T5</td>
+        <td>8</td>
+        <td>预约功能</td>
+    </tr>
+    <tr>
+        <td>T7</td>
+        <td>排班管理模块开发</td>
+        <td>T5</td>
+        <td>6</td>
+        <td>排班功能</td>
+    </tr>
+    <tr>
+        <td>T8</td>
+        <td>前端框架搭建</td>
+        <td>T3</td>
+        <td>2</td>
+        <td>前端骨架</td>
+    </tr>
+    <tr>
+        <td>T9</td>
+        <td>患者端界面开发</td>
+        <td>T8</td>
+        <td>8</td>
+        <td>患者端完成</td>
+    </tr>
+    <tr>
+        <td>T10</td>
+        <td>医生端界面开发</td>
+        <td>T8</td>
+        <td>5</td>
+        <td>医生端完成</td>
+    </tr>
+    <tr>
+        <td>T11</td>
+        <td>管理员端界面开发</td>
+        <td>T8</td>
+        <td>5</td>
+        <td>管理员端完成</td>
+    </tr>
+    <tr>
+        <td>T12</td>
+        <td>AI智能助手开发</td>
+        <td>T6</td>
+        <td>3</td>
+        <td>AI功能</td>
+    </tr>
+    <tr>
+        <td>T13</td>
+        <td>系统集成测试</td>
+        <td>T6,T7,T9,T10,T11,T12</td>
+        <td>5</td>
+        <td>测试报告</td>
+    </tr>
+    <tr>
+        <td>T14</td>
+        <td>Docker部署配置</td>
+        <td>T13</td>
+        <td>2</td>
+        <td>部署脚本</td>
+    </tr>
+    <tr>
+        <td>T15</td>
+        <td>系统上线</td>
+        <td>T14</td>
+        <td>1</td>
+        <td>系统交付</td>
+    </tr>
+</table>
+
+<h3>4.2 活动网络图</h3>
+<div class="diagram-container">
+    <div class="mermaid">
+graph LR
+    T1[T1 需求分析<br/>3天] --> T2[T2 系统设计<br/>4天]
+    T2 --> T3[T3 数据库设计<br/>2天]
+    T3 --> T4[T4 后端框架<br/>2天]
+    T3 --> T8[T8 前端框架<br/>2天]
+    T4 --> T5[T5 用户认证<br/>5天]
+    T5 --> T6[T6 预约挂号<br/>8天]
+    T5 --> T7[T7 排班管理<br/>6天]
+    T6 --> T12[T12 AI助手<br/>3天]
+    T8 --> T9[T9 患者端<br/>8天]
+    T8 --> T10[T10 医生端<br/>5天]
+    T8 --> T11[T11 管理员端<br/>5天]
+    T6 --> T13[T13 集成测试<br/>5天]
+    T7 --> T13
+    T9 --> T13
+    T10 --> T13
+    T11 --> T13
+    T12 --> T13
+    T13 --> T14[T14 Docker部署<br/>2天]
+    T14 --> T15[T15 系统上线<br/>1天]
+    
+    style T1 fill:#ff9999
+    style T2 fill:#ff9999
+    style T3 fill:#ff9999
+    style T4 fill:#ff9999
+    style T5 fill:#ff9999
+    style T6 fill:#ff9999
+    style T13 fill:#ff9999
+    style T14 fill:#ff9999
+    style T15 fill:#ff9999
+    </div>
+</div>
+
+<p class="no-indent">关键路径：T1 → T2 → T3 → T4 → T5 → T6 → T13 → T14 → T15</p>
+<p class="no-indent">关键路径总工期：3+4+2+2+5+8+5+2+1 = 32天</p>
+
+<h3>4.3 甘特图</h3>
+
+<p class="no-indent center">表4-2 项目进度甘特图</p>
+<table class="gantt-table">
+    <tr>
+        <th style="width:120px;">任务</th>
+        <th>W1</th><th>W2</th><th>W3</th><th>W4</th><th>W5</th><th>W6</th><th>W7</th>
+    </tr>
+    <tr>
+        <td style="text-align:left;">T1 需求分析</td>
+        <td style="background:#f44336;"></td>
+        <td></td><td></td><td></td><td></td><td></td><td></td>
+    </tr>
+    <tr>
+        <td style="text-align:left;">T2 系统设计</td>
+        <td style="background:#f44336;"></td>
+        <td></td><td></td><td></td><td></td><td></td><td></td>
+    </tr>
+    <tr>
+        <td style="text-align:left;">T3 数据库设计</td>
+        <td></td>
+        <td style="background:#f44336;"></td>
+        <td></td><td></td><td></td><td></td><td></td>
+    </tr>
+    <tr>
+        <td style="text-align:left;">T4 后端框架</td>
+        <td></td>
+        <td style="background:#f44336;"></td>
+        <td></td><td></td><td></td><td></td><td></td>
+    </tr>
+    <tr>
+        <td style="text-align:left;">T5 用户认证</td>
+        <td></td>
+        <td style="background:#f44336;"></td>
+        <td style="background:#f44336;"></td>
+        <td></td><td></td><td></td><td></td>
+    </tr>
+    <tr>
+        <td style="text-align:left;">T6 预约挂号</td>
+        <td></td><td></td>
+        <td style="background:#f44336;"></td>
+        <td style="background:#f44336;"></td>
+        <td></td><td></td><td></td>
+    </tr>
+    <tr>
+        <td style="text-align:left;">T7 排班管理</td>
+        <td></td><td></td>
+        <td style="background:#4CAF50;"></td>
+        <td style="background:#4CAF50;"></td>
+        <td></td><td></td><td></td>
+    </tr>
+    <tr>
+        <td style="text-align:left;">T8 前端框架</td>
+        <td></td>
+        <td style="background:#4CAF50;"></td>
+        <td></td><td></td><td></td><td></td><td></td>
+    </tr>
+    <tr>
+        <td style="text-align:left;">T9 患者端</td>
+        <td></td><td></td>
+        <td style="background:#4CAF50;"></td>
+        <td style="background:#4CAF50;"></td>
+        <td></td><td></td><td></td>
+    </tr>
+    <tr>
+        <td style="text-align:left;">T10 医生端</td>
+        <td></td><td></td>
+        <td style="background:#4CAF50;"></td>
+        <td style="background:#4CAF50;"></td>
+        <td></td><td></td><td></td>
+    </tr>
+    <tr>
+        <td style="text-align:left;">T11 管理员端</td>
+        <td></td><td></td><td></td>
+        <td style="background:#4CAF50;"></td>
+        <td></td><td></td><td></td>
+    </tr>
+    <tr>
+        <td style="text-align:left;">T12 AI助手</td>
+        <td></td><td></td><td></td>
+        <td style="background:#4CAF50;"></td>
+        <td></td><td></td><td></td>
+    </tr>
+    <tr>
+        <td style="text-align:left;">T13 集成测试</td>
+        <td></td><td></td><td></td><td></td>
+        <td style="background:#f44336;"></td>
+        <td></td><td></td>
+    </tr>
+    <tr>
+        <td style="text-align:left;">T14 Docker部署</td>
+        <td></td><td></td><td></td><td></td>
+        <td style="background:#f44336;"></td>
+        <td></td><td></td>
+    </tr>
+    <tr>
+        <td style="text-align:left;">T15 系统上线</td>
+        <td></td><td></td><td></td><td></td><td></td>
+        <td style="background:#f44336;"></td>
+        <td></td>
+    </tr>
+</table>
+<p class="no-indent">注：红色为关键路径任务，绿色为非关键路径任务</p>
+
+</div>
+
+
+<div class="page page-break">
+
+<h2>5. 人员组织计划</h2>
+
+<h3>5.1 团队组织结构</h3>
+<div class="diagram-container">
+    <div class="mermaid">
+graph TD
+    PM[项目经理] --> BE[后端开发]
+    PM --> FE[前端开发]
+    PM --> QA[测试人员]
+    PM --> OPS[运维人员]
+    
+    BE --> BE1[用户模块]
+    BE --> BE2[预约模块]
+    BE --> BE3[排班模块]
+    
+    FE --> FE1[患者端]
+    FE --> FE2[医生端]
+    FE --> FE3[管理员端]
+    </div>
+</div>
+
+<h3>5.2 任务分配表</h3>
+
+<p class="no-indent center">表5-1 任务分配表</p>
+<table>
+    <tr>
+        <th>任务编号</th>
+        <th>任务名称</th>
+        <th>负责人</th>
+        <th>成果审查人</th>
+        <th>交付物</th>
+    </tr>
+    <tr>
+        <td>T1</td>
+        <td>需求分析</td>
+        <td>项目经理</td>
+        <td>全体成员</td>
+        <td>需求规格说明书</td>
+    </tr>
+    <tr>
+        <td>T2</td>
+        <td>系统设计</td>
+        <td>项目经理</td>
+        <td>后端开发</td>
+        <td>设计规格说明书</td>
+    </tr>
+    <tr>
+        <td>T3</td>
+        <td>数据库设计</td>
+        <td>后端开发</td>
+        <td>项目经理</td>
+        <td>数据库脚本</td>
+    </tr>
+    <tr>
+        <td>T4</td>
+        <td>后端框架搭建</td>
+        <td>后端开发</td>
+        <td>项目经理</td>
+        <td>Spring Boot项目</td>
+    </tr>
+    <tr>
+        <td>T5</td>
+        <td>用户认证模块</td>
+        <td>后端开发</td>
+        <td>测试人员</td>
+        <td>认证API</td>
+    </tr>
+    <tr>
+        <td>T6</td>
+        <td>预约挂号模块</td>
+        <td>后端开发</td>
+        <td>测试人员</td>
+        <td>预约API</td>
+    </tr>
+    <tr>
+        <td>T7</td>
+        <td>排班管理模块</td>
+        <td>后端开发</td>
+        <td>测试人员</td>
+        <td>排班API</td>
+    </tr>
+    <tr>
+        <td>T8</td>
+        <td>前端框架搭建</td>
+        <td>前端开发</td>
+        <td>项目经理</td>
+        <td>Vue项目</td>
+    </tr>
+    <tr>
+        <td>T9</td>
+        <td>患者端界面</td>
+        <td>前端开发</td>
+        <td>测试人员</td>
+        <td>患者端页面</td>
+    </tr>
+    <tr>
+        <td>T10</td>
+        <td>医生端界面</td>
+        <td>前端开发</td>
+        <td>测试人员</td>
+        <td>医生端页面</td>
+    </tr>
+    <tr>
+        <td>T11</td>
+        <td>管理员端界面</td>
+        <td>前端开发</td>
+        <td>测试人员</td>
+        <td>管理员端页面</td>
+    </tr>
+    <tr>
+        <td>T12</td>
+        <td>AI智能助手</td>
+        <td>后端开发</td>
+        <td>前端开发</td>
+        <td>AI聊天功能</td>
+    </tr>
+    <tr>
+        <td>T13</td>
+        <td>系统集成测试</td>
+        <td>测试人员</td>
+        <td>项目经理</td>
+        <td>测试报告</td>
+    </tr>
+    <tr>
+        <td>T14</td>
+        <td>Docker部署</td>
+        <td>运维人员</td>
+        <td>后端开发</td>
+        <td>部署脚本</td>
+    </tr>
+    <tr>
+        <td>T15</td>
+        <td>系统上线</td>
+        <td>运维人员</td>
+        <td>项目经理</td>
+        <td>上线报告</td>
+    </tr>
+</table>
+
+<h3>5.3 人员职责说明</h3>
+
+<p class="no-indent center">表5-2 人员职责表</p>
+<table>
+    <tr>
+        <th>角色</th>
+        <th>人数</th>
+        <th>主要职责</th>
+        <th>技能要求</th>
+    </tr>
+    <tr>
+        <td>项目经理</td>
+        <td>1</td>
+        <td>项目规划、进度控制、需求分析、文档编写</td>
+        <td>项目管理、需求分析、沟通协调</td>
+    </tr>
+    <tr>
+        <td>后端开发</td>
+        <td>1</td>
+        <td>后端API开发、数据库设计、业务逻辑实现</td>
+        <td>Java、Spring Boot、MySQL、JPA</td>
+    </tr>
+    <tr>
+        <td>前端开发</td>
+        <td>1</td>
+        <td>前端界面开发、交互设计、API对接</td>
+        <td>Vue 3、JavaScript、CSS、Element Plus</td>
+    </tr>
+    <tr>
+        <td>测试人员</td>
+        <td>1</td>
+        <td>测试用例设计、功能测试、缺陷跟踪</td>
+        <td>测试方法、Postman、浏览器调试</td>
+    </tr>
+    <tr>
+        <td>运维人员</td>
+        <td>1</td>
+        <td>服务器配置、Docker部署、系统监控</td>
+        <td>Linux、Docker、Nginx、Shell</td>
+    </tr>
+</table>
+
+<h3>5.4 沟通计划</h3>
+
+<p class="no-indent center">表5-3 沟通计划表</p>
+<table>
+    <tr>
+        <th>沟通方式</th>
+        <th>频率</th>
+        <th>参与人员</th>
+        <th>目的</th>
+    </tr>
+    <tr>
+        <td>每日站会</td>
+        <td>每天</td>
+        <td>全体成员</td>
+        <td>同步进度、解决问题</td>
+    </tr>
+    <tr>
+        <td>周例会</td>
+        <td>每周</td>
+        <td>全体成员</td>
+        <td>总结本周、计划下周</td>
+    </tr>
+    <tr>
+        <td>代码评审</td>
+        <td>按需</td>
+        <td>开发人员</td>
+        <td>代码质量控制</td>
+    </tr>
+    <tr>
+        <td>里程碑评审</td>
+        <td>按计划</td>
+        <td>全体成员</td>
+        <td>阶段成果验收</td>
+    </tr>
+</table>
+
+</div>
+
+<script>
+    mermaid.initialize({
+        startOnLoad: true,
+        theme: 'default',
+        securityLevel: 'loose'
+    });
+</script>
+
+</body>
+</html>

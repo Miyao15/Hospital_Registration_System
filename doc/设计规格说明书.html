@@ -1,0 +1,2332 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>医院预约挂号系统 - 设计规格说明书</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: "SimSun", "宋体", serif;
+            font-size: 12pt;
+            line-height: 1.8;
+            color: #000;
+            background: #fff;
+            padding: 0;
+        }
+        .page {
+            width: 100%;
+            max-width: 21cm;
+            margin: 0 auto;
+            padding: 1cm;
+        }
+        h1 {
+            font-size: 18pt;
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 30pt;
+            padding-bottom: 10pt;
+            border-bottom: 2px solid #000;
+        }
+        h2 {
+            font-size: 14pt;
+            font-weight: bold;
+            margin-top: 20pt;
+            margin-bottom: 10pt;
+        }
+        h3 {
+            font-size: 12pt;
+            font-weight: bold;
+            margin-top: 15pt;
+            margin-bottom: 8pt;
+        }
+        h4 {
+            font-size: 12pt;
+            font-weight: bold;
+            margin-top: 10pt;
+            margin-bottom: 6pt;
+        }
+        p {
+            text-indent: 2em;
+            margin-bottom: 8pt;
+        }
+        ul, ol {
+            margin-left: 2em;
+            margin-bottom: 10pt;
+        }
+        li {
+            margin-bottom: 4pt;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10pt 0;
+            font-size: 10pt;
+            page-break-inside: avoid;
+        }
+        th, td {
+            border: 1px solid #000;
+            padding: 6pt 8pt;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+            text-align: center;
+        }
+        pre {
+            font-family: "Courier New", monospace;
+            font-size: 9pt;
+            background: #f8f8f8;
+            border: 1px solid #ccc;
+            padding: 10pt;
+            margin: 10pt 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            page-break-inside: avoid;
+        }
+        code {
+            font-family: "Courier New", monospace;
+            font-size: 10pt;
+            background: #f5f5f5;
+            padding: 2pt 4pt;
+        }
+        .center {
+            text-align: center;
+        }
+        .no-indent {
+            text-indent: 0;
+        }
+        .page-break {
+            page-break-before: always;
+        }
+        @media print {
+            body { padding: 0; }
+            .page { padding: 0; max-width: none; }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+
+<h1>医院预约挂号系统<br>设计规格说明书</h1>
+
+<h2>1. 引言</h2>
+
+<h3>1.1 命名规则</h3>
+
+<h4>1.1.1 变量对象命名规则</h4>
+
+<p class="no-indent center">表1-1 变量命名规则</p>
+<table>
+    <tr>
+        <th>类型</th>
+        <th>命名规则</th>
+        <th>示例</th>
+    </tr>
+    <tr>
+        <td>全局常量</td>
+        <td>全大写，下划线分隔</td>
+        <td>MAX_LOGIN_ATTEMPTS, JWT_SECRET</td>
+    </tr>
+    <tr>
+        <td>类名</td>
+        <td>大驼峰命名法（PascalCase）</td>
+        <td>UserService, DoctorController</td>
+    </tr>
+    <tr>
+        <td>方法名</td>
+        <td>小驼峰命名法（camelCase）</td>
+        <td>getUserById, createAppointment</td>
+    </tr>
+    <tr>
+        <td>局部变量</td>
+        <td>小驼峰命名法（camelCase）</td>
+        <td>patientName, appointmentDate</td>
+    </tr>
+    <tr>
+        <td>私有成员变量</td>
+        <td>小驼峰命名法（camelCase）</td>
+        <td>userId, passwordHash</td>
+    </tr>
+    <tr>
+        <td>接口名</td>
+        <td>大驼峰，以I开头或以able/ible结尾</td>
+        <td>IUserRepository, Serializable</td>
+    </tr>
+    <tr>
+        <td>枚举类型</td>
+        <td>大驼峰命名，值全大写</td>
+        <td>UserRole.PATIENT, AppointmentStatus.PENDING</td>
+    </tr>
+    <tr>
+        <td>DTO类</td>
+        <td>大驼峰，以DTO结尾</td>
+        <td>LoginRequestDTO, AppointmentDetailDTO</td>
+    </tr>
+</table>
+
+<h4>1.1.2 数据库对象命名规则</h4>
+
+<p class="no-indent center">表1-2 数据库对象命名规则</p>
+<table>
+    <tr>
+        <th>对象类型</th>
+        <th>命名规则</th>
+        <th>示例</th>
+    </tr>
+    <tr>
+        <td>数据库表名</td>
+        <td>小写，下划线分隔，复数形式</td>
+        <td>users, doctors, appointments</td>
+    </tr>
+    <tr>
+        <td>字段名</td>
+        <td>小写，下划线分隔</td>
+        <td>user_id, created_at, password_hash</td>
+    </tr>
+    <tr>
+        <td>主键</td>
+        <td>id（UUID字符串）</td>
+        <td>id VARCHAR(36)</td>
+    </tr>
+    <tr>
+        <td>外键</td>
+        <td>关联表名单数_id</td>
+        <td>user_id, doctor_id, department_id</td>
+    </tr>
+    <tr>
+        <td>索引名</td>
+        <td>idx_表名_字段名</td>
+        <td>idx_users_phone, idx_doctors_department_id</td>
+    </tr>
+    <tr>
+        <td>唯一约束</td>
+        <td>uk_表名_字段名</td>
+        <td>uk_users_phone, uk_doctors_license_number</td>
+    </tr>
+    <tr>
+        <td>时间戳字段</td>
+        <td>created_at, updated_at</td>
+        <td>created_at DATETIME, updated_at DATETIME</td>
+    </tr>
+</table>
+
+<h3>1.2 术语定义</h3>
+
+<p class="no-indent center">表1-3 术语定义表</p>
+<table>
+    <tr>
+        <th>术语</th>
+        <th>英文</th>
+        <th>定义</th>
+    </tr>
+    <tr>
+        <td>患者</td>
+        <td>Patient</td>
+        <td>使用系统进行预约挂号的普通用户</td>
+    </tr>
+    <tr>
+        <td>医生</td>
+        <td>Doctor</td>
+        <td>提供医疗服务的专业人员，需审批后方可使用系统</td>
+    </tr>
+    <tr>
+        <td>管理员</td>
+        <td>Admin</td>
+        <td>系统管理人员，负责审批医生、管理科室等</td>
+    </tr>
+    <tr>
+        <td>科室</td>
+        <td>Department</td>
+        <td>医院的医疗部门分类，如内科、外科等</td>
+    </tr>
+    <tr>
+        <td>排班</td>
+        <td>Schedule</td>
+        <td>医生的出诊日期安排</td>
+    </tr>
+    <tr>
+        <td>时段</td>
+        <td>TimeSlot</td>
+        <td>排班中的具体时间段，分上午/下午</td>
+    </tr>
+    <tr>
+        <td>预约</td>
+        <td>Appointment</td>
+        <td>患者对医生某时段的挂号记录</td>
+    </tr>
+    <tr>
+        <td>号源</td>
+        <td>Slot</td>
+        <td>某时段可预约的名额数量</td>
+    </tr>
+    <tr>
+        <td>JWT</td>
+        <td>JSON Web Token</td>
+        <td>用于用户身份认证的令牌</td>
+    </tr>
+    <tr>
+        <td>DTO</td>
+        <td>Data Transfer Object</td>
+        <td>数据传输对象，用于层间数据传递</td>
+    </tr>
+</table>
+
+<h3>1.3 相关文档</h3>
+
+<p class="no-indent center">表1-4 相关文档列表</p>
+<table>
+    <tr>
+        <th>文档名称</th>
+        <th>版本</th>
+        <th>说明</th>
+    </tr>
+    <tr>
+        <td>需求规格说明书</td>
+        <td>V1.0</td>
+        <td>系统功能需求和非功能需求描述</td>
+    </tr>
+    <tr>
+        <td>系统实现及测试报告</td>
+        <td>V1.0</td>
+        <td>系统测试用例和测试结果</td>
+    </tr>
+    <tr>
+        <td>部署文档(DEPLOY.md)</td>
+        <td>V1.0</td>
+        <td>Docker部署指南</td>
+    </tr>
+    <tr>
+        <td>API接口文档</td>
+        <td>V1.0</td>
+        <td>RESTful API接口说明</td>
+    </tr>
+</table>
+
+</div>
+
+
+<div class="page page-break">
+
+<h2>2. 系统设计</h2>
+
+<h3>2.1 体系结构设计</h3>
+
+<h4>2.1.1 系统逻辑架构（包图）</h4>
+
+<p>本系统采用前后端分离的B/S架构，后端采用Spring Boot框架，前端采用Vue 3框架。</p>
+
+<pre>
+┌─────────────────────────────────────────────────────────────────┐
+│                        表现层 (Presentation)                      │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐              │
+│  │  患者端Vue   │  │  医生端Vue   │  │  管理员端Vue │              │
+│  └─────────────┘  └─────────────┘  └─────────────┘              │
+└─────────────────────────────────────────────────────────────────┘
+                              │ HTTP/REST
+┌─────────────────────────────────────────────────────────────────┐
+│                        控制层 (Controller)                        │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐           │
+│  │AuthCtrl  │ │DoctorCtrl│ │ApptCtrl  │ │AdminCtrl │           │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘           │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+┌─────────────────────────────────────────────────────────────────┐
+│                        业务层 (Service)                          │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐           │
+│  │AuthSvc   │ │DoctorSvc │ │ApptSvc   │ │ScheduleSvc│          │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘           │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+┌─────────────────────────────────────────────────────────────────┐
+│                        数据访问层 (Repository)                    │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐           │
+│  │UserRepo  │ │DoctorRepo│ │ApptRepo  │ │ScheduleRepo│         │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘           │
+└─────────────────────────────────────────────────────────────────┘
+                              │ JPA/Hibernate
+┌─────────────────────────────────────────────────────────────────┐
+│                        数据层 (Database)                         │
+│                         MySQL 8.0                                │
+└─────────────────────────────────────────────────────────────────┘
+</pre>
+
+<h4>2.1.2 系统物理架构（部署图）</h4>
+
+<pre>
+┌─────────────────────────────────────────────────────────────────┐
+│                      云服务器 (152.136.13.236)                    │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │                    Docker Compose                        │   │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐     │   │
+│  │  │  frontend   │  │   backend   │  │    mysql    │     │   │
+│  │  │  (Nginx)    │  │(Spring Boot)│  │   (MySQL)   │     │   │
+│  │  │  Port:8081  │  │  Port:8082  │  │  Port:3307  │     │   │
+│  │  └─────────────┘  └─────────────┘  └─────────────┘     │   │
+│  │         │                │                │             │   │
+│  │         └────────────────┼────────────────┘             │   │
+│  │                          │                              │   │
+│  │                   Docker Network                        │   │
+│  └─────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                         Internet
+                              │
+┌─────────────────────────────────────────────────────────────────┐
+│                        客户端浏览器                               │
+│              Chrome / Edge / Firefox / 移动端                    │
+└─────────────────────────────────────────────────────────────────┘
+</pre>
+
+<h3>2.2 类设计</h3>
+
+<h4>2.2.1 核心实体类图</h4>
+
+<pre>
+┌─────────────────┐       ┌─────────────────┐
+│      User       │       │    Patient      │
+├─────────────────┤       ├─────────────────┤
+│ -id: String     │1    1 │ -id: String     │
+│ -phone: String  │───────│ -userId: String │
+│ -passwordHash   │       │ -name: String   │
+│ -role: UserRole │       │ -idCard: String │
+│ -status         │       │ -gender: Gender │
+│ -createdAt      │       │ -birthDate      │
+└─────────────────┘       └─────────────────┘
+        │1
+        │
+        │1
+┌─────────────────┐       ┌─────────────────┐
+│     Doctor      │       │   Department    │
+├─────────────────┤       ├─────────────────┤
+│ -id: String     │  n  1 │ -id: String     │
+│ -userId: String │───────│ -name: String   │
+│ -name: String   │       │ -category       │
+│ -employeeId     │       │ -description    │
+│ -title          │       │ -location       │
+│ -departmentId   │       │ -enabled        │
+│ -licenseNumber  │       └─────────────────┘
+└─────────────────┘
+        │1
+        │
+        │n
+┌─────────────────┐       ┌─────────────────┐
+│    Schedule     │       │    TimeSlot     │
+├─────────────────┤       ├─────────────────┤
+│ -id: String     │1    n │ -id: String     │
+│ -doctorId       │───────│ -scheduleId     │
+│ -scheduleDate   │       │ -period         │
+│ -isWorking      │       │ -startTime      │
+│ -remark         │       │ -totalSlots     │
+└─────────────────┘       │ -remainingSlots │
+                          └─────────────────┘
+                                  │1
+                                  │
+                                  │n
+                          ┌─────────────────┐
+                          │   Appointment   │
+                          ├─────────────────┤
+                          │ -id: String     │
+                          │ -appointmentNo  │
+                          │ -patientId      │
+                          │ -doctorId       │
+                          │ -timeSlotId     │
+                          │ -status         │
+                          └─────────────────┘
+</pre>
+
+<h4>2.2.2 预约挂号序列图</h4>
+
+<pre>
+Patient      Frontend     Controller      Service       Repository     Database
+   │            │             │              │              │              │
+   │ 1.选择医生  │             │              │              │              │
+   │───────────>│             │              │              │              │
+   │            │ 2.查询排班   │              │              │              │
+   │            │────────────>│              │              │              │
+   │            │             │ 3.getSchedule│              │              │
+   │            │             │─────────────>│              │              │
+   │            │             │              │ 4.findByDoctor│             │
+   │            │             │              │─────────────>│              │
+   │            │             │              │              │ 5.SELECT    │
+   │            │             │              │              │─────────────>│
+   │            │             │              │              │<─────────────│
+   │            │             │              │<─────────────│              │
+   │            │             │<─────────────│              │              │
+   │            │<────────────│              │              │              │
+   │<───────────│             │              │              │              │
+   │            │             │              │              │              │
+   │ 6.提交预约  │             │              │              │              │
+   │───────────>│             │              │              │              │
+   │            │ 7.createAppt│              │              │              │
+   │            │────────────>│              │              │              │
+   │            │             │ 8.create     │              │              │
+   │            │             │─────────────>│              │              │
+   │            │             │              │ 9.checkSlot  │              │
+   │            │             │              │─────────────>│              │
+   │            │             │              │ 10.saveAppt  │              │
+   │            │             │              │─────────────>│              │
+   │            │             │              │              │ 11.INSERT   │
+   │            │             │              │              │─────────────>│
+   │            │             │              │              │<─────────────│
+   │            │             │              │<─────────────│              │
+   │            │             │<─────────────│              │              │
+   │            │<────────────│              │              │              │
+   │<───────────│             │              │              │              │
+</pre>
+
+</div>
+
+
+<div class="page page-break">
+
+<h3>2.3 类说明</h3>
+
+<p class="no-indent center">表2-1 核心实体类说明</p>
+<table>
+    <tr>
+        <th>类名</th>
+        <th>职责</th>
+        <th>主要属性</th>
+        <th>主要方法</th>
+    </tr>
+    <tr>
+        <td>User</td>
+        <td>用户基础信息，统一管理所有角色的登录凭证</td>
+        <td>id, phone, passwordHash, role, status</td>
+        <td>@PrePersist, @PreUpdate</td>
+    </tr>
+    <tr>
+        <td>Patient</td>
+        <td>患者详细信息，关联User表</td>
+        <td>id, userId, name, idCard, gender, birthDate</td>
+        <td>@PrePersist, @PreUpdate</td>
+    </tr>
+    <tr>
+        <td>Doctor</td>
+        <td>医生详细信息，包含职称、科室、执照等</td>
+        <td>id, userId, name, title, departmentId, licenseNumber</td>
+        <td>@PrePersist, @PreUpdate</td>
+    </tr>
+    <tr>
+        <td>Admin</td>
+        <td>管理员信息</td>
+        <td>id, userId, name, employeeId</td>
+        <td>@PrePersist, @PreUpdate</td>
+    </tr>
+    <tr>
+        <td>Department</td>
+        <td>科室信息管理</td>
+        <td>id, name, category, description, enabled</td>
+        <td>@PrePersist, @PreUpdate</td>
+    </tr>
+    <tr>
+        <td>Schedule</td>
+        <td>医生排班日期</td>
+        <td>id, doctorId, scheduleDate, isWorking</td>
+        <td>@PrePersist, @PreUpdate</td>
+    </tr>
+    <tr>
+        <td>TimeSlot</td>
+        <td>排班时段及号源管理</td>
+        <td>id, scheduleId, period, totalSlots, remainingSlots</td>
+        <td>@PrePersist, @PreUpdate, @Version</td>
+    </tr>
+    <tr>
+        <td>Appointment</td>
+        <td>预约挂号记录</td>
+        <td>id, appointmentNo, patientId, doctorId, status</td>
+        <td>@PrePersist, @PreUpdate</td>
+    </tr>
+    <tr>
+        <td>Notification</td>
+        <td>系统通知消息</td>
+        <td>id, userId, title, content, type, isRead</td>
+        <td>@PrePersist</td>
+    </tr>
+    <tr>
+        <td>DoctorLeave</td>
+        <td>医生请假申请</td>
+        <td>id, doctorId, startDate, endDate, status</td>
+        <td>@PrePersist, @PreUpdate</td>
+    </tr>
+    <tr>
+        <td>DoctorReview</td>
+        <td>医生评价</td>
+        <td>id, doctorId, patientId, rating, content</td>
+        <td>@PrePersist</td>
+    </tr>
+    <tr>
+        <td>Hospital</td>
+        <td>医院信息</td>
+        <td>id, name, address, longitude, latitude</td>
+        <td>@PrePersist, @PreUpdate</td>
+    </tr>
+</table>
+
+<p class="no-indent center">表2-2 服务层类说明</p>
+<table>
+    <tr>
+        <th>类名</th>
+        <th>职责</th>
+        <th>主要方法</th>
+    </tr>
+    <tr>
+        <td>AuthService</td>
+        <td>用户认证服务</td>
+        <td>login(), register(), logout(), validateToken()</td>
+    </tr>
+    <tr>
+        <td>PatientService</td>
+        <td>患者信息管理</td>
+        <td>getProfile(), updateProfile(), getAppointments()</td>
+    </tr>
+    <tr>
+        <td>DoctorProfileService</td>
+        <td>医生信息管理</td>
+        <td>getProfile(), searchDoctors(), getTopDoctors()</td>
+    </tr>
+    <tr>
+        <td>AppointmentService</td>
+        <td>预约挂号服务</td>
+        <td>createAppointment(), cancelAppointment(), getDetail()</td>
+    </tr>
+    <tr>
+        <td>ScheduleService</td>
+        <td>排班管理服务</td>
+        <td>createSchedule(), getSchedule(), updateTimeSlot()</td>
+    </tr>
+    <tr>
+        <td>DepartmentService</td>
+        <td>科室管理服务</td>
+        <td>getAllDepartments(), createDepartment(), updateDepartment()</td>
+    </tr>
+    <tr>
+        <td>NotificationService</td>
+        <td>通知消息服务</td>
+        <td>sendNotification(), getNotifications(), markAsRead()</td>
+    </tr>
+    <tr>
+        <td>AIChatService</td>
+        <td>AI智能助手服务</td>
+        <td>chat(), getHistory()</td>
+    </tr>
+</table>
+
+<p class="no-indent center">表2-3 枚举类型说明</p>
+<table>
+    <tr>
+        <th>枚举名</th>
+        <th>说明</th>
+        <th>枚举值</th>
+    </tr>
+    <tr>
+        <td>UserRole</td>
+        <td>用户角色</td>
+        <td>PATIENT, DOCTOR, ADMIN</td>
+    </tr>
+    <tr>
+        <td>UserStatus</td>
+        <td>用户状态</td>
+        <td>ACTIVE, INACTIVE, LOCKED, PENDING</td>
+    </tr>
+    <tr>
+        <td>Gender</td>
+        <td>性别</td>
+        <td>MALE, FEMALE</td>
+    </tr>
+    <tr>
+        <td>DoctorTitle</td>
+        <td>医生职称</td>
+        <td>RESIDENT, ATTENDING, ASSOCIATE_CHIEF, CHIEF</td>
+    </tr>
+    <tr>
+        <td>TimePeriod</td>
+        <td>时段</td>
+        <td>MORNING, AFTERNOON</td>
+    </tr>
+    <tr>
+        <td>AppointmentStatus</td>
+        <td>预约状态</td>
+        <td>PENDING, CONFIRMED, COMPLETED, CANCELLED</td>
+    </tr>
+    <tr>
+        <td>LeaveStatus</td>
+        <td>请假状态</td>
+        <td>PENDING, APPROVED, REJECTED</td>
+    </tr>
+    <tr>
+        <td>NotificationType</td>
+        <td>通知类型</td>
+        <td>APPOINTMENT, SYSTEM, REMINDER</td>
+    </tr>
+</table>
+
+</div>
+
+<div class="page page-break">
+
+<h2>3. 数据结构设计</h2>
+
+<h3>3.1 持久类分析</h3>
+
+<p>本系统采用JPA/Hibernate作为ORM框架，所有实体类均使用@Entity注解标记为持久类，通过@Table注解映射到数据库表。主要持久类包括：</p>
+
+<ul>
+    <li><strong>User</strong>：用户基础表，存储所有用户的登录凭证，通过role字段区分角色</li>
+    <li><strong>Patient</strong>：患者信息表，通过user_id外键关联User表</li>
+    <li><strong>Doctor</strong>：医生信息表，通过user_id外键关联User表，department_id关联科室</li>
+    <li><strong>Department</strong>：科室表，独立实体，被Doctor引用</li>
+    <li><strong>Schedule</strong>：排班表，通过doctor_id关联医生</li>
+    <li><strong>TimeSlot</strong>：时段表，通过schedule_id关联排班，使用@Version实现乐观锁</li>
+    <li><strong>Appointment</strong>：预约表，关联患者、医生、时段等多个实体</li>
+</ul>
+
+<h3>3.2 数据库表名清单</h3>
+
+<p class="no-indent center">表3-1 数据库表名清单</p>
+<table>
+    <tr>
+        <th>序号</th>
+        <th>中文表名</th>
+        <th>英文表名</th>
+        <th>表功能说明</th>
+    </tr>
+    <tr>
+        <td>1</td>
+        <td>用户表</td>
+        <td>users</td>
+        <td>存储所有用户的登录凭证和基本状态</td>
+    </tr>
+    <tr>
+        <td>2</td>
+        <td>患者表</td>
+        <td>patients</td>
+        <td>存储患者的详细个人信息</td>
+    </tr>
+    <tr>
+        <td>3</td>
+        <td>医生表</td>
+        <td>doctors</td>
+        <td>存储医生的详细信息和资质</td>
+    </tr>
+    <tr>
+        <td>4</td>
+        <td>管理员表</td>
+        <td>admins</td>
+        <td>存储管理员信息</td>
+    </tr>
+    <tr>
+        <td>5</td>
+        <td>科室表</td>
+        <td>departments</td>
+        <td>存储医院科室信息</td>
+    </tr>
+    <tr>
+        <td>6</td>
+        <td>排班表</td>
+        <td>schedules</td>
+        <td>存储医生的出诊日期安排</td>
+    </tr>
+    <tr>
+        <td>7</td>
+        <td>时段表</td>
+        <td>time_slots</td>
+        <td>存储排班的具体时段和号源</td>
+    </tr>
+    <tr>
+        <td>8</td>
+        <td>预约表</td>
+        <td>appointments</td>
+        <td>存储患者的预约挂号记录</td>
+    </tr>
+    <tr>
+        <td>9</td>
+        <td>通知表</td>
+        <td>notifications</td>
+        <td>存储系统通知消息</td>
+    </tr>
+    <tr>
+        <td>10</td>
+        <td>医生请假表</td>
+        <td>doctor_leaves</td>
+        <td>存储医生的请假申请</td>
+    </tr>
+    <tr>
+        <td>11</td>
+        <td>医生评价表</td>
+        <td>doctor_reviews</td>
+        <td>存储患者对医生的评价</td>
+    </tr>
+    <tr>
+        <td>12</td>
+        <td>医院表</td>
+        <td>hospitals</td>
+        <td>存储医院基本信息</td>
+    </tr>
+</table>
+
+<h3>3.3 数据库表之间关系</h3>
+
+<pre>
+                    ┌─────────────┐
+                    │   users     │
+                    │   (用户表)   │
+                    └──────┬──────┘
+           ┌───────────────┼───────────────┐
+           │               │               │
+           ▼               ▼               ▼
+    ┌─────────────┐ ┌─────────────┐ ┌─────────────┐
+    │  patients   │ │   doctors   │ │   admins    │
+    │  (患者表)    │ │  (医生表)    │ │ (管理员表)   │
+    └──────┬──────┘ └──────┬──────┘ └─────────────┘
+           │               │
+           │               ├──────────────┐
+           │               │              │
+           │               ▼              ▼
+           │        ┌─────────────┐ ┌─────────────┐
+           │        │ departments │ │  schedules  │
+           │        │  (科室表)    │ │  (排班表)    │
+           │        └─────────────┘ └──────┬──────┘
+           │                               │
+           │                               ▼
+           │                        ┌─────────────┐
+           │                        │ time_slots  │
+           │                        │  (时段表)    │
+           │                        └──────┬──────┘
+           │                               │
+           └───────────────┬───────────────┘
+                           ▼
+                    ┌─────────────┐
+                    │appointments │
+                    │  (预约表)    │
+                    └─────────────┘
+</pre>
+
+<p class="no-indent">主要关系说明：</p>
+<ul>
+    <li>users 1:1 patients/doctors/admins（用户与角色详情一对一）</li>
+    <li>departments 1:n doctors（科室与医生一对多）</li>
+    <li>doctors 1:n schedules（医生与排班一对多）</li>
+    <li>schedules 1:n time_slots（排班与时段一对多）</li>
+    <li>time_slots 1:n appointments（时段与预约一对多）</li>
+    <li>patients 1:n appointments（患者与预约一对多）</li>
+    <li>doctors 1:n appointments（医生与预约一对多）</li>
+</ul>
+
+</div>
+
+
+<div class="page page-break">
+
+<h3>3.4 数据库表的详细清单</h3>
+
+<h4>3.4.1 用户表 (users)</h4>
+
+<p class="no-indent center">表3-2 users表结构</p>
+<table>
+    <tr>
+        <th>序号</th>
+        <th>字段中文名</th>
+        <th>字段英文名</th>
+        <th>类型、宽度</th>
+        <th>取值约束</th>
+        <th>空否</th>
+        <th>默认值</th>
+        <th>主键/外键</th>
+        <th>索引</th>
+    </tr>
+    <tr>
+        <td>1</td>
+        <td>用户ID</td>
+        <td>id</td>
+        <td>VARCHAR(36)</td>
+        <td>UUID格式</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>PK</td>
+        <td>是</td>
+    </tr>
+    <tr>
+        <td>2</td>
+        <td>手机号</td>
+        <td>phone</td>
+        <td>VARCHAR(20)</td>
+        <td>11位数字</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>-</td>
+        <td>UNIQUE</td>
+    </tr>
+    <tr>
+        <td>3</td>
+        <td>密码哈希</td>
+        <td>password_hash</td>
+        <td>VARCHAR(255)</td>
+        <td>BCrypt加密</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>4</td>
+        <td>角色</td>
+        <td>role</td>
+        <td>VARCHAR(20)</td>
+        <td>PATIENT/DOCTOR/ADMIN</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>-</td>
+        <td>是</td>
+    </tr>
+    <tr>
+        <td>5</td>
+        <td>状态</td>
+        <td>status</td>
+        <td>VARCHAR(20)</td>
+        <td>ACTIVE/INACTIVE/LOCKED/PENDING</td>
+        <td>NOT NULL</td>
+        <td>ACTIVE</td>
+        <td>-</td>
+        <td>是</td>
+    </tr>
+    <tr>
+        <td>6</td>
+        <td>登录失败次数</td>
+        <td>login_failures</td>
+        <td>INT</td>
+        <td>>=0</td>
+        <td>NULL</td>
+        <td>0</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>7</td>
+        <td>锁定截止时间</td>
+        <td>locked_until</td>
+        <td>DATETIME</td>
+        <td>-</td>
+        <td>NULL</td>
+        <td>NULL</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>8</td>
+        <td>创建时间</td>
+        <td>created_at</td>
+        <td>DATETIME</td>
+        <td>-</td>
+        <td>NOT NULL</td>
+        <td>CURRENT_TIMESTAMP</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>9</td>
+        <td>更新时间</td>
+        <td>updated_at</td>
+        <td>DATETIME</td>
+        <td>-</td>
+        <td>NOT NULL</td>
+        <td>CURRENT_TIMESTAMP</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>10</td>
+        <td>最后登录时间</td>
+        <td>last_login_at</td>
+        <td>DATETIME</td>
+        <td>-</td>
+        <td>NULL</td>
+        <td>NULL</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+</table>
+
+<p class="no-indent">索引：idx_users_phone(phone), idx_users_role(role), idx_users_status(status)</p>
+
+<h4>3.4.2 患者表 (patients)</h4>
+
+<p class="no-indent center">表3-3 patients表结构</p>
+<table>
+    <tr>
+        <th>序号</th>
+        <th>字段中文名</th>
+        <th>字段英文名</th>
+        <th>类型、宽度</th>
+        <th>取值约束</th>
+        <th>空否</th>
+        <th>默认值</th>
+        <th>主键/外键</th>
+        <th>索引</th>
+    </tr>
+    <tr>
+        <td>1</td>
+        <td>患者ID</td>
+        <td>id</td>
+        <td>VARCHAR(36)</td>
+        <td>UUID格式</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>PK</td>
+        <td>是</td>
+    </tr>
+    <tr>
+        <td>2</td>
+        <td>用户ID</td>
+        <td>user_id</td>
+        <td>VARCHAR(36)</td>
+        <td>-</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>FK(users.id)</td>
+        <td>UNIQUE</td>
+    </tr>
+    <tr>
+        <td>3</td>
+        <td>姓名</td>
+        <td>name</td>
+        <td>VARCHAR(50)</td>
+        <td>-</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>-</td>
+        <td>是</td>
+    </tr>
+    <tr>
+        <td>4</td>
+        <td>身份证号</td>
+        <td>id_card</td>
+        <td>VARCHAR(18)</td>
+        <td>18位</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>-</td>
+        <td>UNIQUE</td>
+    </tr>
+    <tr>
+        <td>5</td>
+        <td>性别</td>
+        <td>gender</td>
+        <td>VARCHAR(10)</td>
+        <td>MALE/FEMALE</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>6</td>
+        <td>出生日期</td>
+        <td>birth_date</td>
+        <td>DATE</td>
+        <td>-</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>7</td>
+        <td>病史</td>
+        <td>medical_history</td>
+        <td>TEXT</td>
+        <td>-</td>
+        <td>NULL</td>
+        <td>NULL</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>8</td>
+        <td>过敏史</td>
+        <td>allergy_history</td>
+        <td>TEXT</td>
+        <td>-</td>
+        <td>NULL</td>
+        <td>NULL</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>9</td>
+        <td>紧急联系人</td>
+        <td>emergency_contact</td>
+        <td>VARCHAR(50)</td>
+        <td>-</td>
+        <td>NULL</td>
+        <td>NULL</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>10</td>
+        <td>紧急联系电话</td>
+        <td>emergency_phone</td>
+        <td>VARCHAR(20)</td>
+        <td>-</td>
+        <td>NULL</td>
+        <td>NULL</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+</table>
+
+<h4>3.4.3 医生表 (doctors)</h4>
+
+<p class="no-indent center">表3-4 doctors表结构</p>
+<table>
+    <tr>
+        <th>序号</th>
+        <th>字段中文名</th>
+        <th>字段英文名</th>
+        <th>类型、宽度</th>
+        <th>取值约束</th>
+        <th>空否</th>
+        <th>默认值</th>
+        <th>主键/外键</th>
+        <th>索引</th>
+    </tr>
+    <tr>
+        <td>1</td>
+        <td>医生ID</td>
+        <td>id</td>
+        <td>VARCHAR(36)</td>
+        <td>UUID格式</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>PK</td>
+        <td>是</td>
+    </tr>
+    <tr>
+        <td>2</td>
+        <td>用户ID</td>
+        <td>user_id</td>
+        <td>VARCHAR(36)</td>
+        <td>-</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>FK(users.id)</td>
+        <td>UNIQUE</td>
+    </tr>
+    <tr>
+        <td>3</td>
+        <td>姓名</td>
+        <td>name</td>
+        <td>VARCHAR(50)</td>
+        <td>-</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>4</td>
+        <td>工号</td>
+        <td>employee_id</td>
+        <td>VARCHAR(20)</td>
+        <td>-</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>-</td>
+        <td>UNIQUE</td>
+    </tr>
+    <tr>
+        <td>5</td>
+        <td>职称</td>
+        <td>title</td>
+        <td>VARCHAR(30)</td>
+        <td>RESIDENT/ATTENDING/ASSOCIATE_CHIEF/CHIEF</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>6</td>
+        <td>科室ID</td>
+        <td>department_id</td>
+        <td>VARCHAR(36)</td>
+        <td>-</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>FK(departments.id)</td>
+        <td>是</td>
+    </tr>
+    <tr>
+        <td>7</td>
+        <td>专长</td>
+        <td>specialty</td>
+        <td>TEXT</td>
+        <td>-</td>
+        <td>NULL</td>
+        <td>NULL</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>8</td>
+        <td>执业证号</td>
+        <td>license_number</td>
+        <td>VARCHAR(50)</td>
+        <td>-</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>-</td>
+        <td>UNIQUE</td>
+    </tr>
+    <tr>
+        <td>9</td>
+        <td>简介</td>
+        <td>introduction</td>
+        <td>TEXT</td>
+        <td>-</td>
+        <td>NULL</td>
+        <td>NULL</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>10</td>
+        <td>头像URL</td>
+        <td>avatar_url</td>
+        <td>VARCHAR(255)</td>
+        <td>-</td>
+        <td>NULL</td>
+        <td>NULL</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>11</td>
+        <td>医院ID</td>
+        <td>hospital_id</td>
+        <td>VARCHAR(36)</td>
+        <td>-</td>
+        <td>NULL</td>
+        <td>NULL</td>
+        <td>FK(hospitals.id)</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>12</td>
+        <td>审批时间</td>
+        <td>approved_at</td>
+        <td>DATETIME</td>
+        <td>-</td>
+        <td>NULL</td>
+        <td>NULL</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+</table>
+
+</div>
+
+
+<div class="page page-break">
+
+<h4>3.4.4 科室表 (departments)</h4>
+
+<p class="no-indent center">表3-5 departments表结构</p>
+<table>
+    <tr>
+        <th>序号</th>
+        <th>字段中文名</th>
+        <th>字段英文名</th>
+        <th>类型、宽度</th>
+        <th>取值约束</th>
+        <th>空否</th>
+        <th>默认值</th>
+        <th>主键/外键</th>
+        <th>索引</th>
+    </tr>
+    <tr>
+        <td>1</td>
+        <td>科室ID</td>
+        <td>id</td>
+        <td>VARCHAR(36)</td>
+        <td>UUID格式</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>PK</td>
+        <td>是</td>
+    </tr>
+    <tr>
+        <td>2</td>
+        <td>科室名称</td>
+        <td>name</td>
+        <td>VARCHAR(50)</td>
+        <td>-</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>-</td>
+        <td>UNIQUE</td>
+    </tr>
+    <tr>
+        <td>3</td>
+        <td>科室分类</td>
+        <td>category</td>
+        <td>VARCHAR(20)</td>
+        <td>内科/外科/妇产科等</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>4</td>
+        <td>科室描述</td>
+        <td>description</td>
+        <td>TEXT</td>
+        <td>-</td>
+        <td>NULL</td>
+        <td>NULL</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>5</td>
+        <td>位置</td>
+        <td>location</td>
+        <td>VARCHAR(100)</td>
+        <td>-</td>
+        <td>NULL</td>
+        <td>NULL</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>6</td>
+        <td>联系电话</td>
+        <td>phone</td>
+        <td>VARCHAR(20)</td>
+        <td>-</td>
+        <td>NULL</td>
+        <td>NULL</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>7</td>
+        <td>科室主任ID</td>
+        <td>director_id</td>
+        <td>VARCHAR(36)</td>
+        <td>-</td>
+        <td>NULL</td>
+        <td>NULL</td>
+        <td>FK(doctors.id)</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>8</td>
+        <td>排序号</td>
+        <td>sort_order</td>
+        <td>INT</td>
+        <td>>=0</td>
+        <td>NULL</td>
+        <td>0</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>9</td>
+        <td>是否启用</td>
+        <td>enabled</td>
+        <td>BOOLEAN</td>
+        <td>true/false</td>
+        <td>NULL</td>
+        <td>true</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+</table>
+
+<h4>3.4.5 排班表 (schedules)</h4>
+
+<p class="no-indent center">表3-6 schedules表结构</p>
+<table>
+    <tr>
+        <th>序号</th>
+        <th>字段中文名</th>
+        <th>字段英文名</th>
+        <th>类型、宽度</th>
+        <th>取值约束</th>
+        <th>空否</th>
+        <th>默认值</th>
+        <th>主键/外键</th>
+        <th>索引</th>
+    </tr>
+    <tr>
+        <td>1</td>
+        <td>排班ID</td>
+        <td>id</td>
+        <td>VARCHAR(36)</td>
+        <td>UUID格式</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>PK</td>
+        <td>是</td>
+    </tr>
+    <tr>
+        <td>2</td>
+        <td>医生ID</td>
+        <td>doctor_id</td>
+        <td>VARCHAR(36)</td>
+        <td>-</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>FK(doctors.id)</td>
+        <td>是</td>
+    </tr>
+    <tr>
+        <td>3</td>
+        <td>排班日期</td>
+        <td>schedule_date</td>
+        <td>DATE</td>
+        <td>-</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>-</td>
+        <td>是</td>
+    </tr>
+    <tr>
+        <td>4</td>
+        <td>是否出诊</td>
+        <td>is_working</td>
+        <td>BOOLEAN</td>
+        <td>true/false</td>
+        <td>NULL</td>
+        <td>true</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>5</td>
+        <td>备注</td>
+        <td>remark</td>
+        <td>VARCHAR(255)</td>
+        <td>-</td>
+        <td>NULL</td>
+        <td>NULL</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+</table>
+
+<p class="no-indent">唯一约束：UNIQUE(doctor_id, schedule_date)</p>
+
+<h4>3.4.6 时段表 (time_slots)</h4>
+
+<p class="no-indent center">表3-7 time_slots表结构</p>
+<table>
+    <tr>
+        <th>序号</th>
+        <th>字段中文名</th>
+        <th>字段英文名</th>
+        <th>类型、宽度</th>
+        <th>取值约束</th>
+        <th>空否</th>
+        <th>默认值</th>
+        <th>主键/外键</th>
+        <th>索引</th>
+    </tr>
+    <tr>
+        <td>1</td>
+        <td>时段ID</td>
+        <td>id</td>
+        <td>VARCHAR(36)</td>
+        <td>UUID格式</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>PK</td>
+        <td>是</td>
+    </tr>
+    <tr>
+        <td>2</td>
+        <td>排班ID</td>
+        <td>schedule_id</td>
+        <td>VARCHAR(36)</td>
+        <td>-</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>FK(schedules.id)</td>
+        <td>是</td>
+    </tr>
+    <tr>
+        <td>3</td>
+        <td>时段</td>
+        <td>period</td>
+        <td>VARCHAR(20)</td>
+        <td>MORNING/AFTERNOON</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>4</td>
+        <td>开始时间</td>
+        <td>start_time</td>
+        <td>TIME</td>
+        <td>-</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>5</td>
+        <td>结束时间</td>
+        <td>end_time</td>
+        <td>TIME</td>
+        <td>-</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>6</td>
+        <td>总号源</td>
+        <td>total_slots</td>
+        <td>INT</td>
+        <td>>0</td>
+        <td>NOT NULL</td>
+        <td>20</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>7</td>
+        <td>剩余号源</td>
+        <td>remaining_slots</td>
+        <td>INT</td>
+        <td>>=0</td>
+        <td>NOT NULL</td>
+        <td>20</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>8</td>
+        <td>版本号</td>
+        <td>version</td>
+        <td>INT</td>
+        <td>乐观锁</td>
+        <td>NOT NULL</td>
+        <td>0</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+</table>
+
+<p class="no-indent">唯一约束：UNIQUE(schedule_id, period)</p>
+
+<h4>3.4.7 预约表 (appointments)</h4>
+
+<p class="no-indent center">表3-8 appointments表结构</p>
+<table>
+    <tr>
+        <th>序号</th>
+        <th>字段中文名</th>
+        <th>字段英文名</th>
+        <th>类型、宽度</th>
+        <th>取值约束</th>
+        <th>空否</th>
+        <th>默认值</th>
+        <th>主键/外键</th>
+        <th>索引</th>
+    </tr>
+    <tr>
+        <td>1</td>
+        <td>预约ID</td>
+        <td>id</td>
+        <td>VARCHAR(36)</td>
+        <td>UUID格式</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>PK</td>
+        <td>是</td>
+    </tr>
+    <tr>
+        <td>2</td>
+        <td>预约单号</td>
+        <td>appointment_no</td>
+        <td>VARCHAR(20)</td>
+        <td>GH+日期+序号</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>-</td>
+        <td>UNIQUE</td>
+    </tr>
+    <tr>
+        <td>3</td>
+        <td>患者ID</td>
+        <td>patient_id</td>
+        <td>VARCHAR(36)</td>
+        <td>-</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>FK(patients.id)</td>
+        <td>是</td>
+    </tr>
+    <tr>
+        <td>4</td>
+        <td>医生ID</td>
+        <td>doctor_id</td>
+        <td>VARCHAR(36)</td>
+        <td>-</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>FK(doctors.id)</td>
+        <td>是</td>
+    </tr>
+    <tr>
+        <td>5</td>
+        <td>科室ID</td>
+        <td>department_id</td>
+        <td>VARCHAR(36)</td>
+        <td>-</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>FK(departments.id)</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>6</td>
+        <td>时段ID</td>
+        <td>time_slot_id</td>
+        <td>VARCHAR(36)</td>
+        <td>-</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>FK(time_slots.id)</td>
+        <td>是</td>
+    </tr>
+    <tr>
+        <td>7</td>
+        <td>预约日期</td>
+        <td>appointment_date</td>
+        <td>DATE</td>
+        <td>-</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>-</td>
+        <td>是</td>
+    </tr>
+    <tr>
+        <td>8</td>
+        <td>时段</td>
+        <td>period</td>
+        <td>VARCHAR(20)</td>
+        <td>MORNING/AFTERNOON</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>9</td>
+        <td>就诊人姓名</td>
+        <td>patient_name</td>
+        <td>VARCHAR(50)</td>
+        <td>-</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>10</td>
+        <td>就诊人电话</td>
+        <td>patient_phone</td>
+        <td>VARCHAR(20)</td>
+        <td>-</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>11</td>
+        <td>症状描述</td>
+        <td>symptom_desc</td>
+        <td>TEXT</td>
+        <td>-</td>
+        <td>NULL</td>
+        <td>NULL</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>12</td>
+        <td>预约状态</td>
+        <td>status</td>
+        <td>VARCHAR(20)</td>
+        <td>PENDING/CONFIRMED/COMPLETED/CANCELLED</td>
+        <td>NOT NULL</td>
+        <td>PENDING</td>
+        <td>-</td>
+        <td>是</td>
+    </tr>
+    <tr>
+        <td>13</td>
+        <td>取消原因</td>
+        <td>cancel_reason</td>
+        <td>VARCHAR(255)</td>
+        <td>-</td>
+        <td>NULL</td>
+        <td>NULL</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+</table>
+
+</div>
+
+
+<div class="page page-break">
+
+<h4>3.4.8 通知表 (notifications)</h4>
+
+<p class="no-indent center">表3-9 notifications表结构</p>
+<table>
+    <tr>
+        <th>序号</th>
+        <th>字段中文名</th>
+        <th>字段英文名</th>
+        <th>类型、宽度</th>
+        <th>取值约束</th>
+        <th>空否</th>
+        <th>默认值</th>
+        <th>主键/外键</th>
+        <th>索引</th>
+    </tr>
+    <tr>
+        <td>1</td>
+        <td>通知ID</td>
+        <td>id</td>
+        <td>VARCHAR(36)</td>
+        <td>UUID格式</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>PK</td>
+        <td>是</td>
+    </tr>
+    <tr>
+        <td>2</td>
+        <td>用户ID</td>
+        <td>user_id</td>
+        <td>VARCHAR(36)</td>
+        <td>-</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>FK(users.id)</td>
+        <td>是</td>
+    </tr>
+    <tr>
+        <td>3</td>
+        <td>标题</td>
+        <td>title</td>
+        <td>VARCHAR(100)</td>
+        <td>-</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>4</td>
+        <td>内容</td>
+        <td>content</td>
+        <td>TEXT</td>
+        <td>-</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>5</td>
+        <td>通知类型</td>
+        <td>type</td>
+        <td>VARCHAR(20)</td>
+        <td>APPOINTMENT/SYSTEM/REMINDER</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>6</td>
+        <td>关联ID</td>
+        <td>related_id</td>
+        <td>VARCHAR(36)</td>
+        <td>-</td>
+        <td>NULL</td>
+        <td>NULL</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>7</td>
+        <td>是否已读</td>
+        <td>is_read</td>
+        <td>BOOLEAN</td>
+        <td>true/false</td>
+        <td>NULL</td>
+        <td>false</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>8</td>
+        <td>创建时间</td>
+        <td>created_at</td>
+        <td>DATETIME</td>
+        <td>-</td>
+        <td>NOT NULL</td>
+        <td>CURRENT_TIMESTAMP</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+</table>
+
+<h4>3.4.9 医生请假表 (doctor_leaves)</h4>
+
+<p class="no-indent center">表3-10 doctor_leaves表结构</p>
+<table>
+    <tr>
+        <th>序号</th>
+        <th>字段中文名</th>
+        <th>字段英文名</th>
+        <th>类型、宽度</th>
+        <th>取值约束</th>
+        <th>空否</th>
+        <th>默认值</th>
+        <th>主键/外键</th>
+        <th>索引</th>
+    </tr>
+    <tr>
+        <td>1</td>
+        <td>请假ID</td>
+        <td>id</td>
+        <td>VARCHAR(36)</td>
+        <td>UUID格式</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>PK</td>
+        <td>是</td>
+    </tr>
+    <tr>
+        <td>2</td>
+        <td>医生ID</td>
+        <td>doctor_id</td>
+        <td>VARCHAR(36)</td>
+        <td>-</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>FK(doctors.id)</td>
+        <td>是</td>
+    </tr>
+    <tr>
+        <td>3</td>
+        <td>开始日期</td>
+        <td>start_date</td>
+        <td>DATE</td>
+        <td>-</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>4</td>
+        <td>结束日期</td>
+        <td>end_date</td>
+        <td>DATE</td>
+        <td>-</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>5</td>
+        <td>请假原因</td>
+        <td>reason</td>
+        <td>VARCHAR(500)</td>
+        <td>-</td>
+        <td>NULL</td>
+        <td>NULL</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>6</td>
+        <td>审批状态</td>
+        <td>status</td>
+        <td>VARCHAR(20)</td>
+        <td>PENDING/APPROVED/REJECTED</td>
+        <td>NOT NULL</td>
+        <td>PENDING</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>7</td>
+        <td>审批人ID</td>
+        <td>approved_by</td>
+        <td>VARCHAR(36)</td>
+        <td>-</td>
+        <td>NULL</td>
+        <td>NULL</td>
+        <td>FK(admins.id)</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>8</td>
+        <td>审批时间</td>
+        <td>approved_at</td>
+        <td>DATETIME</td>
+        <td>-</td>
+        <td>NULL</td>
+        <td>NULL</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>9</td>
+        <td>拒绝原因</td>
+        <td>reject_reason</td>
+        <td>VARCHAR(255)</td>
+        <td>-</td>
+        <td>NULL</td>
+        <td>NULL</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+</table>
+
+<h4>3.4.10 医生评价表 (doctor_reviews)</h4>
+
+<p class="no-indent center">表3-11 doctor_reviews表结构</p>
+<table>
+    <tr>
+        <th>序号</th>
+        <th>字段中文名</th>
+        <th>字段英文名</th>
+        <th>类型、宽度</th>
+        <th>取值约束</th>
+        <th>空否</th>
+        <th>默认值</th>
+        <th>主键/外键</th>
+        <th>索引</th>
+    </tr>
+    <tr>
+        <td>1</td>
+        <td>评价ID</td>
+        <td>id</td>
+        <td>VARCHAR(36)</td>
+        <td>UUID格式</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>PK</td>
+        <td>是</td>
+    </tr>
+    <tr>
+        <td>2</td>
+        <td>医生ID</td>
+        <td>doctor_id</td>
+        <td>VARCHAR(36)</td>
+        <td>-</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>FK(doctors.id)</td>
+        <td>是</td>
+    </tr>
+    <tr>
+        <td>3</td>
+        <td>患者ID</td>
+        <td>patient_id</td>
+        <td>VARCHAR(36)</td>
+        <td>-</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>FK(patients.id)</td>
+        <td>是</td>
+    </tr>
+    <tr>
+        <td>4</td>
+        <td>评分</td>
+        <td>rating</td>
+        <td>INT</td>
+        <td>1-5</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>5</td>
+        <td>评价内容</td>
+        <td>content</td>
+        <td>TEXT</td>
+        <td>-</td>
+        <td>NULL</td>
+        <td>NULL</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>6</td>
+        <td>创建时间</td>
+        <td>created_at</td>
+        <td>DATETIME</td>
+        <td>-</td>
+        <td>NOT NULL</td>
+        <td>CURRENT_TIMESTAMP</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+</table>
+
+<h4>3.4.11 医院表 (hospitals)</h4>
+
+<p class="no-indent center">表3-12 hospitals表结构</p>
+<table>
+    <tr>
+        <th>序号</th>
+        <th>字段中文名</th>
+        <th>字段英文名</th>
+        <th>类型、宽度</th>
+        <th>取值约束</th>
+        <th>空否</th>
+        <th>默认值</th>
+        <th>主键/外键</th>
+        <th>索引</th>
+    </tr>
+    <tr>
+        <td>1</td>
+        <td>医院ID</td>
+        <td>id</td>
+        <td>VARCHAR(36)</td>
+        <td>UUID格式</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>PK</td>
+        <td>是</td>
+    </tr>
+    <tr>
+        <td>2</td>
+        <td>医院名称</td>
+        <td>name</td>
+        <td>VARCHAR(100)</td>
+        <td>-</td>
+        <td>NOT NULL</td>
+        <td>-</td>
+        <td>-</td>
+        <td>UNIQUE</td>
+    </tr>
+    <tr>
+        <td>3</td>
+        <td>地址</td>
+        <td>address</td>
+        <td>VARCHAR(255)</td>
+        <td>-</td>
+        <td>NULL</td>
+        <td>NULL</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>4</td>
+        <td>联系电话</td>
+        <td>phone</td>
+        <td>VARCHAR(20)</td>
+        <td>-</td>
+        <td>NULL</td>
+        <td>NULL</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>5</td>
+        <td>经度</td>
+        <td>longitude</td>
+        <td>DOUBLE</td>
+        <td>-180~180</td>
+        <td>NULL</td>
+        <td>NULL</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>6</td>
+        <td>纬度</td>
+        <td>latitude</td>
+        <td>DOUBLE</td>
+        <td>-90~90</td>
+        <td>NULL</td>
+        <td>NULL</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>7</td>
+        <td>描述</td>
+        <td>description</td>
+        <td>TEXT</td>
+        <td>-</td>
+        <td>NULL</td>
+        <td>NULL</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+    <tr>
+        <td>8</td>
+        <td>是否启用</td>
+        <td>enabled</td>
+        <td>BOOLEAN</td>
+        <td>true/false</td>
+        <td>NOT NULL</td>
+        <td>true</td>
+        <td>-</td>
+        <td>否</td>
+    </tr>
+</table>
+
+</div>
+
+
+<div class="page page-break">
+
+<h3>3.5 视图设计</h3>
+
+<p>本系统主要通过JPA查询和DTO映射实现数据视图，以下为主要的逻辑视图设计：</p>
+
+<h4>3.5.1 医生详情视图 (v_doctor_detail)</h4>
+
+<p class="no-indent center">表3-13 医生详情视图</p>
+<table>
+    <tr>
+        <th>中文列名</th>
+        <th>英文列名</th>
+        <th>类型</th>
+        <th>算法/来源</th>
+        <th>基本表</th>
+    </tr>
+    <tr>
+        <td>医生ID</td>
+        <td>doctor_id</td>
+        <td>VARCHAR(36)</td>
+        <td>直接取值</td>
+        <td>doctors.id</td>
+    </tr>
+    <tr>
+        <td>医生姓名</td>
+        <td>doctor_name</td>
+        <td>VARCHAR(50)</td>
+        <td>直接取值</td>
+        <td>doctors.name</td>
+    </tr>
+    <tr>
+        <td>职称</td>
+        <td>title</td>
+        <td>VARCHAR(30)</td>
+        <td>直接取值</td>
+        <td>doctors.title</td>
+    </tr>
+    <tr>
+        <td>科室名称</td>
+        <td>department_name</td>
+        <td>VARCHAR(50)</td>
+        <td>关联查询</td>
+        <td>departments.name</td>
+    </tr>
+    <tr>
+        <td>平均评分</td>
+        <td>avg_rating</td>
+        <td>DECIMAL(3,2)</td>
+        <td>AVG(rating)</td>
+        <td>doctor_reviews.rating</td>
+    </tr>
+    <tr>
+        <td>评价数量</td>
+        <td>review_count</td>
+        <td>INT</td>
+        <td>COUNT(*)</td>
+        <td>doctor_reviews</td>
+    </tr>
+    <tr>
+        <td>用户状态</td>
+        <td>user_status</td>
+        <td>VARCHAR(20)</td>
+        <td>关联查询</td>
+        <td>users.status</td>
+    </tr>
+</table>
+
+<h4>3.5.2 预约详情视图 (v_appointment_detail)</h4>
+
+<p class="no-indent center">表3-14 预约详情视图</p>
+<table>
+    <tr>
+        <th>中文列名</th>
+        <th>英文列名</th>
+        <th>类型</th>
+        <th>算法/来源</th>
+        <th>基本表</th>
+    </tr>
+    <tr>
+        <td>预约单号</td>
+        <td>appointment_no</td>
+        <td>VARCHAR(20)</td>
+        <td>直接取值</td>
+        <td>appointments.appointment_no</td>
+    </tr>
+    <tr>
+        <td>患者姓名</td>
+        <td>patient_name</td>
+        <td>VARCHAR(50)</td>
+        <td>直接取值</td>
+        <td>appointments.patient_name</td>
+    </tr>
+    <tr>
+        <td>医生姓名</td>
+        <td>doctor_name</td>
+        <td>VARCHAR(50)</td>
+        <td>关联查询</td>
+        <td>doctors.name</td>
+    </tr>
+    <tr>
+        <td>科室名称</td>
+        <td>department_name</td>
+        <td>VARCHAR(50)</td>
+        <td>关联查询</td>
+        <td>departments.name</td>
+    </tr>
+    <tr>
+        <td>预约日期</td>
+        <td>appointment_date</td>
+        <td>DATE</td>
+        <td>直接取值</td>
+        <td>appointments.appointment_date</td>
+    </tr>
+    <tr>
+        <td>时段</td>
+        <td>period</td>
+        <td>VARCHAR(20)</td>
+        <td>直接取值</td>
+        <td>appointments.period</td>
+    </tr>
+    <tr>
+        <td>预约状态</td>
+        <td>status</td>
+        <td>VARCHAR(20)</td>
+        <td>直接取值</td>
+        <td>appointments.status</td>
+    </tr>
+</table>
+
+<h3>3.6 存储过程与触发器设计</h3>
+
+<p>本系统采用JPA/Hibernate框架进行数据访问，主要业务逻辑在Service层实现，未使用数据库存储过程。以下为系统中的关键业务逻辑说明：</p>
+
+<h4>3.6.1 预约号源扣减逻辑</h4>
+
+<p>采用乐观锁机制（@Version注解）防止并发超卖：</p>
+
+<pre>
+// TimeSlot实体使用@Version实现乐观锁
+@Version
+@Column(nullable = false)
+private Integer version = 0;
+
+// Service层扣减号源
+@Transactional
+public void decrementSlot(String timeSlotId) {
+    TimeSlot slot = timeSlotRepository.findById(timeSlotId)
+        .orElseThrow(() -> new RuntimeException("时段不存在"));
+    
+    if (slot.getRemainingSlots() <= 0) {
+        throw new RuntimeException("号源已满");
+    }
+    
+    slot.setRemainingSlots(slot.getRemainingSlots() - 1);
+    timeSlotRepository.save(slot); // 乐观锁自动检查version
+}
+</pre>
+
+<h4>3.6.2 预约单号生成逻辑</h4>
+
+<p>预约单号格式：GH + 日期(yyyyMMdd) + 6位序号</p>
+
+<pre>
+// 生成预约单号
+private String generateAppointmentNo() {
+    String dateStr = LocalDate.now().format(
+        DateTimeFormatter.ofPattern("yyyyMMdd"));
+    String sequence = String.format("%06d", 
+        appointmentRepository.countByDate(LocalDate.now()) + 1);
+    return "GH" + dateStr + sequence;
+}
+</pre>
+
+<h4>3.6.3 用户登录失败锁定逻辑</h4>
+
+<p>连续登录失败5次后锁定账户30分钟：</p>
+
+<pre>
+// 登录失败处理
+public void handleLoginFailure(User user) {
+    user.setLoginFailures(user.getLoginFailures() + 1);
+    
+    if (user.getLoginFailures() >= 5) {
+        user.setStatus(UserStatus.LOCKED);
+        user.setLockedUntil(LocalDateTime.now().plusMinutes(30));
+    }
+    
+    userRepository.save(user);
+}
+</pre>
+
+<h4>3.6.4 JPA生命周期回调</h4>
+
+<p>使用@PrePersist和@PreUpdate注解自动维护时间戳：</p>
+
+<pre>
+@PrePersist
+protected void onCreate() {
+    createdAt = LocalDateTime.now();
+    updatedAt = LocalDateTime.now();
+    if (id == null) {
+        id = UUID.randomUUID().toString();
+    }
+}
+
+@PreUpdate
+protected void onUpdate() {
+    updatedAt = LocalDateTime.now();
+}
+</pre>
+
+</div>
+
+</body>
+</html>

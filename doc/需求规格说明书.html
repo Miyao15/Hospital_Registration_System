@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>医院预约挂号系统 - 需求规格说明书</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: "SimSun", "宋体", serif;
+            font-size: 12pt;
+            line-height: 1.8;
+            color: #000;
+            background: #fff;
+            padding: 0;
+        }
+        .page {
+            width: 100%;
+            max-width: 21cm;
+            margin: 0 auto;
+            padding: 1cm;
+        }
+        h1 {
+            font-size: 18pt;
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 30pt;
+            padding-bottom: 10pt;
+            border-bottom: 2px solid #000;
+        }
+        h2 {
+            font-size: 14pt;
+            font-weight: bold;
+            margin-top: 20pt;
+            margin-bottom: 10pt;
+        }
+        h3 {
+            font-size: 12pt;
+            font-weight: bold;
+            margin-top: 15pt;
+            margin-bottom: 8pt;
+        }
+        h4 {
+            font-size: 12pt;
+            font-weight: bold;
+            margin-top: 10pt;
+            margin-bottom: 6pt;
+        }
+        p {
+            text-indent: 2em;
+            margin-bottom: 8pt;
+        }
+        ul, ol {
+            margin-left: 2em;
+            margin-bottom: 10pt;
+        }
+        li {
+            margin-bottom: 4pt;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10pt 0;
+            font-size: 10pt;
+            page-break-inside: avoid;
+        }
+        th, td {
+            border: 1px solid #000;
+            padding: 6pt 8pt;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+            text-align: center;
+        }
+        .center {
+            text-align: center;
+        }
+        .no-indent {
+            text-indent: 0;
+        }
+        .page-break {
+            page-break-before: always;
+        }
+        .diagram-container {
+            margin: 15px 0;
+            padding: 10px;
+            background: #fafafa;
+            border: 1px solid #ddd;
+        }
+        .mermaid {
+            display: flex;
+            justify-content: center;
+        }
+        @media print {
+            body { padding: 0; }
+            .page { padding: 0; max-width: none; }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+
+<h1>医院预约挂号系统<br>需求规格说明书</h1>
+
+<h2>1. 系统功能需求</h2>
+
+<h3>1.1 用户需求描述</h3>
+
+<p>医院预约挂号系统是一个面向医院、医生和患者的在线预约挂号平台。系统旨在解决传统挂号方式中排队时间长、号源分配不均、信息不透明等问题，通过信息化手段优化医疗资源配置，提升患者就医体验。</p>
+
+<p class="no-indent">系统主要功能需求如下：</p>
+
+<ul>
+    <li><strong>患者端功能：</strong>患者可以通过手机号注册账号，登录系统后可搜索医生、查看医生排班信息、在线预约挂号、查看和取消预约、对医生进行评价，还可以使用AI智能助手进行健康咨询。</li>
+    <li><strong>医生端功能：</strong>医生可以注册账号（需管理员审批），登录后可管理自己的出诊排班、查看患者预约信息、申请请假。</li>
+    <li><strong>管理员端功能：</strong>管理员可以审批医生注册申请、管理科室信息、审批医生请假申请、查看系统统计数据。</li>
+    <li><strong>公共功能：</strong>系统支持GPS定位自动获取用户所在城市、消息通知推送等功能。</li>
+</ul>
+
+<p class="no-indent">系统约束条件：</p>
+
+<ul>
+    <li>系统需支持7×24小时在线服务</li>
+    <li>系统需支持PC端和移动端访问</li>
+    <li>用户密码需加密存储，保障信息安全</li>
+    <li>预约挂号需防止并发超卖</li>
+    <li>系统响应时间应在3秒以内</li>
+</ul>
+
+<h3>1.2 初始功能提取</h3>
+
+<p class="no-indent center">表1-1 功能需求点列表</p>
+<table>
+    <tr>
+        <th>编号</th>
+        <th>功能名称</th>
+        <th>使用人</th>
+        <th>功能描述</th>
+        <th>输入内容</th>
+        <th>输出内容</th>
+    </tr>
+    <tr>
+        <td>F01</td>
+        <td>患者注册</td>
+        <td>患者</td>
+        <td>新患者通过手机号注册账号</td>
+        <td>手机号、密码、姓名、身份证号、性别、出生日期</td>
+        <td>注册成功提示、用户ID</td>
+    </tr>
+    <tr>
+        <td>F02</td>
+        <td>用户登录</td>
+        <td>所有用户</td>
+        <td>已注册用户通过手机号和密码登录系统</td>
+        <td>手机号、密码</td>
+        <td>JWT Token、用户信息、角色</td>
+    </tr>
+    <tr>
+        <td>F03</td>
+        <td>用户登出</td>
+        <td>所有用户</td>
+        <td>已登录用户退出系统</td>
+        <td>Token</td>
+        <td>登出成功提示</td>
+    </tr>
+    <tr>
+        <td>F04</td>
+        <td>搜索医生</td>
+        <td>患者</td>
+        <td>按科室或姓名搜索医生</td>
+        <td>关键词、科室ID</td>
+        <td>医生列表（姓名、职称、科室、评分）</td>
+    </tr>
+    <tr>
+        <td>F05</td>
+        <td>查看医生详情</td>
+        <td>患者</td>
+        <td>查看医生的详细信息</td>
+        <td>医生ID</td>
+        <td>医生详情（简介、专长、评价）</td>
+    </tr>
+    <tr>
+        <td>F06</td>
+        <td>查看排班</td>
+        <td>患者</td>
+        <td>查看医生的可预约时间</td>
+        <td>医生ID、日期范围</td>
+        <td>排班列表（日期、时段、剩余号源）</td>
+    </tr>
+    <tr>
+        <td>F07</td>
+        <td>创建预约</td>
+        <td>患者</td>
+        <td>预约挂号</td>
+        <td>医生ID、时段ID、就诊人信息</td>
+        <td>预约单号、预约详情</td>
+    </tr>
+    <tr>
+        <td>F08</td>
+        <td>查看预约</td>
+        <td>患者</td>
+        <td>查看自己的预约记录</td>
+        <td>用户ID、状态筛选</td>
+        <td>预约列表</td>
+    </tr>
+    <tr>
+        <td>F09</td>
+        <td>取消预约</td>
+        <td>患者</td>
+        <td>取消已有的预约</td>
+        <td>预约ID、取消原因</td>
+        <td>取消成功提示</td>
+    </tr>
+    <tr>
+        <td>F10</td>
+        <td>评价医生</td>
+        <td>患者</td>
+        <td>对就诊医生进行评分和评价</td>
+        <td>医生ID、评分(1-5)、评价内容</td>
+        <td>评价成功提示</td>
+    </tr>
+    <tr>
+        <td>F11</td>
+        <td>AI问诊</td>
+        <td>所有用户</td>
+        <td>与AI助手进行健康咨询</td>
+        <td>用户问题</td>
+        <td>AI回复内容</td>
+    </tr>
+    <tr>
+        <td>F12</td>
+        <td>GPS定位</td>
+        <td>所有用户</td>
+        <td>自动获取用户所在城市</td>
+        <td>经纬度坐标</td>
+        <td>城市名称</td>
+    </tr>
+    <tr>
+        <td>F13</td>
+        <td>医生注册</td>
+        <td>医生</td>
+        <td>医生提交注册申请，等待管理员审批</td>
+        <td>手机号、密码、姓名、科室、职称、简介、资质证明</td>
+        <td>注册申请提交成功提示</td>
+    </tr>
+    <tr>
+        <td>F14</td>
+        <td>管理排班</td>
+        <td>医生</td>
+        <td>医生设置自己的出诊时间和号源数量</td>
+        <td>日期、时段、号源数量</td>
+        <td>排班设置成功提示</td>
+    </tr>
+    <tr>
+        <td>F15</td>
+        <td>查看患者预约</td>
+        <td>医生</td>
+        <td>医生查看预约自己的患者列表</td>
+        <td>医生ID、日期范围</td>
+        <td>患者预约列表</td>
+    </tr>
+    <tr>
+        <td>F16</td>
+        <td>申请请假</td>
+        <td>医生</td>
+        <td>医生提交请假申请</td>
+        <td>请假日期、请假原因</td>
+        <td>请假申请提交成功提示</td>
+    </tr>
+    <tr>
+        <td>F17</td>
+        <td>审批医生注册</td>
+        <td>管理员</td>
+        <td>管理员审批医生的注册申请</td>
+        <td>申请ID、审批结果、审批意见</td>
+        <td>审批结果通知</td>
+    </tr>
+    <tr>
+        <td>F18</td>
+        <td>管理科室</td>
+        <td>管理员</td>
+        <td>管理员增删改查科室信息</td>
+        <td>科室名称、科室描述、科室图标</td>
+        <td>操作成功提示</td>
+    </tr>
+    <tr>
+        <td>F19</td>
+        <td>审批请假</td>
+        <td>管理员</td>
+        <td>管理员审批医生的请假申请</td>
+        <td>请假ID、审批结果、审批意见</td>
+        <td>审批结果通知</td>
+    </tr>
+    <tr>
+        <td>F20</td>
+        <td>查看统计数据</td>
+        <td>管理员</td>
+        <td>查看系统运营统计数据</td>
+        <td>时间范围、统计维度</td>
+        <td>统计图表、数据报表</td>
+    </tr>
+</table>
+
+<h3>1.3 系统需求描述</h3>
+
+<h4>1.3.1 用例分析</h4>
+
+<p>根据系统功能需求，识别出三类主要参与者：患者、医生和管理员。下面通过用例图描述各参与者与系统的交互关系。</p>
+
+<p class="no-indent center">图1-1 系统用例图</p>
+<div class="diagram-container">
+    <div class="mermaid">
+    graph TB
+        subgraph 患者用例
+            P((患者))
+            P --> UC1[注册账号]
+            P --> UC2[登录系统]
+            P --> UC3[搜索医生]
+            P --> UC4[查看医生详情]
+            P --> UC5[查看排班]
+            P --> UC6[预约挂号]
+            P --> UC7[查看预约]
+            P --> UC8[取消预约]
+            P --> UC9[评价医生]
+            P --> UC10[AI问诊]
+        end
+        
+        subgraph 医生用例
+            D((医生))
+            D --> UC11[注册申请]
+            D --> UC12[登录系统]
+            D --> UC13[管理排班]
+            D --> UC14[查看患者预约]
+            D --> UC15[申请请假]
+        end
+        
+        subgraph 管理员用例
+            A((管理员))
+            A --> UC16[登录系统]
+            A --> UC17[审批医生注册]
+            A --> UC18[管理科室]
+            A --> UC19[审批请假]
+            A --> UC20[查看统计]
+        end
+    </div>
+</div>
+
+<h4>1.3.2 用例描述</h4>
+
+<p class="no-indent center">表1-2 预约挂号用例描述</p>
+<table>
+    <tr>
+        <th style="width:20%">用例名称</th>
+        <td colspan="3">预约挂号</td>
+    </tr>
+    <tr>
+        <th>用例编号</th>
+        <td>UC06</td>
+        <th>参与者</th>
+        <td>患者</td>
+    </tr>
+    <tr>
+        <th>前置条件</th>
+        <td colspan="3">患者已登录系统，医生有可用号源</td>
+    </tr>
+    <tr>
+        <th>后置条件</th>
+        <td colspan="3">预约记录已创建，号源数量减1，患者收到预约成功通知</td>
+    </tr>
+    <tr>
+        <th>基本流程</th>
+        <td colspan="3">
+            1. 患者搜索并选择医生<br>
+            2. 患者查看医生排班信息<br>
+            3. 患者选择可用时段<br>
+            4. 患者确认就诊人信息<br>
+            5. 系统检查号源是否充足<br>
+            6. 系统创建预约记录<br>
+            7. 系统扣减号源数量<br>
+            8. 系统返回预约成功信息
+        </td>
+    </tr>
+    <tr>
+        <th>异常流程</th>
+        <td colspan="3">
+            5a. 号源已满：系统提示号源不足，返回步骤3<br>
+            6a. 并发冲突：系统提示预约失败，请重试
+        </td>
+    </tr>
+</table>
+
+<p class="no-indent center">表1-3 审批医生注册用例描述</p>
+<table>
+    <tr>
+        <th style="width:20%">用例名称</th>
+        <td colspan="3">审批医生注册</td>
+    </tr>
+    <tr>
+        <th>用例编号</th>
+        <td>UC17</td>
+        <th>参与者</th>
+        <td>管理员</td>
+    </tr>
+    <tr>
+        <th>前置条件</th>
+        <td colspan="3">管理员已登录系统，存在待审批的医生注册申请</td>
+    </tr>
+    <tr>
+        <th>后置条件</th>
+        <td colspan="3">医生注册申请状态已更新，医生收到审批结果通知</td>
+    </tr>
+    <tr>
+        <th>基本流程</th>
+        <td colspan="3">
+            1. 管理员查看待审批列表<br>
+            2. 管理员选择一个申请查看详情<br>
+            3. 管理员审核医生资质信息<br>
+            4. 管理员填写审批意见<br>
+            5. 管理员提交审批结果（通过/拒绝）<br>
+            6. 系统更新申请状态<br>
+            7. 系统发送通知给医生
+        </td>
+    </tr>
+    <tr>
+        <th>异常流程</th>
+        <td colspan="3">
+            3a. 资质信息不完整：管理员可要求补充材料
+        </td>
+    </tr>
+</table>
+
+<h4>1.3.3 活动图</h4>
+
+<p class="no-indent center">图1-2 预约挂号活动图</p>
+<div class="diagram-container">
+    <div class="mermaid">
+    flowchart TD
+        A([开始]) --> B[搜索医生]
+        B --> C[选择医生]
+        C --> D[查看排班]
+        D --> E{有可用号源?}
+        E -->|否| D
+        E -->|是| F[选择时段]
+        F --> G[确认就诊人信息]
+        G --> H[提交预约]
+        H --> I{号源充足?}
+        I -->|否| J[提示号源不足]
+        J --> D
+        I -->|是| K[创建预约记录]
+        K --> L[扣减号源]
+        L --> M[发送预约成功通知]
+        M --> N([结束])
+    </div>
+</div>
+
+<p class="no-indent center">图1-3 医生注册审批活动图</p>
+<div class="diagram-container">
+    <div class="mermaid">
+    flowchart TD
+        A([开始]) --> B[医生提交注册申请]
+        B --> C[系统记录申请]
+        C --> D[管理员查看申请列表]
+        D --> E[选择申请查看详情]
+        E --> F[审核资质信息]
+        F --> G{资质是否合格?}
+        G -->|是| H[填写通过意见]
+        G -->|否| I[填写拒绝原因]
+        H --> J[提交审批-通过]
+        I --> K[提交审批-拒绝]
+        J --> L[更新医生状态为已审批]
+        K --> M[更新申请状态为已拒绝]
+        L --> N[发送通知给医生]
+        M --> N
+        N --> O([结束])
+    </div>
+</div>
+
+<h2>2. 系统性能需求</h2>
+
+<p>系统性能需求定义了系统在响应时间、并发处理、数据容量等方面的要求。</p>
+
+<p class="no-indent center">表2-1 系统性能需求列表</p>
+<table>
+    <tr>
+        <th>编号</th>
+        <th>性能指标</th>
+        <th>需求描述</th>
+        <th>目标值</th>
+    </tr>
+    <tr>
+        <td>P01</td>
+        <td>页面响应时间</td>
+        <td>用户操作后页面响应时间</td>
+        <td>≤3秒</td>
+    </tr>
+    <tr>
+        <td>P02</td>
+        <td>API响应时间</td>
+        <td>后端接口响应时间</td>
+        <td>≤500ms</td>
+    </tr>
+    <tr>
+        <td>P03</td>
+        <td>并发用户数</td>
+        <td>系统同时在线用户数</td>
+        <td>≥1000</td>
+    </tr>
+    <tr>
+        <td>P04</td>
+        <td>预约TPS</td>
+        <td>预约接口每秒处理能力</td>
+        <td>≥100</td>
+    </tr>
+    <tr>
+        <td>P05</td>
+        <td>数据存储容量</td>
+        <td>系统数据存储能力</td>
+        <td>≥100万条预约记录</td>
+    </tr>
+    <tr>
+        <td>P06</td>
+        <td>系统可用性</td>
+        <td>系统正常运行时间比例</td>
+        <td>≥99.9%</td>
+    </tr>
+    <tr>
+        <td>P07</td>
+        <td>数据备份</td>
+        <td>数据备份频率</td>
+        <td>每日自动备份</td>
+    </tr>
+    <tr>
+        <td>P08</td>
+        <td>故障恢复</td>
+        <td>系统故障后恢复时间</td>
+        <td>≤30分钟</td>
+    </tr>
+</table>
+
+<h2>3. 系统界面与接口需求</h2>
+
+<h3>3.1 界面需求</h3>
+
+<p>系统界面需求描述了用户界面的设计原则和具体要求。</p>
+
+<p class="no-indent center">表3-1 界面需求列表</p>
+<table>
+    <tr>
+        <th>编号</th>
+        <th>界面类型</th>
+        <th>需求描述</th>
+    </tr>
+    <tr>
+        <td>UI01</td>
+        <td>响应式设计</td>
+        <td>界面需适配PC端（1920×1080）和移动端（375×667及以上）</td>
+    </tr>
+    <tr>
+        <td>UI02</td>
+        <td>导航设计</td>
+        <td>提供清晰的导航结构，用户可在3次点击内到达目标页面</td>
+    </tr>
+    <tr>
+        <td>UI03</td>
+        <td>表单设计</td>
+        <td>表单需提供输入验证和错误提示，必填项需明确标识</td>
+    </tr>
+    <tr>
+        <td>UI04</td>
+        <td>加载状态</td>
+        <td>数据加载时需显示加载动画，避免用户误操作</td>
+    </tr>
+    <tr>
+        <td>UI05</td>
+        <td>操作反馈</td>
+        <td>用户操作后需提供明确的成功/失败反馈</td>
+    </tr>
+    <tr>
+        <td>UI06</td>
+        <td>无障碍设计</td>
+        <td>支持键盘导航，图片需提供alt文本</td>
+    </tr>
+    <tr>
+        <td>UI07</td>
+        <td>多语言支持</td>
+        <td>界面文字支持中文显示，预留国际化扩展能力</td>
+    </tr>
+</table>
+
+<h3>3.2 接口需求</h3>
+
+<p>系统需要与外部系统进行数据交互，以下是外部接口需求。</p>
+
+<p class="no-indent center">表3-2 外部接口需求列表</p>
+<table>
+    <tr>
+        <th>编号</th>
+        <th>接口名称</th>
+        <th>接口类型</th>
+        <th>接口描述</th>
+        <th>数据格式</th>
+    </tr>
+    <tr>
+        <td>IF01</td>
+        <td>GPS定位接口</td>
+        <td>HTTP REST</td>
+        <td>调用高德地图API获取用户位置对应的城市信息</td>
+        <td>JSON</td>
+    </tr>
+    <tr>
+        <td>IF02</td>
+        <td>AI问诊接口</td>
+        <td>HTTP REST</td>
+        <td>调用通义千问API实现智能问诊功能</td>
+        <td>JSON</td>
+    </tr>
+    <tr>
+        <td>IF03</td>
+        <td>短信通知接口</td>
+        <td>HTTP REST</td>
+        <td>调用短信服务发送预约通知（预留）</td>
+        <td>JSON</td>
+    </tr>
+    <tr>
+        <td>IF04</td>
+        <td>支付接口</td>
+        <td>HTTP REST</td>
+        <td>调用支付平台完成挂号费支付（预留）</td>
+        <td>JSON</td>
+    </tr>
+</table>
+
+<h3>3.3 内部接口设计</h3>
+
+<p>系统内部采用RESTful API进行前后端通信，以下是主要API接口设计。</p>
+
+<p class="no-indent center">表3-3 内部API接口列表</p>
+<table>
+    <tr>
+        <th>模块</th>
+        <th>接口路径</th>
+        <th>方法</th>
+        <th>功能描述</th>
+    </tr>
+    <tr>
+        <td rowspan="3">认证模块</td>
+        <td>/api/auth/register</td>
+        <td>POST</td>
+        <td>用户注册</td>
+    </tr>
+    <tr>
+        <td>/api/auth/login</td>
+        <td>POST</td>
+        <td>用户登录</td>
+    </tr>
+    <tr>
+        <td>/api/auth/logout</td>
+        <td>POST</td>
+        <td>用户登出</td>
+    </tr>
+    <tr>
+        <td rowspan="3">医生模块</td>
+        <td>/api/doctors</td>
+        <td>GET</td>
+        <td>获取医生列表</td>
+    </tr>
+    <tr>
+        <td>/api/doctors/{id}</td>
+        <td>GET</td>
+        <td>获取医生详情</td>
+    </tr>
+    <tr>
+        <td>/api/doctors/{id}/schedules</td>
+        <td>GET</td>
+        <td>获取医生排班</td>
+    </tr>
+    <tr>
+        <td rowspan="3">预约模块</td>
+        <td>/api/appointments</td>
+        <td>POST</td>
+        <td>创建预约</td>
+    </tr>
+    <tr>
+        <td>/api/appointments</td>
+        <td>GET</td>
+        <td>查询预约列表</td>
+    </tr>
+    <tr>
+        <td>/api/appointments/{id}/cancel</td>
+        <td>PUT</td>
+        <td>取消预约</td>
+    </tr>
+    <tr>
+        <td rowspan="2">评价模块</td>
+        <td>/api/reviews</td>
+        <td>POST</td>
+        <td>提交评价</td>
+    </tr>
+    <tr>
+        <td>/api/doctors/{id}/reviews</td>
+        <td>GET</td>
+        <td>获取医生评价</td>
+    </tr>
+    <tr>
+        <td>AI模块</td>
+        <td>/api/ai/chat</td>
+        <td>POST</td>
+        <td>AI问诊对话</td>
+    </tr>
+</table>
+
+<h2>4. 目标系统假设与约束条件</h2>
+
+<h3>4.1 系统假设</h3>
+
+<p class="no-indent">系统开发基于以下假设：</p>
+
+<ul>
+    <li>用户具备基本的互联网使用能力，能够使用浏览器访问系统</li>
+    <li>用户拥有有效的手机号码用于注册和接收通知</li>
+    <li>医院已有完整的科室设置和医生信息</li>
+    <li>系统部署环境具备稳定的网络连接</li>
+    <li>服务器具备足够的计算和存储资源</li>
+    <li>外部API服务（高德地图、通义千问）保持可用</li>
+</ul>
+
+<h3>4.2 约束条件</h3>
+
+<p class="no-indent center">表4-1 系统约束条件</p>
+<table>
+    <tr>
+        <th>约束类型</th>
+        <th>约束描述</th>
+        <th>应对措施</th>
+    </tr>
+    <tr>
+        <td>技术约束</td>
+        <td>前端需兼容主流浏览器（Chrome、Firefox、Safari、Edge）</td>
+        <td>使用Vue3框架，采用标准Web技术</td>
+    </tr>
+    <tr>
+        <td>技术约束</td>
+        <td>后端需支持高并发预约请求</td>
+        <td>使用数据库乐观锁防止超卖</td>
+    </tr>
+    <tr>
+        <td>安全约束</td>
+        <td>用户密码不能明文存储</td>
+        <td>使用BCrypt算法加密存储</td>
+    </tr>
+    <tr>
+        <td>安全约束</td>
+        <td>API接口需要身份认证</td>
+        <td>使用JWT Token进行身份验证</td>
+    </tr>
+    <tr>
+        <td>法规约束</td>
+        <td>患者个人信息需要保护</td>
+        <td>敏感信息加密，访问权限控制</td>
+    </tr>
+    <tr>
+        <td>运营约束</td>
+        <td>系统需7×24小时运行</td>
+        <td>使用Docker容器化部署，支持故障恢复</td>
+    </tr>
+    <tr>
+        <td>时间约束</td>
+        <td>项目开发周期为8周</td>
+        <td>采用增量开发模型，分阶段交付</td>
+    </tr>
+</table>
+
+<h3>4.3 开发环境约束</h3>
+
+<p class="no-indent center">表4-2 开发环境配置</p>
+<table>
+    <tr>
+        <th>类别</th>
+        <th>技术选型</th>
+        <th>版本要求</th>
+    </tr>
+    <tr>
+        <td>前端框架</td>
+        <td>Vue.js</td>
+        <td>3.x</td>
+    </tr>
+    <tr>
+        <td>UI组件库</td>
+        <td>Element Plus</td>
+        <td>2.x</td>
+    </tr>
+    <tr>
+        <td>后端框架</td>
+        <td>Spring Boot</td>
+        <td>3.x</td>
+    </tr>
+    <tr>
+        <td>数据库</td>
+        <td>MySQL</td>
+        <td>8.0+</td>
+    </tr>
+    <tr>
+        <td>缓存</td>
+        <td>Redis（预留）</td>
+        <td>7.x</td>
+    </tr>
+    <tr>
+        <td>容器化</td>
+        <td>Docker</td>
+        <td>24.x</td>
+    </tr>
+    <tr>
+        <td>编程语言</td>
+        <td>Java / JavaScript</td>
+        <td>JDK 17 / ES6+</td>
+    </tr>
+</table>
+
+<h2>5. 数据需求</h2>
+
+<h3>5.1 数据实体</h3>
+
+<p>系统涉及的主要数据实体及其关系如下：</p>
+
+<p class="no-indent center">图5-1 数据实体关系图</p>
+<div class="diagram-container">
+    <div class="mermaid">
+    erDiagram
+        USER ||--o{ APPOINTMENT : creates
+        USER ||--o{ REVIEW : writes
+        DOCTOR ||--o{ SCHEDULE : has
+        DOCTOR ||--o{ APPOINTMENT : receives
+        DOCTOR ||--o{ REVIEW : receives
+        DOCTOR }o--|| DEPARTMENT : belongs_to
+        SCHEDULE ||--o{ APPOINTMENT : contains
+        DOCTOR ||--o{ LEAVE_REQUEST : submits
+        
+        USER {
+            Long id PK
+            String phone
+            String password
+            String name
+            String idCard
+            String gender
+            Date birthDate
+            String role
+        }
+        
+        DOCTOR {
+            Long id PK
+            Long userId FK
+            Long departmentId FK
+            String title
+            String introduction
+            String specialty
+            Decimal rating
+            String status
+        }
+        
+        DEPARTMENT {
+            Long id PK
+            String name
+            String description
+            String icon
+        }
+        
+        SCHEDULE {
+            Long id PK
+            Long doctorId FK
+            Date scheduleDate
+            String timeSlot
+            Integer totalSlots
+            Integer availableSlots
+        }
+        
+        APPOINTMENT {
+            Long id PK
+            Long userId FK
+            Long doctorId FK
+            Long scheduleId FK
+            String appointmentNo
+            String status
+            DateTime createTime
+        }
+        
+        REVIEW {
+            Long id PK
+            Long userId FK
+            Long doctorId FK
+            Integer rating
+            String content
+            DateTime createTime
+        }
+    </div>
+</div>
+
+<h3>5.2 数据字典</h3>
+
+<p class="no-indent center">表5-1 用户状态数据字典</p>
+<table>
+    <tr>
+        <th>字段值</th>
+        <th>含义</th>
+        <th>说明</th>
+    </tr>
+    <tr>
+        <td>ACTIVE</td>
+        <td>正常</td>
+        <td>用户账号正常可用</td>
+    </tr>
+    <tr>
+        <td>DISABLED</td>
+        <td>禁用</td>
+        <td>用户账号已被禁用</td>
+    </tr>
+    <tr>
+        <td>PENDING</td>
+        <td>待审批</td>
+        <td>医生账号等待审批</td>
+    </tr>
+</table>
+
+<p class="no-indent center">表5-2 预约状态数据字典</p>
+<table>
+    <tr>
+        <th>字段值</th>
+        <th>含义</th>
+        <th>说明</th>
+    </tr>
+    <tr>
+        <td>PENDING</td>
+        <td>待就诊</td>
+        <td>预约已创建，等待就诊</td>
+    </tr>
+    <tr>
+        <td>COMPLETED</td>
+        <td>已完成</td>
+        <td>患者已完成就诊</td>
+    </tr>
+    <tr>
+        <td>CANCELLED</td>
+        <td>已取消</td>
+        <td>预约已被取消</td>
+    </tr>
+    <tr>
+        <td>EXPIRED</td>
+        <td>已过期</td>
+        <td>预约时间已过未就诊</td>
+    </tr>
+</table>
+
+<p class="no-indent center">表5-3 用户角色数据字典</p>
+<table>
+    <tr>
+        <th>字段值</th>
+        <th>含义</th>
+        <th>权限范围</th>
+    </tr>
+    <tr>
+        <td>PATIENT</td>
+        <td>患者</td>
+        <td>预约挂号、查看预约、评价医生、AI问诊</td>
+    </tr>
+    <tr>
+        <td>DOCTOR</td>
+        <td>医生</td>
+        <td>管理排班、查看患者预约、申请请假</td>
+    </tr>
+    <tr>
+        <td>ADMIN</td>
+        <td>管理员</td>
+        <td>审批医生、管理科室、审批请假、查看统计</td>
+    </tr>
+</table>
+
+<h2>6. 安全需求</h2>
+
+<h3>6.1 身份认证</h3>
+
+<p class="no-indent center">表6-1 身份认证需求</p>
+<table>
+    <tr>
+        <th>编号</th>
+        <th>需求描述</th>
+        <th>实现方式</th>
+    </tr>
+    <tr>
+        <td>SEC01</td>
+        <td>用户登录需验证手机号和密码</td>
+        <td>后端验证，密码BCrypt加密比对</td>
+    </tr>
+    <tr>
+        <td>SEC02</td>
+        <td>登录成功后颁发访问令牌</td>
+        <td>JWT Token，有效期24小时</td>
+    </tr>
+    <tr>
+        <td>SEC03</td>
+        <td>敏感操作需验证用户身份</td>
+        <td>请求头携带Token，后端验证</td>
+    </tr>
+    <tr>
+        <td>SEC04</td>
+        <td>连续登录失败需限制</td>
+        <td>5次失败后锁定15分钟（预留）</td>
+    </tr>
+</table>
+
+<h3>6.2 访问控制</h3>
+
+<p class="no-indent center">表6-2 访问控制矩阵</p>
+<table>
+    <tr>
+        <th>功能模块</th>
+        <th>患者</th>
+        <th>医生</th>
+        <th>管理员</th>
+    </tr>
+    <tr>
+        <td>搜索医生</td>
+        <td>✓</td>
+        <td>✓</td>
+        <td>✓</td>
+    </tr>
+    <tr>
+        <td>预约挂号</td>
+        <td>✓</td>
+        <td>✗</td>
+        <td>✗</td>
+    </tr>
+    <tr>
+        <td>管理排班</td>
+        <td>✗</td>
+        <td>✓</td>
+        <td>✗</td>
+    </tr>
+    <tr>
+        <td>审批医生</td>
+        <td>✗</td>
+        <td>✗</td>
+        <td>✓</td>
+    </tr>
+    <tr>
+        <td>管理科室</td>
+        <td>✗</td>
+        <td>✗</td>
+        <td>✓</td>
+    </tr>
+    <tr>
+        <td>AI问诊</td>
+        <td>✓</td>
+        <td>✓</td>
+        <td>✓</td>
+    </tr>
+</table>
+
+<h3>6.3 数据安全</h3>
+
+<p class="no-indent center">表6-3 数据安全需求</p>
+<table>
+    <tr>
+        <th>编号</th>
+        <th>安全需求</th>
+        <th>保护措施</th>
+    </tr>
+    <tr>
+        <td>DS01</td>
+        <td>用户密码保护</td>
+        <td>BCrypt加密存储，不可逆</td>
+    </tr>
+    <tr>
+        <td>DS02</td>
+        <td>敏感信息保护</td>
+        <td>身份证号部分脱敏显示</td>
+    </tr>
+    <tr>
+        <td>DS03</td>
+        <td>传输安全</td>
+        <td>HTTPS加密传输（生产环境）</td>
+    </tr>
+    <tr>
+        <td>DS04</td>
+        <td>SQL注入防护</td>
+        <td>使用参数化查询，MyBatis预编译</td>
+    </tr>
+    <tr>
+        <td>DS05</td>
+        <td>XSS防护</td>
+        <td>前端输入过滤，后端输出编码</td>
+    </tr>
+    <tr>
+        <td>DS06</td>
+        <td>CSRF防护</td>
+        <td>Token验证机制</td>
+    </tr>
+</table>
+
+<h2>7. 需求追踪矩阵</h2>
+
+<p>需求追踪矩阵用于确保所有需求都能被设计和实现覆盖。</p>
+
+<p class="no-indent center">表7-1 需求追踪矩阵</p>
+<table>
+    <tr>
+        <th>需求编号</th>
+        <th>功能名称</th>
+        <th>用例编号</th>
+        <th>设计模块</th>
+        <th>优先级</th>
+    </tr>
+    <tr>
+        <td>F01</td>
+        <td>患者注册</td>
+        <td>UC01</td>
+        <td>认证模块</td>
+        <td>高</td>
+    </tr>
+    <tr>
+        <td>F02</td>
+        <td>用户登录</td>
+        <td>UC02</td>
+        <td>认证模块</td>
+        <td>高</td>
+    </tr>
+    <tr>
+        <td>F04</td>
+        <td>搜索医生</td>
+        <td>UC03</td>
+        <td>医生模块</td>
+        <td>高</td>
+    </tr>
+    <tr>
+        <td>F06</td>
+        <td>查看排班</td>
+        <td>UC05</td>
+        <td>排班模块</td>
+        <td>高</td>
+    </tr>
+    <tr>
+        <td>F07</td>
+        <td>创建预约</td>
+        <td>UC06</td>
+        <td>预约模块</td>
+        <td>高</td>
+    </tr>
+    <tr>
+        <td>F09</td>
+        <td>取消预约</td>
+        <td>UC08</td>
+        <td>预约模块</td>
+        <td>中</td>
+    </tr>
+    <tr>
+        <td>F10</td>
+        <td>评价医生</td>
+        <td>UC09</td>
+        <td>评价模块</td>
+        <td>中</td>
+    </tr>
+    <tr>
+        <td>F11</td>
+        <td>AI问诊</td>
+        <td>UC10</td>
+        <td>AI模块</td>
+        <td>中</td>
+    </tr>
+    <tr>
+        <td>F14</td>
+        <td>管理排班</td>
+        <td>UC13</td>
+        <td>排班模块</td>
+        <td>高</td>
+    </tr>
+    <tr>
+        <td>F17</td>
+        <td>审批医生注册</td>
+        <td>UC17</td>
+        <td>管理模块</td>
+        <td>高</td>
+    </tr>
+    <tr>
+        <td>F18</td>
+        <td>管理科室</td>
+        <td>UC18</td>
+        <td>管理模块</td>
+        <td>中</td>
+    </tr>
+    <tr>
+        <td>F20</td>
+        <td>查看统计数据</td>
+        <td>UC20</td>
+        <td>统计模块</td>
+        <td>低</td>
+    </tr>
+</table>
+
+</div>
+
+<script>
+    mermaid.initialize({ 
+        startOnLoad: true,
+        theme: 'neutral',
+        flowchart: {
+            useMaxWidth: true,
+            htmlLabels: true
+        }
+    });
+</script>
+
+</body>
+</html>
