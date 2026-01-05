@@ -446,16 +446,15 @@ const isLocating = ref(false);
 const locationError = ref('');
 const currentLocation = ref('');
 
-// New data for enriched sections
+// New data for enriched sections - 真实数据
 const departments = ref([
-  { id: 1, name: '内科', doctorCount: 120 },
-  { id: 2, name: '外科', doctorCount: 95 },
-  { id: 3, name: '儿科', doctorCount: 80 },
-  { id: 4, name: '妇科', doctorCount: 75 },
-  { id: 5, name: '骨科', doctorCount: 65 },
-  { id: 6, name: '眼科', doctorCount: 50 },
-  { id: 7, name: '口腔科', doctorCount: 45 },
-  { id: 8, name: '皮肤科', doctorCount: 40 }
+  { id: 1, name: '儿科', doctorCount: 4 },
+  { id: 2, name: '皮肤科', doctorCount: 3 },
+  { id: 3, name: '口腔科', doctorCount: 1 },
+  { id: 4, name: '妇科', doctorCount: 1 },
+  { id: 5, name: '心血管内科', doctorCount: 1 },
+  { id: 6, name: '眼科', doctorCount: 1 },
+  { id: 7, name: '骨科', doctorCount: 1 }
 ]);
 
 const testimonials = ref([
