@@ -1056,7 +1056,33 @@ const mapTimeslotFilterToPeriod = (filterValue) => {
   return mapping[filterValue];
 };
 
+// 计算单个时间段的30分钟时间槽数量
+const calculateHalfHourCount = (slot) => {
+  let startTime = '09:00';
+  let endTime = '12:00';
+  
+  if (slot.timeRange) {
+    const parts = slot.timeRange.split('-').map(s => s.trim());
+    if (parts.length === 2) {
+      startTime = parts[0].substring(0, 5);
+      endTime = parts[1].substring(0, 5);
+    }
+  } else if (slot.startTime && slot.endTime) {
+    startTime = String(slot.startTime).substring(0, 5);
+    endTime = String(slot.endTime).substring(0, 5);
+  }
+  
+  const [startHour, startMin] = startTime.split(':').map(Number);
+  const [endHour, endMin] = endTime.split(':').map(Number);
+  
+  const startMinutes = startHour * 60 + startMin;
+  const endMinutes = endHour * 60 + endMin;
+  
+  return Math.floor((endMinutes - startMinutes) / 30);
+};
+
 // 获取某日期的剩余号源总数（考虑时间段筛选）
+// 计算方式：时间段数量 × SLOTS_PER_HALF_HOUR (2)
 const getRemainingSlotsCount = (doctor, dateString) => {
   const slots = getSlotsForDate(doctor, dateString);
   if (!slots || slots.length === 0) return 0;
@@ -1066,18 +1092,19 @@ const getRemainingSlotsCount = (doctor, dateString) => {
     const selectedPeriods = selectedTimeslotFilters.value.map(mapTimeslotFilterToPeriod);
     return slots
       .filter(slot => {
-        // slot.period 是字符串（如 'MORNING'），从后端 TimeSlotDTO 返回
         const period = slot.period;
         return selectedPeriods.includes(period);
       })
       .reduce((total, slot) => {
-        return total + (slot.remainingSlots || 0);
+        const halfHourCount = calculateHalfHourCount(slot);
+        return total + halfHourCount * SLOTS_PER_HALF_HOUR;
       }, 0);
   }
   
-  // 如果没有选择时间段筛选，计算所有时间段的剩余号源总和
+  // 如果没有选择时间段筛选，计算所有时间段的号源总和
   return slots.reduce((total, slot) => {
-    return total + (slot.remainingSlots || 0);
+    const halfHourCount = calculateHalfHourCount(slot);
+    return total + halfHourCount * SLOTS_PER_HALF_HOUR;
   }, 0);
 };
 

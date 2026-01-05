@@ -321,10 +321,41 @@ const hasSlots = (doctor, dateStr) => {
   return slots.length > 0;
 };
 
+// 每个30分钟时间段固定2个号源
+const SLOTS_PER_HALF_HOUR = 2;
+
+// 计算单个时间段的30分钟时间槽数量
+const calculateHalfHourCount = (slot) => {
+  let startTime = '09:00';
+  let endTime = '12:00';
+  
+  if (slot.timeRange) {
+    const parts = slot.timeRange.split('-').map(s => s.trim());
+    if (parts.length === 2) {
+      startTime = parts[0].substring(0, 5);
+      endTime = parts[1].substring(0, 5);
+    }
+  } else if (slot.startTime && slot.endTime) {
+    startTime = String(slot.startTime).substring(0, 5);
+    endTime = String(slot.endTime).substring(0, 5);
+  }
+  
+  const [startHour, startMin] = startTime.split(':').map(Number);
+  const [endHour, endMin] = endTime.split(':').map(Number);
+  
+  const startMinutes = startHour * 60 + startMin;
+  const endMinutes = endHour * 60 + endMin;
+  
+  return Math.floor((endMinutes - startMinutes) / 30);
+};
+
+// 计算号源总数：时间段数量 × SLOTS_PER_HALF_HOUR (2)
 const getSlotCount = (doctor, dateStr) => {
   const slots = doctor.availabilityMap?.[dateStr] || [];
-  // 计算剩余号源总数，而不是时间段数量
-  return slots.reduce((total, slot) => total + (slot.remainingSlots || 0), 0);
+  return slots.reduce((total, slot) => {
+    const halfHourCount = calculateHalfHourCount(slot);
+    return total + halfHourCount * SLOTS_PER_HALF_HOUR;
+  }, 0);
 };
 
 const filterByDepartment = (deptId) => {
