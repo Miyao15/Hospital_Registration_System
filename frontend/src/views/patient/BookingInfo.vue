@@ -344,6 +344,12 @@ const handleSubmit = async () => {
     return;
   }
 
+  // 检查用户角色是否为患者
+  if (userStore.userRole !== 'PATIENT') {
+    ElMessage.error('只有患者账号才能进行预约，请使用患者账号登录');
+    return;
+  }
+
   submitting.value = true;
 
   try {
