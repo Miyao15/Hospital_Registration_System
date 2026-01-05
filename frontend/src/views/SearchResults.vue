@@ -896,6 +896,15 @@ const openBookingModal = (doctor, dayObj = null) => {
   // 允许未登录用户打开预约模态框，选择时间后再提示登录
   selectedDoctor.value = doctor;
   
+  // 如果没有预选的检查项目，根据医生科室自动选择第一个匹配的检查项目
+  if (!preselectedMedicalItemId.value && doctor.departmentId) {
+    const matchingItem = medicalItems.value.find(item => item.departmentId === doctor.departmentId);
+    if (matchingItem) {
+      selectedMedicalItem.value = matchingItem;
+      preselectedMedicalItemId.value = matchingItem.id;
+    }
+  }
+  
   if (dayObj) {
     selectedDateDisplay.value = dayObj.displayDate;
     selectedDateForBooking.value = dayObj.fullDate;
