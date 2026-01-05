@@ -124,11 +124,21 @@ const refreshUnreadCount = async () => {
 
 // 获取患者信息
 const fetchPatientInfo = async () => {
+  // 先从缓存读取头像，快速显示
+  const cachedAvatar = localStorage.getItem('user_avatar')
+  if (cachedAvatar) {
+    patientInfo.value.avatarUrl = cachedAvatar
+  }
+  
   try {
     const data = await request.get('/api/patients/profile')
     if (data) {
       patientInfo.value.name = data.name || ''
       patientInfo.value.avatarUrl = data.avatarUrl || ''
+      // 更新缓存
+      if (data.avatarUrl) {
+        localStorage.setItem('user_avatar', data.avatarUrl)
+      }
     }
   } catch (e) {
     console.error('获取患者信息失败:', e)

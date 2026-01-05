@@ -267,6 +267,39 @@ const getTitleText = (title) => {
   return map[title] || title || '医师';
 };
 
+// 压缩图片函数
+const compressImage = (file, maxWidth = 200, quality = 0.8) => {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        
+        // 按比例缩放
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        canvas.toBlob((blob) => {
+          resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+        }, 'image/jpeg', quality);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+};
+
 const handleAvatarChange = async (event) => {
   const file = event.target.files[0];
   if (!file) return;
@@ -285,9 +318,13 @@ const handleAvatarChange = async (event) => {
   
   uploadingAvatar.value = true;
   try {
+    // 压缩图片（头像只需要200px宽度）
+    const compressedFile = await compressImage(file, 200, 0.8);
+    console.log(`图片压缩: ${(file.size/1024).toFixed(1)}KB -> ${(compressedFile.size/1024).toFixed(1)}KB`);
+    
     // 上传文件
     const formDataObj = new FormData();
-    formDataObj.append('file', file);
+    formDataObj.append('file', compressedFile);
     
     const uploadRes = await request.post('/api/upload/avatar', formDataObj, {
       headers: { 'Content-Type': 'multipart/form-data' }
@@ -300,6 +337,8 @@ const handleAvatarChange = async (event) => {
       });
       
       profile.value.avatarUrl = uploadRes.url;
+      // 缓存头像到localStorage
+      localStorage.setItem('user_avatar', uploadRes.url);
       ElMessage.success('头像更新成功');
     }
   } catch (e) {

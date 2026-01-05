@@ -186,6 +186,12 @@ onMounted(async () => {
     doctorInfo.value.name = userStore.userInfo.realName || '医生';
   }
   
+  // 先从缓存读取头像，快速显示
+  const cachedAvatar = localStorage.getItem('user_avatar')
+  if (cachedAvatar) {
+    doctorInfo.value.avatarUrl = cachedAvatar
+  }
+  
   // 获取完整的医生信息（包括科室）
   try {
     const data = await getMyDoctorInfo();
@@ -193,6 +199,10 @@ onMounted(async () => {
       doctorInfo.value.name = data.name || doctorInfo.value.name;
       doctorInfo.value.departmentName = data.departmentName || '科室';
       doctorInfo.value.avatarUrl = data.avatarUrl || '';
+      // 更新缓存
+      if (data.avatarUrl) {
+        localStorage.setItem('user_avatar', data.avatarUrl)
+      }
     }
   } catch (error) {
     console.error('获取医生信息失败:', error);
