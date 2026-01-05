@@ -69,18 +69,38 @@ public class DoctorProfileService {
     // 安全的转换方法，捕获单个医生转换的错误
     private DoctorListDTO safeConvertToListDTO(Doctor doctor) {
         try {
-            return convertToListDTO(doctor);
+            if (doctor == null) {
+                log.error("Doctor is null in safeConvertToListDTO");
+                return null;
+            }
+            DoctorListDTO dto = convertToListDTO(doctor);
+            if (dto == null) {
+                log.error("convertToListDTO returned null for doctor: {}", doctor.getId());
+                // 返回一个基本的 DTO
+                dto = new DoctorListDTO();
+                dto.setId(doctor.getId());
+                dto.setName(doctor.getName() != null ? doctor.getName() : "未知");
+                dto.setTitle("医生");
+                dto.setRating(5.0);
+                dto.setReviewCount(0);
+            }
+            return dto;
         } catch (Exception e) {
-            log.error("Error converting doctor {} to DTO: {}", doctor.getId(), e.getMessage());
-            // 返回一个基本的 DTO
+            log.error("Error converting doctor {} to DTO: {}", 
+                doctor != null ? doctor.getId() : "null", e.getMessage(), e);
+            // 返回一个基本的 DTO，确保不会返回null
             DoctorListDTO dto = new DoctorListDTO();
-            dto.setId(doctor.getId());
-            dto.setName(doctor.getName() != null ? doctor.getName() : "未知");
-            dto.setTitle("医生");
-            dto.setEmployeeId(doctor.getEmployeeId());
-            dto.setLicenseNumber(doctor.getLicenseNumber());
+            if (doctor != null) {
+                dto.setId(doctor.getId());
+                dto.setName(doctor.getName() != null ? doctor.getName() : "未知");
+                dto.setTitle("医生");
+                dto.setEmployeeId(doctor.getEmployeeId());
+                dto.setLicenseNumber(doctor.getLicenseNumber());
+            }
             dto.setOnlineStatus("AVAILABLE");
             dto.setStatus("ACTIVE");
+            dto.setRating(5.0);
+            dto.setReviewCount(0);
             return dto;
         }
     }
@@ -102,8 +122,59 @@ public class DoctorProfileService {
         Pageable pageable = PageRequest.of(page, size);
         
         try {
-            log.info("Searching doctors with departmentId: {}, keyword: {}, medicalItemId: {}", 
-                    searchDTO.getDepartmentId(), searchDTO.getKeyword(), searchDTO.getMedicalItemId());
+            log.info("Searching doctors with departmentId: {}, keyword: {}, medicalItemId: {}, region: {}, city: {}, district: {}", 
+                    searchDTO.getDepartmentId(), searchDTO.getKeyword(), searchDTO.getMedicalItemId(), 
+                    searchDTO.getRegion(), searchDTO.getCity(), searchDTO.getDistrict());
+            
+            // 先按地区和城市筛选医院，获取符合条件的医院ID列表
+            final List<String> allowedHospitalIds;
+            
+            if ((searchDTO.getRegion() != null && !searchDTO.getRegion().isEmpty()) || 
+                (searchDTO.getCity() != null && !searchDTO.getCity().isEmpty()) ||
+                (searchDTO.getProvince() != null && !searchDTO.getProvince().isEmpty()) ||
+                (searchDTO.getDistrict() != null && !searchDTO.getDistrict().isEmpty())) {
+                
+                List<Hospital> hospitals = new ArrayList<>();
+                
+                if (searchDTO.getDistrict() != null && !searchDTO.getDistrict().isEmpty()) {
+                    // 优先使用区县筛选（最精确）
+                    if (searchDTO.getCity() != null && !searchDTO.getCity().isEmpty()) {
+                        // 同时指定城市和区县
+                        hospitals = hospitalRepository.findByCityAndDistrictAndEnabledTrue(
+                                searchDTO.getCity(), searchDTO.getDistrict());
+                    } else {
+                        // 只指定区县
+                        hospitals = hospitalRepository.findByDistrictAndEnabledTrue(searchDTO.getDistrict());
+                    }
+                } else if (searchDTO.getRegion() != null && !searchDTO.getRegion().isEmpty() && 
+                    searchDTO.getCity() != null && !searchDTO.getCity().isEmpty()) {
+                    // 同时指定地区和城市
+                    hospitals = hospitalRepository.findByRegionAndCityAndEnabledTrue(
+                            searchDTO.getRegion(), searchDTO.getCity());
+                } else if (searchDTO.getRegion() != null && !searchDTO.getRegion().isEmpty()) {
+                    // 只指定地区
+                    hospitals = hospitalRepository.findByRegionAndEnabledTrue(searchDTO.getRegion());
+                } else if (searchDTO.getCity() != null && !searchDTO.getCity().isEmpty()) {
+                    // 只指定城市
+                    hospitals = hospitalRepository.findByCityAndEnabledTrue(searchDTO.getCity());
+                } else if (searchDTO.getProvince() != null && !searchDTO.getProvince().isEmpty()) {
+                    // 只指定省份
+                    hospitals = hospitalRepository.findByProvinceAndEnabledTrue(searchDTO.getProvince());
+                }
+                
+                allowedHospitalIds = hospitals.stream()
+                        .map(Hospital::getId)
+                        .collect(Collectors.toList());
+                
+                log.info("Found {} hospitals matching location criteria", allowedHospitalIds.size());
+                
+                // 如果没有找到符合条件的医院，直接返回空结果
+                if (allowedHospitalIds.isEmpty()) {
+                    return Page.empty(pageable);
+                }
+            } else {
+                allowedHospitalIds = null;
+            }
             
             Page<Doctor> doctors;
             
@@ -126,26 +197,47 @@ public class DoctorProfileService {
                     }
                     // 使用指定的科室ID
                     List<Doctor> deptDoctors = doctorRepository.findByDepartmentId(searchDTO.getDepartmentId());
+                    // 应用医院筛选
+                    if (allowedHospitalIds != null) {
+                        final List<String> finalIds = allowedHospitalIds;
+                        deptDoctors = deptDoctors.stream()
+                                .filter(doc -> doc.getHospitalId() != null && finalIds.contains(doc.getHospitalId()))
+                                .collect(Collectors.toList());
+                    }
                     int start = (int) pageable.getOffset();
                     int end = Math.min(start + pageable.getPageSize(), deptDoctors.size());
                     List<Doctor> pageContent = start < deptDoctors.size() ? deptDoctors.subList(start, end) : new ArrayList<>();
                     doctors = new org.springframework.data.domain.PageImpl<>(pageContent, pageable, deptDoctors.size());
                 } else {
                     // 查询所有关联科室的医生
-                    List<Doctor> allDoctors = new ArrayList<>();
+                    List<Doctor> allDeptDoctors = new ArrayList<>();
                     for (String deptId : departmentIds) {
-                        allDoctors.addAll(doctorRepository.findByDepartmentId(deptId));
+                        allDeptDoctors.addAll(doctorRepository.findByDepartmentId(deptId));
                     }
-                    log.info("Found {} doctors across {} departments", allDoctors.size(), departmentIds.size());
+                    // 应用医院筛选
+                    if (allowedHospitalIds != null) {
+                        final List<String> finalIds = allowedHospitalIds;
+                        allDeptDoctors = allDeptDoctors.stream()
+                                .filter(doc -> doc.getHospitalId() != null && finalIds.contains(doc.getHospitalId()))
+                                .collect(Collectors.toList());
+                    }
+                    log.info("Found {} doctors across {} departments", allDeptDoctors.size(), departmentIds.size());
                     // 手动分页
                     int start = (int) pageable.getOffset();
-                    int end = Math.min(start + pageable.getPageSize(), allDoctors.size());
-                    List<Doctor> pageContent = start < allDoctors.size() ? allDoctors.subList(start, end) : new ArrayList<>();
-                    doctors = new org.springframework.data.domain.PageImpl<>(pageContent, pageable, allDoctors.size());
+                    int end = Math.min(start + pageable.getPageSize(), allDeptDoctors.size());
+                    List<Doctor> pageContent = start < allDeptDoctors.size() ? allDeptDoctors.subList(start, end) : new ArrayList<>();
+                    doctors = new org.springframework.data.domain.PageImpl<>(pageContent, pageable, allDeptDoctors.size());
                 }
             } else if (searchDTO.getDepartmentId() != null && !searchDTO.getDepartmentId().isEmpty()) {
                 // 按科室查询
                 List<Doctor> deptDoctors = doctorRepository.findByDepartmentId(searchDTO.getDepartmentId());
+                // 应用医院筛选
+                if (allowedHospitalIds != null) {
+                    final List<String> finalIds = allowedHospitalIds;
+                    deptDoctors = deptDoctors.stream()
+                            .filter(doc -> doc.getHospitalId() != null && finalIds.contains(doc.getHospitalId()))
+                            .collect(Collectors.toList());
+                }
                 log.info("Found {} doctors in department {}", deptDoctors.size(), searchDTO.getDepartmentId());
                 // 手动分页
                 int start = (int) pageable.getOffset();
@@ -154,10 +246,30 @@ public class DoctorProfileService {
                 doctors = new org.springframework.data.domain.PageImpl<>(pageContent, pageable, deptDoctors.size());
             } else if (searchDTO.getKeyword() != null && !searchDTO.getKeyword().isEmpty()) {
                 // 按关键字查询
-                doctors = doctorRepository.findByNameContaining(searchDTO.getKeyword(), pageable);
+                Page<Doctor> keywordDoctors = doctorRepository.findByNameContaining(searchDTO.getKeyword(), pageable);
+                // 应用医院筛选
+                if (allowedHospitalIds != null) {
+                    final List<String> finalIds = allowedHospitalIds;
+                    List<Doctor> filteredDoctors = keywordDoctors.getContent().stream()
+                            .filter(doc -> doc.getHospitalId() != null && finalIds.contains(doc.getHospitalId()))
+                            .collect(Collectors.toList());
+                    doctors = new org.springframework.data.domain.PageImpl<>(filteredDoctors, pageable, filteredDoctors.size());
+                } else {
+                    doctors = keywordDoctors;
+                }
             } else {
                 // 返回所有医生
-                doctors = doctorRepository.findAll(pageable);
+                Page<Doctor> allDoctorsPage = doctorRepository.findAll(pageable);
+                // 应用医院筛选
+                if (allowedHospitalIds != null) {
+                    final List<String> finalIds = allowedHospitalIds;
+                    List<Doctor> filteredDoctors = allDoctorsPage.getContent().stream()
+                            .filter(doc -> doc.getHospitalId() != null && finalIds.contains(doc.getHospitalId()))
+                            .collect(Collectors.toList());
+                    doctors = new org.springframework.data.domain.PageImpl<>(filteredDoctors, pageable, filteredDoctors.size());
+                } else {
+                    doctors = allDoctorsPage;
+                }
             }
             
             return doctors.map(this::safeConvertToListDTO);
@@ -180,12 +292,46 @@ public class DoctorProfileService {
             List<Doctor> allDoctors = doctorRepository.findAll();
             log.info("Found {} doctors in database", allDoctors.size());
             
-            List<DoctorListDTO> allDoctorsDTO = allDoctors.stream()
-                    .map(this::safeConvertToListDTO)
-                    .filter(dto -> dto != null) // 过滤掉转换失败的
-                    .collect(Collectors.toList());
+            if (allDoctors.isEmpty()) {
+                log.warn("No doctors found in database!");
+                return new ArrayList<>();
+            }
             
-            log.info("Converted {} doctors to DTO", allDoctorsDTO.size());
+            // 记录前几个医生的ID用于调试
+            if (allDoctors.size() > 0) {
+                log.info("First few doctor IDs: {}", allDoctors.stream()
+                    .limit(3)
+                    .map(Doctor::getId)
+                    .collect(Collectors.toList()));
+            }
+            
+            List<DoctorListDTO> allDoctorsDTO = new ArrayList<>();
+            int successCount = 0;
+            int failCount = 0;
+            
+            for (Doctor doctor : allDoctors) {
+                try {
+                    DoctorListDTO dto = safeConvertToListDTO(doctor);
+                    if (dto != null) {
+                        allDoctorsDTO.add(dto);
+                        successCount++;
+                    } else {
+                        failCount++;
+                        log.warn("safeConvertToListDTO returned null for doctor: {}", doctor.getId());
+                    }
+                } catch (Exception e) {
+                    failCount++;
+                    log.error("Error converting doctor {} to DTO: {}", doctor.getId(), e.getMessage(), e);
+                }
+            }
+            
+            log.info("Converted {} doctors to DTO (success: {}, failed: {})", 
+                allDoctorsDTO.size(), successCount, failCount);
+            
+            if (allDoctorsDTO.isEmpty()) {
+                log.error("All doctors failed to convert to DTO!");
+                return new ArrayList<>();
+            }
             
             // 按评分降序排序，返回评分最高的医生
             List<DoctorListDTO> topDoctors = allDoctorsDTO.stream()
@@ -204,9 +350,17 @@ public class DoctorProfileService {
                     .collect(Collectors.toList());
             
             log.info("Returning {} top doctors", topDoctors.size());
+            if (!topDoctors.isEmpty()) {
+                log.info("Top doctor: id={}, name={}, rating={}, reviewCount={}", 
+                    topDoctors.get(0).getId(),
+                    topDoctors.get(0).getName(),
+                    topDoctors.get(0).getRating(),
+                    topDoctors.get(0).getReviewCount());
+            }
             return topDoctors;
         } catch (Exception e) {
             log.error("Error fetching top doctors: {}", e.getMessage(), e);
+            e.printStackTrace(); // 打印完整堆栈
             return new ArrayList<>(); // 返回空列表
         }
     }
@@ -349,6 +503,9 @@ public class DoctorProfileService {
                     dto.setHospitalAddress(hospital.getAddress());
                     dto.setHospitalLongitude(hospital.getLongitude());
                     dto.setHospitalLatitude(hospital.getLatitude());
+                    dto.setHospitalCity(hospital.getCity());
+                    dto.setHospitalRegion(hospital.getRegion());
+                    dto.setHospitalProvince(hospital.getProvince());
                 });
             } catch (Exception e) {
                 log.warn("Could not get hospital info for doctor: {}, error: {}", doctor.getId(), e.getMessage());

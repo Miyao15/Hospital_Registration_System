@@ -121,29 +121,65 @@ public class AppointmentService {
     }
     
     public Page<AppointmentDetailDTO> getMyAppointments(String userId, String status, int page, int size) {
-        // 通过 userId 查找患者信息
-        Patient patient = patientRepository.findByUserId(userId).orElse(null);
-        if (patient == null) {
-            return Page.empty(PageRequest.of(page, size));
-        }
+        log.info("获取我的预约 - userId: {}, status: {}, page: {}, size: {}", userId, status, page, size);
         
-        String patientId = patient.getId();
-        Pageable pageable = PageRequest.of(page, size);
-        Page<Appointment> appointments;
-        
-        if (status != null && !status.isEmpty()) {
-            try {
-                AppointmentStatus appointmentStatus = AppointmentStatus.valueOf(status);
-                appointments = appointmentRepository.findByPatientIdAndStatusOrderByCreatedAtDesc(
-                        patientId, appointmentStatus, pageable);
-            } catch (IllegalArgumentException e) {
-                appointments = appointmentRepository.findByPatientIdOrderByCreatedAtDesc(patientId, pageable);
+        try {
+            // 通过 userId 查找患者信息
+            Patient patient = patientRepository.findByUserId(userId).orElse(null);
+            if (patient == null) {
+                log.warn("找不到患者信息 - userId: {}", userId);
+                return Page.empty(PageRequest.of(page, size));
             }
-        } else {
-            appointments = appointmentRepository.findByPatientIdOrderByCreatedAtDesc(patientId, pageable);
+            
+            log.info("找到患者 - patientId: {}, name: {}", patient.getId(), patient.getName());
+            String patientId = patient.getId();
+            Pageable pageable = PageRequest.of(page, size);
+            Page<Appointment> appointments;
+            
+            if (status != null && !status.isEmpty()) {
+                try {
+                    AppointmentStatus appointmentStatus = AppointmentStatus.valueOf(status);
+                    appointments = appointmentRepository.findByPatientIdAndStatusOrderByCreatedAtDesc(
+                            patientId, appointmentStatus, pageable);
+                    log.info("按状态查询预约 - patientId: {}, status: {}, 找到 {} 条记录", 
+                            patientId, status, appointments.getTotalElements());
+                } catch (IllegalArgumentException e) {
+                    log.warn("无效的状态值: {}, 使用全部状态查询", status);
+                    appointments = appointmentRepository.findByPatientIdOrderByCreatedAtDesc(patientId, pageable);
+                }
+            } else {
+                appointments = appointmentRepository.findByPatientIdOrderByCreatedAtDesc(patientId, pageable);
+                log.info("查询所有预约 - patientId: {}, 找到 {} 条记录", patientId, appointments.getTotalElements());
+            }
+            
+            // 安全转换，即使某些记录转换失败也继续处理其他记录
+            return appointments.map(appointment -> {
+                try {
+                    return convertToDetailDTO(appointment);
+                } catch (Exception e) {
+                    log.error("转换预约记录失败 - appointmentId: {}, error: {}", 
+                            appointment.getId(), e.getMessage(), e);
+                    // 返回基本信息
+                    AppointmentDetailDTO dto = new AppointmentDetailDTO();
+                    dto.setId(appointment.getId());
+                    dto.setAppointmentNo(appointment.getAppointmentNo() != null ? appointment.getAppointmentNo() : "未知");
+                    dto.setPatientName(appointment.getPatientName() != null ? appointment.getPatientName() : "未知");
+                    dto.setPatientPhone(appointment.getPatientPhone() != null ? appointment.getPatientPhone() : "未知");
+                    if (appointment.getStatus() != null) {
+                        dto.setStatus(appointment.getStatus().name());
+                        try {
+                            dto.setStatusName(appointment.getStatus().getDisplayName());
+                        } catch (Exception ex) {
+                            dto.setStatusName("未知状态");
+                        }
+                    }
+                    return dto;
+                }
+            });
+        } catch (Exception e) {
+            log.error("获取我的预约失败 - userId: {}, error: {}", userId, e.getMessage(), e);
+            throw new BusinessException("获取预约记录失败: " + e.getMessage());
         }
-        
-        return appointments.map(this::convertToDetailDTO);
     }
     
     @Transactional
@@ -378,37 +414,115 @@ public class AppointmentService {
     }
     
     private AppointmentDetailDTO convertToDetailDTO(Appointment appointment) {
-        AppointmentDetailDTO dto = new AppointmentDetailDTO();
-        dto.setId(appointment.getId());
-        dto.setAppointmentNo(appointment.getAppointmentNo());
-        dto.setDoctorId(appointment.getDoctorId());
-        dto.setDepartmentId(appointment.getDepartmentId());
-        dto.setAppointmentDate(appointment.getAppointmentDate());
-        dto.setPeriod(appointment.getPeriod().name());
-        dto.setPeriodName(appointment.getPeriod().getDisplayName());
-        dto.setPatientName(appointment.getPatientName());
-        dto.setPatientPhone(appointment.getPatientPhone());
-        dto.setSymptomDesc(appointment.getSymptomDesc());
-        dto.setStatus(appointment.getStatus().name());
-        dto.setStatusName(appointment.getStatus().getDisplayName());
-        dto.setCreatedAt(appointment.getCreatedAt());
+        if (appointment == null) {
+            log.error("预约对象为null");
+            throw new BusinessException("预约数据不存在");
+        }
+        
+        try {
+            log.debug("开始转换预约详情DTO - appointmentId: {}", appointment.getId());
+            AppointmentDetailDTO dto = new AppointmentDetailDTO();
+            dto.setId(appointment.getId());
+            dto.setAppointmentNo(appointment.getAppointmentNo() != null ? appointment.getAppointmentNo() : "未知");
+            dto.setDoctorId(appointment.getDoctorId());
+            dto.setDepartmentId(appointment.getDepartmentId());
+            dto.setAppointmentDate(appointment.getAppointmentDate());
+            
+            // 安全处理period
+            if (appointment.getPeriod() != null) {
+                dto.setPeriod(appointment.getPeriod().name());
+                dto.setPeriodName(appointment.getPeriod().getDisplayName());
+            } else {
+                log.warn("预约时段为空 - appointmentId: {}", appointment.getId());
+                dto.setPeriod(null);
+                dto.setPeriodName("未知时段");
+            }
+            
+            dto.setPatientName(appointment.getPatientName() != null ? appointment.getPatientName() : "未知");
+            dto.setPatientPhone(appointment.getPatientPhone() != null ? appointment.getPatientPhone() : "未知");
+            dto.setSymptomDesc(appointment.getSymptomDesc());
+            
+            // 安全处理status
+            if (appointment.getStatus() != null) {
+                dto.setStatus(appointment.getStatus().name());
+                dto.setStatusName(appointment.getStatus().getDisplayName());
+            } else {
+                log.warn("预约状态为空 - appointmentId: {}", appointment.getId());
+                dto.setStatus(null);
+                dto.setStatusName("未知状态");
+            }
+            
+            dto.setCreatedAt(appointment.getCreatedAt());
         
         // 获取医生信息
-        doctorRepository.findById(appointment.getDoctorId()).ifPresent(doctor -> {
-            dto.setDoctorName(doctor.getName());
-            dto.setDoctorTitle(doctor.getTitle().name());
-        });
+        if (appointment.getDoctorId() != null) {
+            try {
+                doctorRepository.findById(appointment.getDoctorId()).ifPresentOrElse(
+                    doctor -> {
+                        dto.setDoctorName(doctor.getName() != null ? doctor.getName() : "未知医生");
+                        if (doctor.getTitle() != null) {
+                            dto.setDoctorTitle(doctor.getTitle().name());
+                        } else {
+                            log.warn("医生职称为空 - doctorId: {}", appointment.getDoctorId());
+                            dto.setDoctorTitle("未知");
+                        }
+                    },
+                    () -> {
+                        log.warn("医生不存在 - doctorId: {}", appointment.getDoctorId());
+                        dto.setDoctorName("医生信息缺失");
+                        dto.setDoctorTitle("未知");
+                    }
+                );
+            } catch (Exception e) {
+                log.error("获取医生信息失败 - doctorId: {}, error: {}", appointment.getDoctorId(), e.getMessage());
+                dto.setDoctorName("医生信息缺失");
+                dto.setDoctorTitle("未知");
+            }
+        }
         
         // 获取科室信息
-        departmentRepository.findById(appointment.getDepartmentId()).ifPresent(dept -> {
-            dto.setDepartmentName(dept.getName());
-            dto.setDepartmentLocation(dept.getLocation());
-        });
+        if (appointment.getDepartmentId() != null) {
+            try {
+                departmentRepository.findById(appointment.getDepartmentId()).ifPresentOrElse(
+                    dept -> {
+                        dto.setDepartmentName(dept.getName() != null ? dept.getName() : "未知科室");
+                        if (dept.getLocation() != null) {
+                            dto.setDepartmentLocation(dept.getLocation());
+                        }
+                    },
+                    () -> {
+                        log.warn("科室不存在 - departmentId: {}", appointment.getDepartmentId());
+                        dto.setDepartmentName("科室信息缺失");
+                    }
+                );
+            } catch (Exception e) {
+                log.error("获取科室信息失败 - departmentId: {}, error: {}", appointment.getDepartmentId(), e.getMessage());
+                dto.setDepartmentName("科室信息缺失");
+            }
+        }
         
         // 获取时间段信息
-        timeSlotRepository.findById(appointment.getTimeSlotId()).ifPresent(slot -> {
-            dto.setTimeRange(slot.getStartTime() + " - " + slot.getEndTime());
-        });
+        if (appointment.getTimeSlotId() != null) {
+            try {
+                timeSlotRepository.findById(appointment.getTimeSlotId()).ifPresentOrElse(
+                    slot -> {
+                        if (slot.getStartTime() != null && slot.getEndTime() != null) {
+                            dto.setTimeRange(slot.getStartTime() + " - " + slot.getEndTime());
+                        } else {
+                            log.warn("时间段信息不完整 - timeSlotId: {}", appointment.getTimeSlotId());
+                            dto.setTimeRange("时间待定");
+                        }
+                    },
+                    () -> {
+                        log.warn("时间段不存在 - timeSlotId: {}", appointment.getTimeSlotId());
+                        dto.setTimeRange("时间待定");
+                    }
+                );
+            } catch (Exception e) {
+                log.error("获取时间段信息失败 - timeSlotId: {}, error: {}", appointment.getTimeSlotId(), e.getMessage());
+                dto.setTimeRange("时间待定");
+            }
+        }
         
         // 获取检查项目信息
         if (appointment.getMedicalItemId() != null) {
@@ -420,5 +534,27 @@ public class AppointmentService {
         }
         
         return dto;
+        } catch (Exception e) {
+            log.error("转换预约详情DTO失败 - appointmentId: {}, error: {}", 
+                    appointment != null ? appointment.getId() : "null", e.getMessage(), e);
+            // 返回基本信息，避免完全失败
+            AppointmentDetailDTO dto = new AppointmentDetailDTO();
+            if (appointment != null) {
+                dto.setId(appointment.getId());
+                dto.setAppointmentNo(appointment.getAppointmentNo());
+                dto.setPatientName(appointment.getPatientName());
+                dto.setPatientPhone(appointment.getPatientPhone());
+                if (appointment.getStatus() != null) {
+                    dto.setStatus(appointment.getStatus().name());
+                    try {
+                        dto.setStatusName(appointment.getStatus().getDisplayName());
+                    } catch (Exception ex) {
+                        log.warn("获取状态显示名称失败: {}", ex.getMessage());
+                        dto.setStatusName("未知状态");
+                    }
+                }
+            }
+            return dto;
+        }
     }
 }

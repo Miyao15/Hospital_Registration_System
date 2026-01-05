@@ -1,8 +1,17 @@
 <template>
   <div class="triage-page">
     <div class="progress-bar"></div>
-    <div class="skip-link">
-      <router-link :to="{ path: '/search-results', query: route.query }">跳过到搜索结果</router-link>
+    <div class="top-bar">
+      <button class="back-button" @click="handleBack" title="返回">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        返回
+      </button>
+      <div class="skip-link">
+        <router-link :to="{ path: '/search-results', query: route.query }">跳过到搜索结果</router-link>
+      </div>
     </div>
     <div class="triage-container">
       <h1 class="triage-title">请选择检查项目</h1>
@@ -36,6 +45,14 @@ import { getAllMedicalItems } from '@/api/medicalItem';
 
 const router = useRouter();
 const route = useRoute();
+
+const handleBack = () => {
+  if (window.history.length > 1) {
+    router.back();
+  } else {
+    router.push('/landing');
+  }
+};
 
 const medicalItems = ref([]);
 const loading = ref(true);
@@ -87,9 +104,48 @@ const handleSelectItem = (item) => {
   background-color: #007bff;
 }
 
-.skip-link {
+.top-bar {
   position: absolute;
   top: 1rem;
+  left: 1rem;
+  right: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 10;
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1px solid #DDD;
+  background: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+  
+  &:hover {
+    background: #F5F5F5;
+    border-color: #999;
+  }
+  
+  &:active {
+    transform: scale(0.98);
+  }
+  
+  svg {
+    display: block;
+  }
+}
+
+.skip-link {
+  position: relative;
+  top: 0;
   right: 2rem;
   font-size: 0.9rem;
   a {

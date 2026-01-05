@@ -29,14 +29,19 @@ request.interceptors.response.use(
     // success 为 true 表示业务成功
     if (!res.success) {
       const errorInfo = res.error || {};
-      if (errorInfo.details && Object.keys(errorInfo.details).length > 0) {
-        // Display each detailed error message
+      
+      // 处理details字段（验证错误）
+      if (errorInfo.details && typeof errorInfo.details === 'object' && Object.keys(errorInfo.details).length > 0) {
+        // 显示每个字段的详细错误
         for (const field in errorInfo.details) {
-          ElMessage.error(`${field}: ${errorInfo.details[field]}`);
+          const fieldName = getFieldDisplayName(field);
+          ElMessage.error(`${fieldName}: ${errorInfo.details[field]}`);
         }
+      } else if (errorInfo.message) {
+        // 显示顶层错误消息
+        ElMessage.error(errorInfo.message);
       } else {
-        // Fallback to top-level message
-        ElMessage.error(errorInfo.message || '请求失败');
+        ElMessage.error('请求失败，请重试');
       }
 
       // 根据后端的错误码进行特定处理，例如 token 失效
@@ -54,10 +59,83 @@ request.interceptors.response.use(
     return res.data;
   },
   error => {
-    // 处理网络层面的错误
-    ElMessage.error(error.message || '网络错误');
+    // 处理HTTP错误（401, 400, 500等）
+    if (error.response) {
+      const res = error.response.data;
+      
+      // 调试日志（开发环境）
+      if (process.env.NODE_ENV === 'development') {
+        console.log('错误响应:', {
+          status: error.response.status,
+          data: res,
+          error: error
+        });
+      }
+      
+      // 如果后端返回了ApiResponse格式的错误
+      if (res && typeof res === 'object') {
+        // 检查是否有error字段（ApiResponse格式）
+        if (res.error) {
+          const errorInfo = res.error;
+          
+          // 处理details字段（验证错误）
+          if (errorInfo.details && typeof errorInfo.details === 'object' && Object.keys(errorInfo.details).length > 0) {
+            // 显示每个字段的详细错误
+            for (const field in errorInfo.details) {
+              const fieldName = getFieldDisplayName(field);
+              ElMessage.error(`${fieldName}: ${errorInfo.details[field]}`);
+            }
+          } else if (errorInfo.message) {
+            // 显示顶层错误消息
+            ElMessage.error(errorInfo.message);
+          } else {
+            // 如果没有message，使用code作为提示
+            ElMessage.error('操作失败，请重试');
+          }
+          
+          // 根据错误码进行特定处理
+          if (errorInfo.code === 'AUTH_001' || errorInfo.code === 'AUTH_002' || errorInfo.code === 'AUTH_003') {
+            localStorage.removeItem('token');
+            localStorage.removeItem('userInfo');
+            router.push('/login');
+          }
+          
+          return Promise.reject(new Error(errorInfo.message || '请求失败'));
+        }
+        
+        // 如果没有error字段，但直接有message字段
+        if (res.message) {
+          ElMessage.error(res.message);
+          return Promise.reject(new Error(res.message));
+        }
+      }
+      
+      // 如果无法解析错误信息，显示通用错误
+      const statusText = error.response.statusText || `HTTP ${error.response.status}`;
+      ElMessage.error(`请求失败: ${statusText}`);
+      return Promise.reject(new Error(`请求失败: ${statusText}`));
+    }
+    
+    // 处理网络层面的错误（无响应）
+    ElMessage.error(error.message || '网络错误，请检查网络连接');
     return Promise.reject(error);
   }
 )
+
+// 字段名映射（用于显示友好的字段名）
+function getFieldDisplayName(field) {
+  const fieldMap = {
+    'phone': '手机号',
+    'password': '密码',
+    'name': '姓名',
+    'idCard': '身份证号',
+    'employeeId': '工号',
+    'licenseNumber': '资格证号',
+    'adminRegistrationKey': '管理员密钥',
+    'title': '职称',
+    'departmentId': '科室'
+  };
+  return fieldMap[field] || field;
+}
 
 export default request

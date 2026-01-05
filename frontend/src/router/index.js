@@ -64,7 +64,7 @@ const routes = [
         path: 'home',
         name: 'PatientHome',
         component: () => import('@/views/patient/Home.vue'),
-        meta: { title: '患者首页' }
+        meta: { title: '我的主页' }
       },
       {
         path: 'profile',

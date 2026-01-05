@@ -31,7 +31,7 @@ export const useUserStore = defineStore('user', () => {
       
       ElMessage.success('登录成功！');
 
-      // 检查是否有待处理的预约信息
+      // 检查是否有待处理的预约信息（只有在未登录状态下点击预约后才会有）
       const pendingBooking = localStorage.getItem('pendingBooking');
       if (pendingBooking && response.role === 'PATIENT') {
         try {
@@ -49,14 +49,8 @@ export const useUserStore = defineStore('user', () => {
         }
       }
 
-      // 检查是否有重定向参数
-      const redirect = router.currentRoute.value.query.redirect;
-      if (redirect) {
-        router.push(redirect);
-        return true;
-      }
-
-      // Redirect based on role from the server
+      // 正常登录后，根据角色跳转到对应的首页
+      // 不再使用redirect参数，确保登录后跳转的一致性
       switch (response.role) {
         case 'ADMIN':
           router.push('/admin/home');
@@ -72,8 +66,9 @@ export const useUserStore = defineStore('user', () => {
       }
       return true;
     } catch (error) {
-      // The interceptor in request.js already formats the error
-      ElMessage.error(error.message || '登录失败');
+      // request.js的拦截器已经显示了错误消息，这里不需要重复显示
+      // 只需要返回false表示登录失败
+      console.error('登录失败:', error);
       return false;
     }
   };
@@ -102,7 +97,8 @@ export const useUserStore = defineStore('user', () => {
       ElMessage.success(message);
       return true;
     } catch (error) {
-      ElMessage.error(error.message || '注册失败');
+      // request.js的拦截器已经显示了错误消息，这里不需要重复显示
+      console.error('注册失败:', error);
       return false;
     }
   };

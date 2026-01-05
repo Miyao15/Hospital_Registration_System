@@ -25,15 +25,30 @@ public class Hospital {
     @Column(length = 255)
     private String address;
 
+    @Column(length = 50)
+    private String province;  // 省份
+
+    @Column(length = 50)
+    private String city;      // 城市
+
+    @Column(length = 50)
+    private String district;  // 区县
+
+    @Column(name = "postal_code", length = 10)
+    private String postalCode;  // 邮编
+
+    @Column(length = 50)
+    private String region;  // 地区（如：华东、华北等）
+
     @Column(length = 20)
     private String phone;
 
     // 经度
-    @Column(precision = 10)
+    @Column(columnDefinition = "DOUBLE")
     private Double longitude;
 
     // 纬度
-    @Column(precision = 10)
+    @Column(columnDefinition = "DOUBLE")
     private Double latitude;
 
     @Column(columnDefinition = "TEXT")

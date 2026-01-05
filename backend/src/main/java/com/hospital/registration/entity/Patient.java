@@ -52,6 +52,9 @@ public class Patient {
     @Column(name = "emergency_phone", length = 20)
     private String emergencyPhone;
 
+    @Column(name = "avatar_url", length = 255)
+    private String avatarUrl;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

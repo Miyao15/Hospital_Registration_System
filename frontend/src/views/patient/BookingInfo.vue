@@ -3,6 +3,12 @@
     <!-- 顶部导航 -->
     <header class="top-header">
       <div class="header-left">
+        <button class="back-button" @click="handleBack" title="返回">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+        </button>
         <div class="logo" @click="router.push('/')">
           <div class="logo-icon">优</div>
           <span class="logo-text">优医预约</span>
@@ -181,6 +187,14 @@ const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
 
+const handleBack = () => {
+  if (window.history.length > 1) {
+    router.back();
+  } else {
+    router.push('/landing');
+  }
+};
+
 // 医生和预约信息
 const doctorInfo = ref({
   id: '',
@@ -230,12 +244,9 @@ onMounted(async () => {
   // 检查是否登录
   if (!userStore.isLoggedIn) {
     ElMessage.warning('请先登录后再进行预约');
-    // 保存当前路由参数到 localStorage
+    // 保存当前路由参数到 localStorage，登录后会自动跳转到预约信息填写页面
     localStorage.setItem('pendingBooking', JSON.stringify(route.query));
-    router.push({
-      path: '/login',
-      query: { redirect: route.fullPath }
-    });
+    router.push('/login');
     return;
   }
 
@@ -405,6 +416,34 @@ const handleSubmit = async () => {
 .header-left {
   display: flex;
   align-items: center;
+  gap: 15px;
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #333;
+  transition: all 0.2s;
+  
+  &:hover {
+    background: #f5f7fa;
+    color: #667eea;
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+  
+  svg {
+    display: block;
+  }
 }
 
 .logo {

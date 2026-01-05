@@ -18,7 +18,31 @@ public class HospitalService {
     private final HospitalRepository hospitalRepository;
     
     public List<HospitalDTO> getAllHospitals() {
-        return hospitalRepository.findByEnabledTrue().stream()
+        return hospitalRepository.findByEnabledTrueOrderByCityAsc().stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+    
+    public List<HospitalDTO> getHospitalsByRegion(String region) {
+        return hospitalRepository.findByRegionAndEnabledTrue(region).stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+    
+    public List<HospitalDTO> getHospitalsByCity(String city) {
+        return hospitalRepository.findByCityAndEnabledTrue(city).stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+    
+    public List<HospitalDTO> getHospitalsByProvince(String province) {
+        return hospitalRepository.findByProvinceAndEnabledTrue(province).stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+    
+    public List<HospitalDTO> getHospitalsByRegionAndCity(String region, String city) {
+        return hospitalRepository.findByRegionAndCityAndEnabledTrue(region, city).stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
@@ -32,24 +56,35 @@ public class HospitalService {
         hospital.setId(UUID.randomUUID().toString());
         hospital.setName(dto.getName());
         hospital.setAddress(dto.getAddress());
+        hospital.setProvince(dto.getProvince());
+        hospital.setCity(dto.getCity());
+        hospital.setDistrict(dto.getDistrict());
+        hospital.setPostalCode(dto.getPostalCode());
+        hospital.setRegion(dto.getRegion());
         hospital.setPhone(dto.getPhone());
         hospital.setLongitude(dto.getLongitude());
         hospital.setLatitude(dto.getLatitude());
         hospital.setDescription(dto.getDescription());
-        hospital.setEnabled(true);
+        hospital.setEnabled(dto.getEnabled() != null ? dto.getEnabled() : true);
         
         return toDTO(hospitalRepository.save(hospital));
     }
     
     public HospitalDTO toDTO(Hospital hospital) {
-        return new HospitalDTO(
-            hospital.getId(),
-            hospital.getName(),
-            hospital.getAddress(),
-            hospital.getPhone(),
-            hospital.getLongitude(),
-            hospital.getLatitude(),
-            hospital.getDescription()
-        );
+        HospitalDTO dto = new HospitalDTO();
+        dto.setId(hospital.getId());
+        dto.setName(hospital.getName());
+        dto.setAddress(hospital.getAddress());
+        dto.setProvince(hospital.getProvince());
+        dto.setCity(hospital.getCity());
+        dto.setDistrict(hospital.getDistrict());
+        dto.setPostalCode(hospital.getPostalCode());
+        dto.setRegion(hospital.getRegion());
+        dto.setPhone(hospital.getPhone());
+        dto.setLongitude(hospital.getLongitude());
+        dto.setLatitude(hospital.getLatitude());
+        dto.setDescription(hospital.getDescription());
+        dto.setEnabled(hospital.getEnabled());
+        return dto;
     }
 }

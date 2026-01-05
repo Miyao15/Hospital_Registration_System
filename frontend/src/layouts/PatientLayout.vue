@@ -7,6 +7,17 @@
       <!-- 顶部栏 -->
       <el-header class="header">
         <div class="header-left">
+          <button 
+            v-if="showBackButton" 
+            class="back-button" 
+            @click="handleBack"
+            title="返回"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+          </button>
           <span class="page-title">{{ pageTitle }}</span>
         </div>
         <div class="header-right">
@@ -16,15 +27,18 @@
           <el-dropdown @command="handleCommand">
             <div class="user-info">
               <el-avatar :size="36" :src="userStore.userInfo?.avatar">
-                {{ userStore.userInfo?.realName?.charAt(0) }}
+                {{ avatarPlaceholderText }}
               </el-avatar>
               <span>{{ userStore.userInfo?.realName }}</span>
               <el-icon><ArrowDown /></el-icon>
             </div>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item command="home">
+                <el-dropdown-item command="landing">
                   <el-icon><HomeFilled /></el-icon>首页
+                </el-dropdown-item>
+                <el-dropdown-item command="home">
+                  <el-icon><Grid /></el-icon>我的主页
                 </el-dropdown-item>
                 <el-dropdown-item command="profile">
                   <el-icon><User /></el-icon>个人信息
@@ -73,6 +87,20 @@ const unreadCount = ref(0)
 
 const activeMenu = computed(() => route.path)
 const pageTitle = computed(() => route.meta.title || '患者中心')
+const showBackButton = computed(() => route.path !== '/patient/home')
+
+// 头像占位符文字 - 患者显示"患"
+const avatarPlaceholderText = computed(() => {
+  return '患'
+})
+
+const handleBack = () => {
+  if (window.history.length > 1) {
+    router.back()
+  } else {
+    router.push('/patient/home')
+  }
+}
 
 // 刷新未读数量的方法
 const refreshUnreadCount = async () => {
@@ -102,6 +130,9 @@ const goToNotifications = () => {
 
 const handleCommand = (command) => {
   switch (command) {
+    case 'landing':
+      router.push('/landing')
+      break
     case 'home':
       router.push('/patient/home')
       break
@@ -147,6 +178,39 @@ const handleCommand = (command) => {
   align-items: center;
   justify-content: space-between;
   padding: 0 30px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #333;
+  transition: all 0.2s;
+  
+  &:hover {
+    background: #f5f7fa;
+    color: #667eea;
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+  
+  svg {
+    display: block;
+  }
 }
 
 .page-title {

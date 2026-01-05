@@ -3,6 +3,19 @@
     <!-- Zocdoc 风格顶部导航栏 -->
     <header class="top-navbar">
       <div class="navbar-container">
+        <!-- 返回按钮 -->
+        <button 
+          v-if="showBackButton" 
+          class="back-button" 
+          @click="handleBack"
+          title="返回"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+        </button>
+        
         <!-- Logo 区域 -->
         <div class="logo-area" @click="$router.push('/admin/home')">
           <div class="logo-icon">优</div>
@@ -38,7 +51,7 @@
           <!-- 用户下拉菜单 -->
           <el-dropdown @command="handleCommand" trigger="click" class="user-dropdown">
             <div class="user-trigger">
-              <img :src="defaultAvatar" class="user-avatar" />
+              <div class="user-avatar avatar-placeholder">管</div>
               <span class="user-name">{{ adminInfo.name || '管理员' }}</span>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
                 <polyline points="6 9 12 15 18 9"></polyline>
@@ -48,7 +61,7 @@
               <el-dropdown-menu class="custom-dropdown-menu">
                 <div class="dropdown-header">
                   <div class="dropdown-user-info">
-                    <img :src="defaultAvatar" class="dropdown-avatar" />
+                    <div class="dropdown-avatar avatar-placeholder">管</div>
                     <div class="dropdown-text">
                       <div class="dropdown-name">{{ adminInfo.name || '管理员' }}</div>
                       <div class="dropdown-role">系统管理员</div>
@@ -89,8 +102,6 @@ const router = useRouter();
 const route = useRoute();
 const userStore = useUserStore();
 
-const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png';
-
 const adminInfo = ref({
   name: '',
   employeeId: ''
@@ -115,6 +126,16 @@ const currentDate = computed(() => {
 
 const isActive = (path) => {
   return route.path === path || route.path.startsWith(path + '/');
+};
+
+const showBackButton = computed(() => route.path !== '/admin/home');
+
+const handleBack = () => {
+  if (window.history.length > 1) {
+    router.back();
+  } else {
+    router.push('/admin/home');
+  }
 };
 
 onMounted(() => {
@@ -166,6 +187,35 @@ const handleCommand = (command) => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #2A2A2A;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  
+  &:hover {
+    background: #F5F5F5;
+    color: #000;
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+  
+  svg {
+    display: block;
+  }
 }
 
 /* Logo 区域 */
@@ -283,6 +333,17 @@ const handleCommand = (command) => {
   object-fit: cover;
 }
 
+.user-avatar.avatar-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #FFD300 0%, #FF9800 100%);
+  color: #2A2A2A;
+  font-weight: 700;
+  font-size: 14px;
+  object-fit: none;
+}
+
 .user-name {
   font-size: 14px;
   font-weight: 500;
@@ -315,6 +376,17 @@ const handleCommand = (command) => {
   height: 40px;
   border-radius: 50%;
   object-fit: cover;
+}
+
+.dropdown-avatar.avatar-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #FFD300 0%, #FF9800 100%);
+  color: #2A2A2A;
+  font-weight: 700;
+  font-size: 16px;
+  object-fit: none;
 }
 
 .dropdown-text {
