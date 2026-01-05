@@ -16,6 +16,7 @@ public class DoctorDetailDTO {
     private String departmentId;
     private String departmentName;
     private String avatarUrl;
+    private String avatarData;         // Base64头像数据
     private String introduction;
     private String education;
     private String specialty;

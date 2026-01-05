@@ -16,6 +16,7 @@ public class DoctorListDTO {
     private String departmentId;
     private String departmentName;
     private String avatarUrl;
+    private String avatarData;         // Base64头像数据
     private String specialty;
     private String scheduleInfo;
     private String onlineStatus;  // AVAILABLE, FULL, REST

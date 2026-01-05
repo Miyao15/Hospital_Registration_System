@@ -17,5 +17,6 @@ public class PatientProfileDTO {
     private String emergencyContact;
     private String emergencyPhone;
     private String avatarUrl;
+    private String avatarData;
 }
 

@@ -440,7 +440,10 @@ public class DoctorProfileService {
         dto.setEmployeeId(doctor.getEmployeeId());        // 工号
         dto.setLicenseNumber(doctor.getLicenseNumber());  // 执业证号
         dto.setDepartmentId(doctor.getDepartmentId());
-        dto.setAvatarUrl(doctor.getAvatarUrl());
+        // 优先使用 avatarData，如果没有则使用 avatarUrl
+        String avatar = doctor.getAvatarData() != null ? doctor.getAvatarData() : doctor.getAvatarUrl();
+        dto.setAvatarUrl(avatar);
+        dto.setAvatarData(doctor.getAvatarData());
         dto.setSpecialty(doctor.getSpecialty() != null ? doctor.getSpecialty() : "");
         dto.setScheduleInfo(doctor.getScheduleInfo());
         dto.setOnlineStatus("AVAILABLE");
@@ -523,7 +526,10 @@ public class DoctorProfileService {
         dto.setEmployeeId(doctor.getEmployeeId());        // 添加工号
         dto.setLicenseNumber(doctor.getLicenseNumber());  // 添加执业证号
         dto.setDepartmentId(doctor.getDepartmentId());
-        dto.setAvatarUrl(doctor.getAvatarUrl());
+        // 优先使用 avatarData，如果没有则使用 avatarUrl
+        String avatar = doctor.getAvatarData() != null ? doctor.getAvatarData() : doctor.getAvatarUrl();
+        dto.setAvatarUrl(avatar);
+        dto.setAvatarData(doctor.getAvatarData());
         dto.setIntroduction(doctor.getIntroduction());
         dto.setEducation(doctor.getEducation());
         dto.setSpecialty(doctor.getSpecialty());

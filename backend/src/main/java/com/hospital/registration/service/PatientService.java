@@ -91,7 +91,10 @@ public class PatientService {
             dto.setAllergyHistory(patient.getAllergyHistory());
             dto.setEmergencyContact(patient.getEmergencyContact());
             dto.setEmergencyPhone(patient.getEmergencyPhone());
-            dto.setAvatarUrl(patient.getAvatarUrl());
+            // 优先使用 avatarData，如果没有则使用 avatarUrl
+            String avatar = patient.getAvatarData() != null ? patient.getAvatarData() : patient.getAvatarUrl();
+            dto.setAvatarUrl(avatar);
+            dto.setAvatarData(patient.getAvatarData());
             log.debug("患者信息DTO转换成功 - patientId: {}", patient.getId());
             return dto;
         } catch (Exception e) {

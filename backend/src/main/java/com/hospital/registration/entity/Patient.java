@@ -55,6 +55,10 @@ public class Patient {
     @Column(name = "avatar_url", length = 255)
     private String avatarUrl;
 
+    @Lob
+    @Column(name = "avatar_data", columnDefinition = "MEDIUMTEXT")
+    private String avatarData;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

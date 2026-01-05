@@ -1,7 +1,14 @@
 package com.hospital.registration.controller;
 
 import com.hospital.registration.dto.response.ApiResponse;
+import com.hospital.registration.entity.Doctor;
+import com.hospital.registration.entity.Patient;
+import com.hospital.registration.entity.User;
+import com.hospital.registration.repository.DoctorRepository;
+import com.hospital.registration.repository.PatientRepository;
+import com.hospital.registration.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -9,40 +16,39 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
+import java.util.Optional;
 
 /**
  * 文件上传Controller
- * 支持头像图片上传功能
+ * 支持头像图片上传功能（存储到数据库）
  */
 @Slf4j
 @RestController
 @RequestMapping("/api/upload")
 public class FileUploadController {
 
-    @Value("${app.upload.dir:./uploads}")
-    private String uploadDir;
+    @Autowired
+    private UserRepository userRepository;
 
-    @Value("${app.upload.url-prefix:/uploads}")
-    private String urlPrefix;
+    @Autowired
+    private PatientRepository patientRepository;
+
+    @Autowired
+    private DoctorRepository doctorRepository;
 
     @Value("${app.upload.max-size:5242880}") // 默认5MB
     private long maxFileSize;
 
     /**
-     * 上传头像图片
+     * 上传头像图片（存储到数据库）
      * 
      * @param file 图片文件
      * @param authentication 认证信息
-     * @return 上传结果，包含文件URL
+     * @return 上传结果，包含Base64数据
      */
     @PostMapping(value = "/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<Map<String, String>>> uploadAvatar(
@@ -70,32 +76,48 @@ public class FileUploadController {
                                 String.format("文件大小不能超过 %d MB", maxFileSize / 1024 / 1024)));
             }
 
-            // 创建上传目录
-            Path uploadPath = Paths.get(uploadDir, "avatars");
-            if (!Files.exists(uploadPath)) {
-                Files.createDirectories(uploadPath);
+            // 转换为Base64
+            byte[] fileBytes = file.getBytes();
+            String base64Data = Base64.getEncoder().encodeToString(fileBytes);
+            String dataUrl = "data:" + contentType + ";base64," + base64Data;
+
+            // 获取当前用户（使用手机号作为用户名）
+            String phone = authentication.getName();
+            Optional<User> userOpt = userRepository.findByPhone(phone);
+            
+            if (userOpt.isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(ApiResponse.error("USER_NOT_FOUND", "用户不存在"));
             }
 
-            // 生成唯一文件名
-            String originalFilename = file.getOriginalFilename();
-            String extension = "";
-            if (originalFilename != null && originalFilename.contains(".")) {
-                extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            User user = userOpt.get();
+            String userId = user.getId();
+
+            // 根据用户角色保存到对应表
+            String role = user.getRole().name();
+            if ("PATIENT".equals(role)) {
+                Optional<Patient> patientOpt = patientRepository.findByUserId(userId);
+                if (patientOpt.isPresent()) {
+                    Patient patient = patientOpt.get();
+                    patient.setAvatarData(dataUrl);
+                    patient.setAvatarUrl(dataUrl); // 兼容旧字段
+                    patientRepository.save(patient);
+                }
+            } else if ("DOCTOR".equals(role)) {
+                Optional<Doctor> doctorOpt = doctorRepository.findByUserId(userId);
+                if (doctorOpt.isPresent()) {
+                    Doctor doctor = doctorOpt.get();
+                    doctor.setAvatarData(dataUrl);
+                    doctor.setAvatarUrl(dataUrl); // 兼容旧字段
+                    doctorRepository.save(doctor);
+                }
             }
-            String filename = UUID.randomUUID().toString() + extension;
 
-            // 保存文件
-            Path filePath = uploadPath.resolve(filename);
-            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-
-            // 生成访问URL
-            String fileUrl = urlPrefix + "/avatars/" + filename;
-
-            log.info("文件上传成功: {} -> {}", originalFilename, fileUrl);
+            log.info("头像上传成功，用户: {}, 大小: {} bytes", phone, fileBytes.length);
 
             Map<String, String> result = new HashMap<>();
-            result.put("url", fileUrl);
-            result.put("filename", filename);
+            result.put("url", dataUrl);
+            result.put("filename", "avatar_" + userId);
 
             return ResponseEntity.ok(ApiResponse.success(result));
 
@@ -107,9 +129,9 @@ public class FileUploadController {
     }
 
     /**
-     * 删除头像文件
+     * 删除头像
      * 
-     * @param filename 文件名
+     * @param filename 文件名（兼容旧接口）
      * @param authentication 认证信息
      * @return 删除结果
      */
@@ -119,22 +141,45 @@ public class FileUploadController {
             Authentication authentication) {
         
         try {
-            Path filePath = Paths.get(uploadDir, "avatars", filename);
+            // 获取当前用户（使用手机号作为用户名）
+            String phone = authentication.getName();
+            Optional<User> userOpt = userRepository.findByPhone(phone);
             
-            if (!Files.exists(filePath)) {
+            if (userOpt.isEmpty()) {
                 return ResponseEntity.badRequest()
-                        .body(ApiResponse.error("FILE_NOT_FOUND", "文件不存在"));
+                        .body(ApiResponse.error("USER_NOT_FOUND", "用户不存在"));
             }
 
-            Files.delete(filePath);
-            log.info("文件删除成功: {}", filename);
+            User user = userOpt.get();
+            String userId = user.getId();
+            String role = user.getRole().name();
 
+            // 清除头像数据
+            if ("PATIENT".equals(role)) {
+                Optional<Patient> patientOpt = patientRepository.findByUserId(userId);
+                if (patientOpt.isPresent()) {
+                    Patient patient = patientOpt.get();
+                    patient.setAvatarData(null);
+                    patient.setAvatarUrl(null);
+                    patientRepository.save(patient);
+                }
+            } else if ("DOCTOR".equals(role)) {
+                Optional<Doctor> doctorOpt = doctorRepository.findByUserId(userId);
+                if (doctorOpt.isPresent()) {
+                    Doctor doctor = doctorOpt.get();
+                    doctor.setAvatarData(null);
+                    doctor.setAvatarUrl(null);
+                    doctorRepository.save(doctor);
+                }
+            }
+
+            log.info("头像删除成功，用户: {}", phone);
             return ResponseEntity.ok(ApiResponse.success(null));
 
-        } catch (IOException e) {
-            log.error("文件删除失败", e);
+        } catch (Exception e) {
+            log.error("头像删除失败", e);
             return ResponseEntity.internalServerError()
-                    .body(ApiResponse.error("DELETE_FAILED", "文件删除失败: " + e.getMessage()));
+                    .body(ApiResponse.error("DELETE_FAILED", "头像删除失败: " + e.getMessage()));
         }
     }
 }

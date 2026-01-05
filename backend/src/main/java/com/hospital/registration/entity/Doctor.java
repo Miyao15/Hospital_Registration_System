@@ -52,6 +52,10 @@ public class Doctor {
     @Column(name = "avatar_url", length = 255)
     private String avatarUrl;
 
+    @Lob
+    @Column(name = "avatar_data", columnDefinition = "MEDIUMTEXT")
+    private String avatarData;
+
     @Column(columnDefinition = "TEXT")
     private String education;
 
