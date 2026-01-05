@@ -769,7 +769,7 @@ const goToSettings = () => {
 const handleLogout = () => { showUserMenu.value = false; userStore.logout(); router.push('/landing'); };
 
 const goToDepartments = () => router.push('/search-triage');
-const goToDoctors = () => router.push({ path: '/search-results', query: { minRating: '5.0' } }); // 跳转到高评分医生列表
+const goToDoctors = () => router.push({ path: '/search-results', query: { minRating: '4.0', showReviews: 'true' } }); // 跳转到高评分医生列表并自动打开评价
 const goToSchedule = () => router.push('/search-triage');
 const bookDoctor = (doctor) => {
   router.push({ path: '/search-results', query: { priorityDoctorId: doctor.id, minRating: '5.0' } });

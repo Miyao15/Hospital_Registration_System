@@ -20,11 +20,11 @@ public interface TimeSlotRepository extends JpaRepository<TimeSlot, String> {
     @Query("SELECT SUM(ts.remainingSlots) FROM TimeSlot ts WHERE ts.scheduleId = :scheduleId")
     Integer getTotalRemainingSlotsByScheduleId(@Param("scheduleId") String scheduleId);
     
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE TimeSlot ts SET ts.remainingSlots = ts.remainingSlots - 1, ts.version = ts.version + 1 WHERE ts.id = :id AND ts.remainingSlots > 0 AND ts.version = :version")
     int decrementSlot(@Param("id") String id, @Param("version") Integer version);
     
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE TimeSlot ts SET ts.remainingSlots = ts.remainingSlots + 1 WHERE ts.id = :id")
     int incrementSlot(@Param("id") String id);
 }

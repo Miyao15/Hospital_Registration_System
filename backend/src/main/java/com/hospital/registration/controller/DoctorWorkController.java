@@ -10,6 +10,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -36,6 +37,13 @@ public class DoctorWorkController {
         String userId = getCurrentUserId();
         log.info("获取指定日期预约 - userId: {}, date: {}", userId, date);
         return ApiResponse.success(doctorAppointmentService.getAppointmentsByDate(userId, date));
+    }
+    
+    @GetMapping("/stats")
+    public ApiResponse<Map<String, Object>> getAppointmentStats() {
+        String userId = getCurrentUserId();
+        log.info("获取预约统计 - userId: {}", userId);
+        return ApiResponse.success(doctorAppointmentService.getAppointmentStats(userId));
     }
     
     @PostMapping("/appointments/{id}/check-in")

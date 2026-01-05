@@ -11,6 +11,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/reviews")
@@ -41,6 +43,29 @@ public class ReviewController {
         String userId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         doctorReviewService.deleteReview(userId, id);
         return ApiResponse.success(null);
+    }
+    
+    /**
+     * 公开API - 获取某个医生的评价列表
+     */
+    @GetMapping("/doctor/{doctorId}")
+    public ApiResponse<Page<DoctorReviewDTO>> getDoctorReviews(
+            @PathVariable String doctorId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        log.info("获取医生评价 - doctorId: {}, page: {}, size: {}", doctorId, page, size);
+        Page<DoctorReviewDTO> reviews = doctorReviewService.getDoctorReviews(doctorId, page, size);
+        return ApiResponse.success(reviews);
+    }
+    
+    /**
+     * 公开API - 获取某个医生的评价统计
+     */
+    @GetMapping("/doctor/{doctorId}/stats")
+    public ApiResponse<Map<String, Object>> getDoctorReviewStats(@PathVariable String doctorId) {
+        log.info("获取医生评价统计 - doctorId: {}", doctorId);
+        Map<String, Object> stats = doctorReviewService.getDoctorReviewStats(doctorId);
+        return ApiResponse.success(stats);
     }
 }
 

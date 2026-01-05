@@ -41,7 +41,16 @@ public interface AppointmentRepository extends JpaRepository<Appointment, String
             @Param("endDate") LocalDate endDate);
     
     // 统计指定医生指定日期的预约数量
-    int countByDoctorIdAndAppointmentDate(String doctorId, LocalDate appointmentDate);
+    long countByDoctorIdAndAppointmentDate(String doctorId, LocalDate appointmentDate);
+    
+    // 统计指定医生指定日期指定状态的预约数量
+    long countByDoctorIdAndAppointmentDateAndStatus(String doctorId, LocalDate appointmentDate, AppointmentStatus status);
+    
+    // 统计指定医生日期范围内指定状态的预约数量
+    long countByDoctorIdAndAppointmentDateBetweenAndStatus(String doctorId, LocalDate startDate, LocalDate endDate, AppointmentStatus status);
+    
+    // 统计指定医生日期范围内的预约数量
+    long countByDoctorIdAndAppointmentDateBetween(String doctorId, LocalDate startDate, LocalDate endDate);
     
     // 管理员查询所有预约（支持筛选）
     Page<Appointment> findAllByOrderByCreatedAtDesc(Pageable pageable);

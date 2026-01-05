@@ -32,6 +32,9 @@
         <div class="stat-footer" v-if="stats.pendingCount > 0">
           <span class="stat-detail">待就诊 {{ stats.pendingCount }} 人</span>
         </div>
+        <div class="stat-footer" v-else-if="stats.upcomingCount > 0">
+          <span class="stat-detail upcoming">未来7天 {{ stats.upcomingCount }} 个预约</span>
+        </div>
       </div>
 
       <div class="stat-card card-hover card-tilt stagger-item">
@@ -46,7 +49,9 @@
         </div>
         <div class="stat-value number-roll">{{ stats.completedCount }}</div>
         <div class="stat-footer">
-          <span class="stat-detail positive">较上周 +12%</span>
+          <span class="stat-detail" :class="{ positive: stats.weekGrowth > 0, negative: stats.weekGrowth < 0 }">
+            {{ stats.weekGrowth > 0 ? '+' : '' }}{{ stats.weekGrowth }}% 较上周
+          </span>
         </div>
       </div>
 
@@ -76,9 +81,11 @@
             </svg>
           </div>
         </div>
-        <div class="stat-value number-roll">{{ stats.weekCount }}</div>
+        <div class="stat-value number-roll">{{ stats.monthCount }}</div>
         <div class="stat-footer">
-          <span class="stat-detail">环比 +8%</span>
+          <span class="stat-detail" :class="{ positive: stats.monthGrowth > 0, negative: stats.monthGrowth < 0 }">
+            {{ stats.monthGrowth > 0 ? '+' : '' }}{{ stats.monthGrowth }}% 环比
+          </span>
         </div>
       </div>
     </div>
@@ -245,6 +252,10 @@ const stats = ref({
   pendingCount: 0,
   completedCount: 0,
   weekCount: 0,
+  monthCount: 0,
+  weekGrowth: 0,
+  monthGrowth: 0,
+  upcomingCount: 0,
   rating: '5.0',
   reviewCount: 0
 });
@@ -263,6 +274,7 @@ const todayDate = computed(() => {
 onMounted(async () => {
   await Promise.all([
     fetchTodayAppointments(),
+    fetchAppointmentStats(),
     fetchRecentReviews(),
     fetchReviewStats()
   ]);
@@ -273,16 +285,28 @@ const fetchTodayAppointments = async () => {
   try {
     const data = await request.get('/api/doctor/work/appointments/today');
     todayAppointments.value = data || [];
-    
-    // 计算统计数据
-    stats.value.todayCount = todayAppointments.value.length;
-    stats.value.pendingCount = todayAppointments.value.filter(a => a.status === 'PENDING').length;
-    stats.value.completedCount = todayAppointments.value.filter(a => a.status === 'COMPLETED').length;
   } catch (e) {
     console.error('获取今日预约失败:', e);
     todayAppointments.value = [];
   } finally {
     loading.value = false;
+  }
+};
+
+const fetchAppointmentStats = async () => {
+  try {
+    const data = await request.get('/api/doctor/work/stats');
+    if (data) {
+      stats.value.todayCount = data.todayCount || 0;
+      stats.value.pendingCount = data.pendingCount || 0;
+      stats.value.completedCount = data.weekCompletedCount || 0;
+      stats.value.weekGrowth = data.weekGrowth || 0;
+      stats.value.monthCount = data.monthCount || 0;
+      stats.value.monthGrowth = data.monthGrowth || 0;
+      stats.value.upcomingCount = data.upcomingCount || 0;
+    }
+  } catch (e) {
+    console.error('获取预约统计失败:', e);
   }
 };
 
@@ -533,6 +557,14 @@ const handleNoShow = async (apt) => {
 
 .stat-detail.positive {
   color: #2E7D32;
+}
+
+.stat-detail.negative {
+  color: #C62828;
+}
+
+.stat-detail.upcoming {
+  color: #1976D2;
 }
 
 /* 今日预约部分 */

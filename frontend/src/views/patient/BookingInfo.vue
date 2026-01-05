@@ -368,6 +368,18 @@ const handleSubmit = async () => {
     
     ElMessage.success('预约成功！您可以在"我的预约"中查看详情。');
     
+    // 标记需要刷新号源数据（用于页面返回时刷新）
+    localStorage.setItem('needRefreshSlots', 'true');
+    
+    // 触发预约成功事件，通知其他页面刷新号源数据
+    window.dispatchEvent(new CustomEvent('appointmentCreated', { 
+      detail: { 
+        doctorId: doctorInfo.value.id,
+        date: bookingInfo.value.date,
+        slotId: bookingInfo.value.slotId
+      } 
+    }));
+    
     // 跳转到患者首页
     router.push('/patient/home');
     

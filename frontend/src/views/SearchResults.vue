@@ -231,12 +231,14 @@
               <p class="doc-title">{{ doctor.title }}</p>
               <p class="doc-dept">{{ doctor.departmentName }}</p>
               
-              <div class="rating-row">
+              <div class="rating-row clickable" @click="openReviewModal(doctor)" title="点击查看评价">
                 <div class="stars">
                   <svg v-for="i in 5" :key="i" class="star-icon" fill="#FFD300" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                 </div>
                 <span class="score">{{ doctor.rating || 5.0 }}</span>
-                <span class="reviews">({{ doctor.reviewCount || 0 }})</span>
+                <span class="reviews">({{ doctor.reviewCount || 0 }}条评价)</span>
+                <span class="view-reviews-text">查看</span>
+                <svg class="view-reviews-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="9 18 15 12 9 6"></polyline></svg>
               </div>
 
               <div class="address-row">
@@ -375,6 +377,81 @@
       </div>
     </div>
 
+    <!-- 评价弹窗 -->
+    <div class="modal-overlay" v-if="showReviewModal" @click.self="closeReviewModal">
+      <div class="review-modal-content">
+        <button class="close-btn" @click="closeReviewModal">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+
+        <h2 class="modal-title">患者评价</h2>
+
+        <!-- 医生信息 -->
+        <div class="review-doctor-info">
+          <img :src="reviewDoctor.avatarData || reviewDoctor.avatarUrl || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'" class="review-avatar" />
+          <div class="review-doctor-details">
+            <h3>{{ reviewDoctor.name }}</h3>
+            <p>{{ reviewDoctor.title }} · {{ reviewDoctor.departmentName }}</p>
+          </div>
+        </div>
+
+        <!-- 评分统计 -->
+        <div class="review-stats" v-if="reviewStats">
+          <div class="stats-overview">
+            <div class="avg-rating">
+              <span class="rating-number">{{ reviewStats.averageRating?.toFixed(1) || '5.0' }}</span>
+              <div class="rating-stars">
+                <svg v-for="i in 5" :key="i" class="star-icon" :fill="i <= Math.round(reviewStats.averageRating || 5) ? '#FFD300' : '#E0E0E0'" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              </div>
+              <span class="total-reviews">{{ reviewStats.totalCount || 0 }} 条评价</span>
+            </div>
+            <div class="rating-distribution">
+              <div class="dist-row" v-for="star in [5, 4, 3, 2, 1]" :key="star">
+                <span class="star-label">{{ star }}星</span>
+                <div class="dist-bar">
+                  <div class="dist-fill" :style="{ width: getDistributionPercent(star) + '%' }"></div>
+                </div>
+                <span class="dist-count">{{ reviewStats.distribution?.[star] || 0 }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 评价列表 -->
+        <div class="review-list">
+          <div v-if="reviewsLoading" class="reviews-loading">
+            <div class="loading-spinner"></div>
+            <span>加载评价中...</span>
+          </div>
+          <div v-else-if="reviews.length === 0" class="no-reviews">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="48" height="48">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+            <p>暂无评价</p>
+          </div>
+          <div v-else>
+            <div class="review-item" v-for="review in reviews" :key="review.id">
+              <div class="review-header">
+                <span class="reviewer-name">{{ review.patientName || '匿名患者' }}</span>
+                <div class="review-rating">
+                  <svg v-for="i in 5" :key="i" class="star-icon-small" :fill="i <= review.rating ? '#FFD300' : '#E0E0E0'" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                </div>
+                <span class="review-date">{{ formatReviewDate(review.createdAt) }}</span>
+              </div>
+              <p class="review-content">{{ review.content || '该患者未留下文字评价' }}</p>
+            </div>
+            
+            <!-- 分页 -->
+            <div class="review-pagination" v-if="reviewTotalPages > 1">
+              <button class="page-btn" :disabled="reviewPage === 0" @click="loadReviews(reviewPage - 1)">上一页</button>
+              <span class="page-info">{{ reviewPage + 1 }} / {{ reviewTotalPages }}</span>
+              <button class="page-btn" :disabled="reviewPage >= reviewTotalPages - 1" @click="loadReviews(reviewPage + 1)">下一页</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -387,6 +464,7 @@ import { getAvailableDates, getTimeSlots } from '@/api/schedule';
 import { getAllMedicalItems } from '@/api/medicalItem'; // Import medical item API
 import { createAppointment } from '@/api/appointment'; // Import createAppointment API
 import { getAllDepartments } from '@/api/department'; // Import department API
+import { getDoctorReviews, getDoctorReviewStats } from '@/api/review'; // Import review API
 import { ElMessage } from 'element-plus'; // Import ElMessage for notifications
 
 const route = useRoute();
@@ -772,9 +850,27 @@ const selectSearchSuggestion = (suggestion) => {
   handleSearch();
 };
 
+// 全局变量，用于标记是否需要强制刷新号源数据
+const forceRefreshSlots = ref(false);
+// 标记是否需要自动打开评价弹窗（从首页"查看真实患者评价"进入时）
+const autoOpenReview = ref(false);
+
 onMounted(async () => {
-  const { specialty, keyword, location, district, departmentId, medicalItemId, minRating, priorityDoctorId } = route.query;
+  // 检查是否需要强制刷新号源数据（预约成功后返回）
+  const needRefresh = localStorage.getItem('needRefreshSlots') === 'true';
+  if (needRefresh) {
+    localStorage.removeItem('needRefreshSlots');
+    console.log('检测到预约成功，将强制刷新号源数据');
+    forceRefreshSlots.value = true;
+  }
+  
+  const { specialty, keyword, location, district, departmentId, medicalItemId, minRating, priorityDoctorId, showReviews } = route.query;
   preselectedMedicalItemId.value = medicalItemId;
+  
+  // 检测是否需要自动打开评价弹窗
+  if (showReviews === 'true') {
+    autoOpenReview.value = true;
+  }
 
   const params = {};
   // 支持 specialty 和 keyword 两种参数名
@@ -841,11 +937,22 @@ onMounted(async () => {
   
   document.addEventListener('click', handleClickOutside);
   document.addEventListener('click', handleFilterClickOutside);
+  
+  // 监听预约成功事件，刷新号源数据
+  window.addEventListener('appointmentCreated', handleAppointmentCreated);
 });
+
+// 处理预约成功事件
+const handleAppointmentCreated = async (event) => {
+  console.log('收到预约成功事件，刷新号源数据', event.detail);
+  // 强制刷新所有医生的号源数据
+  await refreshSlotDisplay(true);
+};
 
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside);
   document.removeEventListener('click', handleFilterClickOutside);
+  window.removeEventListener('appointmentCreated', handleAppointmentCreated);
   // 销毁地图实例
   if (mapInstance) {
     mapInstance.destroy();
@@ -892,16 +999,70 @@ const selectedDateSlots = ref([]);
 const selectedDateDisplay = ref('');
 const selectedDateForBooking = ref(''); // 用于传递给预约页面的日期
 
+// --- 评价弹窗状态 ---
+const showReviewModal = ref(false);
+const reviewDoctor = ref({});
+const reviewStats = ref(null);
+const reviews = ref([]);
+const reviewsLoading = ref(false);
+const reviewPage = ref(0);
+const reviewTotalPages = ref(0);
+
 const openBookingModal = (doctor, dayObj = null) => {
   // 允许未登录用户打开预约模态框，选择时间后再提示登录
   selectedDoctor.value = doctor;
   
-  // 如果没有预选的检查项目，根据医生科室自动选择第一个匹配的检查项目
-  if (!preselectedMedicalItemId.value && doctor.departmentId) {
-    const matchingItem = medicalItems.value.find(item => item.departmentId === doctor.departmentId);
-    if (matchingItem) {
-      selectedMedicalItem.value = matchingItem;
-      preselectedMedicalItemId.value = matchingItem.id;
+  // 每次打开弹窗时，根据医生科室自动选择默认的检查项目
+  // 只有在没有从路由预选项目时才自动选择
+  if (!route.query.medicalItemId) {
+    let defaultItem = null;
+    
+    // 根据医生科室名称智能匹配检查项目
+    const deptName = doctor.departmentName || '';
+    if (deptName) {
+      // 科室名称到检查项目名称的映射
+      const deptToItemMap = {
+        '口腔科': '口腔检查',
+        '眼科': '眼科检查',
+        '皮肤科': '皮肤检查',
+        '妇科': '妇科检查',
+        '妇产科': '妇科检查',
+        '心血管内科': '健康体检',
+        '内科': '健康体检',
+        '外科': '健康体检',
+        '儿科': '健康体检',
+        '神经内科': '健康体检',
+        '骨科': '健康体检'
+      };
+      
+      // 查找匹配的检查项目名称
+      const targetItemName = deptToItemMap[deptName];
+      if (targetItemName) {
+        defaultItem = medicalItems.value.find(item => item.name === targetItemName);
+      }
+      
+      // 如果没有精确匹配，尝试模糊匹配（科室名称包含在检查项目名称中）
+      if (!defaultItem) {
+        defaultItem = medicalItems.value.find(item => 
+          item.name.includes(deptName.replace('科', '')) || 
+          deptName.includes(item.name.replace('检查', ''))
+        );
+      }
+    }
+    
+    // 如果还是没有匹配的项目，选择"健康体检"作为默认
+    if (!defaultItem) {
+      defaultItem = medicalItems.value.find(item => item.name === '健康体检');
+    }
+    
+    // 最后兜底：选择第一个可用的项目
+    if (!defaultItem && medicalItems.value.length > 0) {
+      defaultItem = medicalItems.value[0];
+    }
+    
+    if (defaultItem) {
+      selectedMedicalItem.value = defaultItem;
+      preselectedMedicalItemId.value = defaultItem.id;
     }
   }
   
@@ -963,33 +1124,25 @@ const generateHalfHourSlots = (doctor, dateString) => {
     // 计算该时间段有多少个30分钟时间段
     const halfHourCount = Math.floor((endMinutes - startMinutes) / 30);
     
-    // 计算每个时间点应该有多少剩余号源
-    // 如果后端剩余号源为0，所有时间点都不可用
-    // 否则，平均分配剩余号源到各个时间点
-    let remainingForPeriod = slot.remainingSlots || 0;
-    const slotsPerTimeSlot = Math.max(0, Math.floor(remainingForPeriod / halfHourCount));
-    const extraSlots = remainingForPeriod % halfHourCount; // 余数分配给前面的时间点
+    // 获取后端返回的真实剩余号源
+    const remainingForPeriod = slot.remainingSlots || 0;
+    const totalForPeriod = slot.totalSlots || 0;
     
-    // 每30分钟生成一个时间槽
+    // 每30分钟生成一个时间槽，但显示的是整个时段的剩余号源
     for (let i = 0; i < halfHourCount; i++) {
       const mins = startMinutes + i * 30;
       const hour = Math.floor(mins / 60);
       const minute = mins % 60;
       const displayTime = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
       
-      // 每个时间点的剩余号源 = 基础号源数 + 是否有余数
-      // 前面几个时间点可能会多分配1个号源（如果有余数）
-      const timeSlotRemaining = i < extraSlots 
-        ? Math.min(SLOTS_PER_HALF_HOUR, slotsPerTimeSlot + 1)
-        : Math.min(SLOTS_PER_HALF_HOUR, slotsPerTimeSlot);
-      
       halfHourSlots.push({
         displayTime,
         originalSlotId: slot.id,
         period: slot.period,
-        remainingSlots: timeSlotRemaining,
-        totalSlots: SLOTS_PER_HALF_HOUR,
-        isAvailable: timeSlotRemaining > 0
+        // 显示整个时段的剩余号源，而不是虚拟分配
+        remainingSlots: remainingForPeriod,
+        totalSlots: totalForPeriod,
+        isAvailable: remainingForPeriod > 0
       });
     }
   }
@@ -1000,6 +1153,65 @@ const generateHalfHourSlots = (doctor, dateString) => {
 const closeModal = () => {
   showModal.value = false;
   document.body.style.overflow = '';
+};
+
+// --- 评价弹窗方法 ---
+const openReviewModal = async (doctor) => {
+  reviewDoctor.value = doctor;
+  showReviewModal.value = true;
+  document.body.style.overflow = 'hidden';
+  
+  // 加载评价统计和评价列表
+  await Promise.all([
+    loadReviewStats(doctor.id),
+    loadReviews(0, doctor.id)
+  ]);
+};
+
+const closeReviewModal = () => {
+  showReviewModal.value = false;
+  document.body.style.overflow = '';
+  reviews.value = [];
+  reviewStats.value = null;
+  reviewPage.value = 0;
+};
+
+const loadReviewStats = async (doctorId) => {
+  try {
+    const data = await getDoctorReviewStats(doctorId);
+    reviewStats.value = data;
+  } catch (e) {
+    console.error('Failed to load review stats:', e);
+    reviewStats.value = { averageRating: 5.0, totalCount: 0, distribution: {} };
+  }
+};
+
+const loadReviews = async (page, doctorId = null) => {
+  reviewsLoading.value = true;
+  try {
+    const targetDoctorId = doctorId || reviewDoctor.value.id;
+    const data = await getDoctorReviews(targetDoctorId, page, 5);
+    reviews.value = data?.content || [];
+    reviewPage.value = page;
+    reviewTotalPages.value = data?.totalPages || 1;
+  } catch (e) {
+    console.error('Failed to load reviews:', e);
+    reviews.value = [];
+  } finally {
+    reviewsLoading.value = false;
+  }
+};
+
+const getDistributionPercent = (star) => {
+  if (!reviewStats.value || !reviewStats.value.totalCount) return 0;
+  const count = reviewStats.value.distribution?.[star] || 0;
+  return Math.round((count / reviewStats.value.totalCount) * 100);
+};
+
+const formatReviewDate = (dateStr) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
 };
 
 const confirmBooking = (slot) => {
@@ -1085,7 +1297,7 @@ const calculateHalfHourCount = (slot) => {
 };
 
 // 获取某日期的剩余号源总数（考虑时间段筛选）
-// 计算方式：时间段数量 × SLOTS_PER_HALF_HOUR (2)
+// 直接使用后端返回的真实剩余号源数量
 const getRemainingSlotsCount = (doctor, dateString) => {
   const slots = getSlotsForDate(doctor, dateString);
   if (!slots || slots.length === 0) return 0;
@@ -1094,21 +1306,12 @@ const getRemainingSlotsCount = (doctor, dateString) => {
   if (selectedTimeslotFilters.value.length > 0) {
     const selectedPeriods = selectedTimeslotFilters.value.map(mapTimeslotFilterToPeriod);
     return slots
-      .filter(slot => {
-        const period = slot.period;
-        return selectedPeriods.includes(period);
-      })
-      .reduce((total, slot) => {
-        const halfHourCount = calculateHalfHourCount(slot);
-        return total + halfHourCount * SLOTS_PER_HALF_HOUR;
-      }, 0);
+      .filter(slot => selectedPeriods.includes(slot.period))
+      .reduce((total, slot) => total + (slot.remainingSlots || 0), 0);
   }
   
-  // 如果没有选择时间段筛选，计算所有时间段的号源总和
-  return slots.reduce((total, slot) => {
-    const halfHourCount = calculateHalfHourCount(slot);
-    return total + halfHourCount * SLOTS_PER_HALF_HOUR;
-  }, 0);
+  // 如果没有选择时间段筛选，计算所有时间段的剩余号源总和
+  return slots.reduce((total, slot) => total + (slot.remainingSlots || 0), 0);
 };
 
 const hasSlots = (doctor, dateString) => {
@@ -1130,8 +1333,8 @@ const getPinStyle = (index) => {
 };
 
 // --- API ---
-const refreshSlotDisplay = async () => {
-  for (const doctor of doctors.value) { await fetchSlotsForVisibleDays(doctor); }
+const refreshSlotDisplay = async (forceRefresh = true) => {
+  for (const doctor of doctors.value) { await fetchSlotsForVisibleDays(doctor, forceRefresh); }
 };
 
 const fetchMedicalItems = async () => {
@@ -1288,20 +1491,37 @@ const processDoctorsData = async (fetchedDoctors, extraParams = {}) => {
   }
   
   doctors.value = processedDoctors;
-  for (const doctor of doctors.value) { await fetchSlotsForVisibleDays(doctor); }
+  // 如果需要强制刷新号源数据（预约成功后返回），传递 forceRefresh 参数
+  const shouldForceRefresh = forceRefreshSlots.value;
+  if (shouldForceRefresh) {
+    forceRefreshSlots.value = false; // 重置标志
+    console.log('强制刷新号源数据...');
+  }
+  for (const doctor of doctors.value) { await fetchSlotsForVisibleDays(doctor, shouldForceRefresh); }
+  
+  // 如果需要自动打开评价弹窗（从首页"查看真实患者评价"进入）
+  if (autoOpenReview.value && processedDoctors.length > 0) {
+    autoOpenReview.value = false; // 重置标志，避免重复打开
+    // 延迟一点打开，确保页面渲染完成
+    setTimeout(() => {
+      openReviewModal(processedDoctors[0]);
+    }, 300);
+  }
 };
 
-const fetchSlotsForVisibleDays = async (doctor) => {
+const fetchSlotsForVisibleDays = async (doctor, forceRefresh = false) => {
   try {
     const availableDates = await getAvailableDates(doctor.id); 
     // request.js 响应拦截器已经解析了数据
     const dates = Array.isArray(availableDates) ? availableDates : [];
     for (const dayObj of headerDays.value) {
       const dateStr = dayObj.fullDate;
-      if (doctor.availabilityMap[dateStr]) continue;
+      // 如果不是强制刷新且已有缓存数据，则跳过
+      if (!forceRefresh && doctor.availabilityMap[dateStr]) continue;
       const isAvailable = dates.some(d => (d.date || d) === dateStr && d.available);
       if (isAvailable) {
         const slotsData = await getTimeSlots(doctor.id, dateStr);
+        console.log(`获取号源数据 - 医生: ${doctor.name}, 日期: ${dateStr}, 数据:`, slotsData);
         doctor.availabilityMap[dateStr] = Array.isArray(slotsData) ? slotsData : [];
       } else {
         doctor.availabilityMap[dateStr] = [];
@@ -1751,5 +1971,246 @@ const fetchSlotsForVisibleDays = async (doctor) => {
   .map-column { display: none; }
   .card-calendar-container { display: none; } 
   .card-info { flex: 1; border-right: none; }
+}
+
+/* === 评价相关样式 === */
+.rating-row.clickable {
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 4px 8px;
+  margin: -4px -8px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+}
+.rating-row.clickable:hover {
+  background: #FFF9E6;
+}
+.view-reviews-text {
+  font-size: 12px;
+  color: #666;
+  margin-left: 8px;
+  font-weight: 500;
+}
+.rating-row.clickable:hover .view-reviews-text {
+  color: #E6A700;
+}
+.view-reviews-icon {
+  margin-left: 2px;
+  color: #666;
+}
+.rating-row.clickable:hover .view-reviews-icon {
+  color: #E6A700;
+}
+
+/* 评价弹窗 */
+.review-modal-content {
+  background: #fff;
+  width: 600px;
+  max-width: 95%;
+  border-radius: 12px;
+  padding: 0;
+  position: relative;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+}
+
+.review-doctor-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 32px 20px;
+  border-bottom: 1px solid #F0F0F0;
+}
+.review-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #F0F0F0;
+}
+.review-doctor-details h3 {
+  margin: 0 0 4px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #2A2A2A;
+}
+.review-doctor-details p {
+  margin: 0;
+  font-size: 14px;
+  color: #666;
+}
+
+/* 评分统计 */
+.review-stats {
+  padding: 20px 32px;
+  background: #FAFAFA;
+  border-bottom: 1px solid #F0F0F0;
+}
+.stats-overview {
+  display: flex;
+  gap: 32px;
+  align-items: flex-start;
+}
+.avg-rating {
+  text-align: center;
+  min-width: 100px;
+}
+.rating-number {
+  font-size: 48px;
+  font-weight: 700;
+  color: #2A2A2A;
+  line-height: 1;
+}
+.rating-stars {
+  display: flex;
+  justify-content: center;
+  margin: 8px 0;
+}
+.rating-stars .star-icon {
+  width: 18px;
+  height: 18px;
+}
+.total-reviews {
+  font-size: 13px;
+  color: #666;
+}
+
+.rating-distribution {
+  flex: 1;
+}
+.dist-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.star-label {
+  font-size: 12px;
+  color: #666;
+  width: 30px;
+}
+.dist-bar {
+  flex: 1;
+  height: 8px;
+  background: #E0E0E0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.dist-fill {
+  height: 100%;
+  background: #FFD300;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+.dist-count {
+  font-size: 12px;
+  color: #666;
+  width: 30px;
+  text-align: right;
+}
+
+/* 评价列表 */
+.review-list {
+  padding: 20px 32px 32px;
+}
+.reviews-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 0;
+  color: #666;
+}
+.reviews-loading .loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #FFD300;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 12px;
+}
+.no-reviews {
+  text-align: center;
+  padding: 40px 0;
+  color: #999;
+}
+.no-reviews svg {
+  margin-bottom: 12px;
+  color: #DDD;
+}
+.no-reviews p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.review-item {
+  padding: 16px 0;
+  border-bottom: 1px solid #F0F0F0;
+}
+.review-item:last-child {
+  border-bottom: none;
+}
+.review-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.reviewer-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2A2A2A;
+}
+.review-rating {
+  display: flex;
+}
+.star-icon-small {
+  width: 12px;
+  height: 12px;
+}
+.review-date {
+  font-size: 12px;
+  color: #999;
+  margin-left: auto;
+}
+.review-content {
+  font-size: 14px;
+  color: #2A2A2A;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* 分页 */
+.review-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #F0F0F0;
+}
+.page-btn {
+  padding: 8px 16px;
+  background: #fff;
+  border: 1px solid #DDD;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.page-btn:hover:not(:disabled) {
+  background: #F8F8F8;
+  border-color: #999;
+}
+.page-btn:disabled {
+  color: #CCC;
+  cursor: not-allowed;
+}
+.page-info {
+  font-size: 14px;
+  color: #666;
 }
 </style>

@@ -4,6 +4,7 @@ import com.hospital.registration.dto.DoctorDetailDTO;
 import com.hospital.registration.dto.DoctorReviewDTO;
 import com.hospital.registration.dto.DoctorScheduleDTO;
 import com.hospital.registration.dto.UpdateDoctorProfileDTO;
+import com.hospital.registration.dto.CreateScheduleDTO;
 import com.hospital.registration.dto.response.ApiResponse;
 import com.hospital.registration.service.DoctorProfileService;
 import com.hospital.registration.service.DoctorReviewService;
@@ -85,6 +86,16 @@ public class DoctorSelfController {
         String userId = getCurrentUserId();
         log.info("获取医生排班 - userId: {}, year: {}, month: {}", userId, year, month);
         return ApiResponse.success(scheduleService.getDoctorSchedulesByUserId(userId, year, month));
+    }
+
+    /**
+     * 医生新增排班
+     */
+    @PostMapping("/schedules")
+    public ApiResponse<Map<String, Object>> createSchedule(@Valid @RequestBody CreateScheduleDTO dto) {
+        String userId = getCurrentUserId();
+        log.info("医生新增排班 - userId: {}, dto: {}", userId, dto);
+        return ApiResponse.success(scheduleService.createScheduleByDoctor(userId, dto));
     }
 }
 

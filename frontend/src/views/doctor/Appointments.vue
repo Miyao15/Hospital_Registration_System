@@ -1,5 +1,16 @@
 <template>
   <div class="appointments-page">
+    <!-- 页面标题 -->
+    <div class="page-header">
+      <button class="btn-back" @click="$router.push('/doctor/schedule')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+        返回排班
+      </button>
+      <h1 class="page-title">预约管理</h1>
+    </div>
+
     <!-- 日期选择器 -->
     <div class="date-selector">
       <button class="date-nav" @click="changeDate(-1)">
@@ -29,6 +40,10 @@
       <div class="stat-item pending">
         <span class="stat-num">{{ pendingCount }}</span>
         <span class="stat-label">待就诊</span>
+      </div>
+      <div class="stat-item checked-in">
+        <span class="stat-num">{{ checkedInCount }}</span>
+        <span class="stat-label">已签到</span>
       </div>
       <div class="stat-item completed">
         <span class="stat-num">{{ completedCount }}</span>
@@ -96,11 +111,21 @@
                 </div>
               </div>
               <div class="card-body">
-                <p class="symptom" v-if="apt.symptomDesc"><strong>主诉：</strong>{{ apt.symptomDesc }}</p>
-                <p class="medical-item" v-if="apt.medicalItemName">
-                  <strong>检查项目：</strong>{{ apt.medicalItemName }}
-                  <span v-if="apt.medicalItemPrice" class="item-price">(¥{{ apt.medicalItemPrice }})</span>
-                </p>
+                <div class="info-row" v-if="apt.timeRange">
+                  <span class="info-label">预约时间：</span>
+                  <span class="info-value time-value">{{ apt.timeRange }}</span>
+                </div>
+                <div class="info-row" v-if="apt.symptomDesc">
+                  <span class="info-label">主诉：</span>
+                  <span class="info-value">{{ apt.symptomDesc }}</span>
+                </div>
+                <div class="info-row" v-if="apt.medicalItemName">
+                  <span class="info-label">检查项目：</span>
+                  <span class="info-value">
+                    {{ apt.medicalItemName }}
+                    <span v-if="apt.medicalItemPrice" class="item-price">(¥{{ apt.medicalItemPrice }})</span>
+                  </span>
+                </div>
               </div>
               <div class="card-footer">
                 <span class="appointment-no">{{ apt.appointmentNo }}</span>
@@ -115,7 +140,7 @@
                   <button class="btn no-show" @click="handleNoShow(apt)">爽约</button>
                 </div>
                 <div class="actions" v-if="apt.status === 'CHECKED_IN'">
-                  <button class="btn complete" @click="handleComplete(apt)">完成</button>
+                  <button class="btn complete" @click="handleComplete(apt)">完成就诊</button>
                 </div>
               </div>
             </div>
@@ -151,11 +176,21 @@
                 </div>
               </div>
               <div class="card-body">
-                <p class="symptom" v-if="apt.symptomDesc"><strong>主诉：</strong>{{ apt.symptomDesc }}</p>
-                <p class="medical-item" v-if="apt.medicalItemName">
-                  <strong>检查项目：</strong>{{ apt.medicalItemName }}
-                  <span v-if="apt.medicalItemPrice" class="item-price">(¥{{ apt.medicalItemPrice }})</span>
-                </p>
+                <div class="info-row" v-if="apt.timeRange">
+                  <span class="info-label">预约时间：</span>
+                  <span class="info-value time-value">{{ apt.timeRange }}</span>
+                </div>
+                <div class="info-row" v-if="apt.symptomDesc">
+                  <span class="info-label">主诉：</span>
+                  <span class="info-value">{{ apt.symptomDesc }}</span>
+                </div>
+                <div class="info-row" v-if="apt.medicalItemName">
+                  <span class="info-label">检查项目：</span>
+                  <span class="info-value">
+                    {{ apt.medicalItemName }}
+                    <span v-if="apt.medicalItemPrice" class="item-price">(¥{{ apt.medicalItemPrice }})</span>
+                  </span>
+                </div>
               </div>
               <div class="card-footer">
                 <span class="appointment-no">{{ apt.appointmentNo }}</span>
@@ -164,7 +199,7 @@
                   <button class="btn no-show" @click="handleNoShow(apt)">爽约</button>
                 </div>
                 <div class="actions" v-if="apt.status === 'CHECKED_IN'">
-                  <button class="btn complete" @click="handleComplete(apt)">完成</button>
+                  <button class="btn complete" @click="handleComplete(apt)">完成就诊</button>
                 </div>
               </div>
             </div>
@@ -177,12 +212,27 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import request from '@/utils/request';
 
+const route = useRoute();
 const loading = ref(true);
 const appointments = ref([]);
-const selectedDate = ref(new Date());
+
+// 从路由参数获取日期，如果没有则使用今天
+const getInitialDate = () => {
+  const dateParam = route.query.date;
+  if (dateParam) {
+    const parsed = new Date(dateParam);
+    if (!isNaN(parsed.getTime())) {
+      return parsed;
+    }
+  }
+  return new Date();
+};
+
+const selectedDate = ref(getInitialDate());
 
 const datePickerValue = computed({
   get: () => formatDateForInput(selectedDate.value),
@@ -214,6 +264,10 @@ const completedCount = computed(() =>
 
 const noShowCount = computed(() => 
   appointments.value.filter(a => a.status === 'NO_SHOW').length
+);
+
+const checkedInCount = computed(() => 
+  appointments.value.filter(a => a.status === 'CHECKED_IN').length
 );
 
 onMounted(() => {
@@ -324,6 +378,40 @@ const handleNoShow = async (apt) => {
   margin: 0 auto;
 }
 
+/* 页面标题 */
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.btn-back {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  background: #fff;
+  border: 1px solid #E8E8E8;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-back:hover {
+  border-color: #FFD300;
+  background: #FFF9E5;
+}
+
+.page-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0;
+}
+
 /* 日期选择器 */
 .date-selector {
   display: flex;
@@ -424,6 +512,7 @@ const handleNoShow = async (apt) => {
 }
 
 .stat-item.pending .stat-num { color: #f59e0b; }
+.stat-item.checked-in .stat-num { color: #3b82f6; }
 .stat-item.completed .stat-num { color: #10b981; }
 .stat-item.no-show .stat-num { color: #ef4444; }
 
@@ -581,6 +670,38 @@ const handleNoShow = async (apt) => {
 
 .card-body {
   margin-bottom: 12px;
+}
+
+.info-row {
+  display: flex;
+  font-size: 14px;
+  margin-bottom: 6px;
+  line-height: 1.5;
+}
+
+.info-row:last-child {
+  margin-bottom: 0;
+}
+
+.info-label {
+  color: #64748b;
+  flex-shrink: 0;
+  min-width: 70px;
+}
+
+.info-value {
+  color: #1a1a2e;
+  flex: 1;
+}
+
+.info-value.time-value {
+  font-weight: 600;
+  color: #3b82f6;
+}
+
+.item-price {
+  color: #ef4444;
+  font-weight: 500;
 }
 
 .symptom {

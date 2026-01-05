@@ -67,9 +67,19 @@ public class AppointmentService {
         }
         
         // 使用乐观锁扣减号源
+        log.info("扣减号源前 - timeSlotId: {}, version: {}, remainingSlots: {}", 
+                timeSlot.getId(), timeSlot.getVersion(), timeSlot.getRemainingSlots());
         int updated = timeSlotRepository.decrementSlot(timeSlot.getId(), timeSlot.getVersion());
+        log.info("扣减号源结果 - updated: {}", updated);
         if (updated == 0) {
             throw new BusinessException("该时间段号源已满，请选择其他时间段");
+        }
+        
+        // 重新查询验证号源是否真的减少了
+        TimeSlot updatedSlot = timeSlotRepository.findById(timeSlot.getId()).orElse(null);
+        if (updatedSlot != null) {
+            log.info("扣减号源后 - timeSlotId: {}, version: {}, remainingSlots: {}", 
+                    updatedSlot.getId(), updatedSlot.getVersion(), updatedSlot.getRemainingSlots());
         }
         
         // 创建预约记录

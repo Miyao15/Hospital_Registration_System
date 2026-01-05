@@ -56,6 +56,8 @@ public class FileUploadController {
             Authentication authentication) {
         
         try {
+            log.info("开始上传头像, authentication: {}", authentication);
+            
             // 验证文件
             if (file == null || file.isEmpty()) {
                 return ResponseEntity.badRequest()
@@ -80,17 +82,23 @@ public class FileUploadController {
             byte[] fileBytes = file.getBytes();
             String base64Data = Base64.getEncoder().encodeToString(fileBytes);
             String dataUrl = "data:" + contentType + ";base64," + base64Data;
+            
+            log.info("图片转换完成, 大小: {} bytes, base64长度: {}", fileBytes.length, dataUrl.length());
 
             // 获取当前用户（JWT中存储的是userId）
-            String userId = authentication.getName();
+            String userId = (String) authentication.getPrincipal();
+            log.info("当前用户ID: {}", userId);
+            
             Optional<User> userOpt = userRepository.findById(userId);
             
             if (userOpt.isEmpty()) {
+                log.error("用户不存在: {}", userId);
                 return ResponseEntity.badRequest()
                         .body(ApiResponse.error("USER_NOT_FOUND", "用户不存在"));
             }
 
             User user = userOpt.get();
+            log.info("找到用户: {}, 角色: {}", user.getId(), user.getRole());
 
             // 根据用户角色保存到对应表
             String role = user.getRole().name();
@@ -99,16 +107,24 @@ public class FileUploadController {
                 if (patientOpt.isPresent()) {
                     Patient patient = patientOpt.get();
                     patient.setAvatarData(dataUrl);
-                    patient.setAvatarUrl(dataUrl); // 兼容旧字段
+                    // avatar_url 字段只有255字符，不能存base64，设为标记
+                    patient.setAvatarUrl("data:stored");
                     patientRepository.save(patient);
+                    log.info("患者头像保存成功");
+                } else {
+                    log.warn("未找到患者记录: userId={}", userId);
                 }
             } else if ("DOCTOR".equals(role)) {
                 Optional<Doctor> doctorOpt = doctorRepository.findByUserId(userId);
                 if (doctorOpt.isPresent()) {
                     Doctor doctor = doctorOpt.get();
                     doctor.setAvatarData(dataUrl);
-                    doctor.setAvatarUrl(dataUrl); // 兼容旧字段
+                    // avatar_url 字段只有255字符，不能存base64，设为标记
+                    doctor.setAvatarUrl("data:stored");
                     doctorRepository.save(doctor);
+                    log.info("医生头像保存成功");
+                } else {
+                    log.warn("未找到医生记录: userId={}", userId);
                 }
             }
 
@@ -121,7 +137,11 @@ public class FileUploadController {
             return ResponseEntity.ok(ApiResponse.success(result));
 
         } catch (IOException e) {
-            log.error("文件上传失败", e);
+            log.error("文件上传失败 - IO异常", e);
+            return ResponseEntity.internalServerError()
+                    .body(ApiResponse.error("UPLOAD_FAILED", "文件上传失败: " + e.getMessage()));
+        } catch (Exception e) {
+            log.error("文件上传失败 - 未知异常", e);
             return ResponseEntity.internalServerError()
                     .body(ApiResponse.error("UPLOAD_FAILED", "文件上传失败: " + e.getMessage()));
         }

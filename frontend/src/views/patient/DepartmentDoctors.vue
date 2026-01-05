@@ -349,13 +349,11 @@ const calculateHalfHourCount = (slot) => {
   return Math.floor((endMinutes - startMinutes) / 30);
 };
 
-// 计算号源总数：时间段数量 × SLOTS_PER_HALF_HOUR (2)
+// 计算号源总数：使用后端返回的真实剩余号源数量
 const getSlotCount = (doctor, dateStr) => {
   const slots = doctor.availabilityMap?.[dateStr] || [];
-  return slots.reduce((total, slot) => {
-    const halfHourCount = calculateHalfHourCount(slot);
-    return total + halfHourCount * SLOTS_PER_HALF_HOUR;
-  }, 0);
+  // 直接使用后端返回的 remainingSlots 总和
+  return slots.reduce((total, slot) => total + (slot.remainingSlots || 0), 0);
 };
 
 const filterByDepartment = (deptId) => {

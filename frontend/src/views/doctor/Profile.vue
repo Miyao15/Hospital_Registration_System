@@ -322,7 +322,7 @@ const handleAvatarChange = async (event) => {
     const compressedFile = await compressImage(file, 200, 0.8);
     console.log(`图片压缩: ${(file.size/1024).toFixed(1)}KB -> ${(compressedFile.size/1024).toFixed(1)}KB`);
     
-    // 上传文件
+    // 上传文件 - FileUploadController 会自动保存到数据库
     const formDataObj = new FormData();
     formDataObj.append('file', compressedFile);
     
@@ -331,11 +331,7 @@ const handleAvatarChange = async (event) => {
     });
     
     if (uploadRes && uploadRes.url) {
-      // 更新医生头像
-      await request.put('/api/doctor/profile', {
-        avatarUrl: uploadRes.url
-      });
-      
+      // 直接更新本地显示，不需要再调用 profile 接口
       profile.value.avatarUrl = uploadRes.url;
       // 缓存头像到localStorage
       localStorage.setItem('user_avatar', uploadRes.url);
@@ -343,7 +339,7 @@ const handleAvatarChange = async (event) => {
     }
   } catch (e) {
     console.error('上传头像失败:', e);
-    ElMessage.error('上传头像失败，请稍后重试');
+    ElMessage.error(e.response?.data?.message || '上传头像失败，请稍后重试');
   } finally {
     uploadingAvatar.value = false;
     event.target.value = ''; // 清空input

@@ -17,7 +17,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.Period;
+import java.time.DayOfWeek;
+import java.time.temporal.TemporalAdjusters;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -140,5 +144,76 @@ public class DoctorAppointmentService {
         }
         
         return dto;
+    }
+    
+    /**
+     * 获取医生预约统计数据
+     */
+    public Map<String, Object> getAppointmentStats(String userId) {
+        Doctor doctor = doctorRepository.findByUserId(userId)
+                .orElseThrow(() -> new BusinessException("医生信息不存在"));
+        
+        String doctorId = doctor.getId();
+        LocalDate today = LocalDate.now();
+        
+        Map<String, Object> stats = new HashMap<>();
+        
+        // 今日预约数
+        long todayCount = appointmentRepository.countByDoctorIdAndAppointmentDate(doctorId, today);
+        stats.put("todayCount", todayCount);
+        
+        // 今日待就诊数
+        long pendingCount = appointmentRepository.countByDoctorIdAndAppointmentDateAndStatus(
+                doctorId, today, AppointmentStatus.PENDING);
+        stats.put("pendingCount", pendingCount);
+        
+        // 未来7天预约数（不含今天）
+        LocalDate weekEnd = today.plusDays(7);
+        long upcomingCount = appointmentRepository.countByDoctorIdAndAppointmentDateBetween(
+                doctorId, today.plusDays(1), weekEnd);
+        stats.put("upcomingCount", upcomingCount);
+        
+        // 本周完成数（本周一到今天）
+        LocalDate weekStart = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        long weekCompletedCount = appointmentRepository.countByDoctorIdAndAppointmentDateBetweenAndStatus(
+                doctorId, weekStart, today, AppointmentStatus.COMPLETED);
+        stats.put("weekCompletedCount", weekCompletedCount);
+        
+        // 上周完成数（用于计算环比）
+        LocalDate lastWeekStart = weekStart.minusWeeks(1);
+        LocalDate lastWeekEnd = weekStart.minusDays(1);
+        long lastWeekCompletedCount = appointmentRepository.countByDoctorIdAndAppointmentDateBetweenAndStatus(
+                doctorId, lastWeekStart, lastWeekEnd, AppointmentStatus.COMPLETED);
+        stats.put("lastWeekCompletedCount", lastWeekCompletedCount);
+        
+        // 计算周环比
+        double weekGrowth = 0;
+        if (lastWeekCompletedCount > 0) {
+            weekGrowth = ((double)(weekCompletedCount - lastWeekCompletedCount) / lastWeekCompletedCount) * 100;
+        }
+        stats.put("weekGrowth", Math.round(weekGrowth));
+        
+        // 本月预约数（包含整个月，含未来日期）
+        LocalDate monthStart = today.with(TemporalAdjusters.firstDayOfMonth());
+        LocalDate monthEnd = today.with(TemporalAdjusters.lastDayOfMonth());
+        long monthCount = appointmentRepository.countByDoctorIdAndAppointmentDateBetween(
+                doctorId, monthStart, monthEnd);
+        stats.put("monthCount", monthCount);
+        
+        // 上月整月预约数（用于计算环比）
+        LocalDate lastMonthStart = monthStart.minusMonths(1);
+        LocalDate lastMonthEnd = monthStart.minusDays(1);
+        long lastMonthCount = appointmentRepository.countByDoctorIdAndAppointmentDateBetween(
+                doctorId, lastMonthStart, lastMonthEnd);
+        stats.put("lastMonthCount", lastMonthCount);
+        
+        // 计算月环比
+        double monthGrowth = 0;
+        if (lastMonthCount > 0) {
+            monthGrowth = ((double)(monthCount - lastMonthCount) / lastMonthCount) * 100;
+        }
+        stats.put("monthGrowth", Math.round(monthGrowth));
+        
+        return stats;
     }
 }

@@ -197,13 +197,112 @@ public class ScheduleService {
                 }
                 
                 // 获取当天预约数量
-                int appointmentCount = appointmentRepository.countByDoctorIdAndAppointmentDate(
+                int appointmentCount = (int) appointmentRepository.countByDoctorIdAndAppointmentDate(
                         doctor.getId(), schedule.getScheduleDate());
                 dto.setAppointmentCount(appointmentCount);
             }
             
             result.add(dto);
         }
+        
+        return result;
+    }
+
+    /**
+     * 医生端 - 新增排班
+     */
+    @Transactional
+    public java.util.Map<String, Object> createScheduleByDoctor(String userId, com.hospital.registration.dto.CreateScheduleDTO dto) {
+        log.info("医生新增排班 - userId: {}, dto: {}", userId, dto);
+        
+        Doctor doctor = doctorRepository.findByUserId(userId)
+                .orElseThrow(() -> new BusinessException("医生信息不存在"));
+        
+        LocalDate startDate = dto.getStartDate();
+        LocalDate endDate = dto.getEndDate() != null ? dto.getEndDate() : startDate;
+        
+        if (endDate.isBefore(startDate)) {
+            throw new BusinessException("结束日期不能早于开始日期");
+        }
+        
+        if (startDate.isBefore(LocalDate.now())) {
+            throw new BusinessException("不能为过去的日期创建排班");
+        }
+        
+        // 根据排班类型设置默认值
+        int morningSlots = 20;
+        int afternoonSlots = 15;
+        LocalTime morningStart = LocalTime.of(8, 0);
+        LocalTime morningEnd = LocalTime.of(12, 0);
+        LocalTime afternoonStart = LocalTime.of(14, 0);
+        LocalTime afternoonEnd = LocalTime.of(17, 30);
+        
+        if ("TYPE1".equals(dto.getScheduleType())) {
+            morningSlots = 10;
+            afternoonSlots = 5;
+        } else if ("TYPE2".equals(dto.getScheduleType())) {
+            morningSlots = 20;
+            afternoonSlots = 15;
+        }
+        
+        // 使用自定义值覆盖
+        if (dto.getMorningSlots() != null) morningSlots = dto.getMorningSlots();
+        if (dto.getAfternoonSlots() != null) afternoonSlots = dto.getAfternoonSlots();
+        if (dto.getMorningStartTime() != null) morningStart = dto.getMorningStartTime();
+        if (dto.getMorningEndTime() != null) morningEnd = dto.getMorningEndTime();
+        if (dto.getAfternoonStartTime() != null) afternoonStart = dto.getAfternoonStartTime();
+        if (dto.getAfternoonEndTime() != null) afternoonEnd = dto.getAfternoonEndTime();
+        
+        int createdCount = 0;
+        int skippedCount = 0;
+        List<String> skippedDates = new ArrayList<>();
+        
+        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+            // 检查是否已存在排班
+            if (scheduleRepository.findByDoctorIdAndScheduleDate(doctor.getId(), date).isPresent()) {
+                skippedCount++;
+                skippedDates.add(date.toString());
+                continue;
+            }
+            
+            // 创建排班
+            Schedule schedule = new Schedule();
+            schedule.setDoctorId(doctor.getId());
+            schedule.setScheduleDate(date);
+            schedule.setIsWorking(true);
+            schedule = scheduleRepository.save(schedule);
+            
+            // 创建时间段
+            if (Boolean.TRUE.equals(dto.getHasMorning())) {
+                TimeSlot morning = new TimeSlot();
+                morning.setScheduleId(schedule.getId());
+                morning.setPeriod(TimePeriod.MORNING);
+                morning.setStartTime(morningStart);
+                morning.setEndTime(morningEnd);
+                morning.setTotalSlots(morningSlots);
+                morning.setRemainingSlots(morningSlots);
+                timeSlotRepository.save(morning);
+            }
+            
+            if (Boolean.TRUE.equals(dto.getHasAfternoon())) {
+                TimeSlot afternoon = new TimeSlot();
+                afternoon.setScheduleId(schedule.getId());
+                afternoon.setPeriod(TimePeriod.AFTERNOON);
+                afternoon.setStartTime(afternoonStart);
+                afternoon.setEndTime(afternoonEnd);
+                afternoon.setTotalSlots(afternoonSlots);
+                afternoon.setRemainingSlots(afternoonSlots);
+                timeSlotRepository.save(afternoon);
+            }
+            
+            createdCount++;
+        }
+        
+        java.util.Map<String, Object> result = new java.util.HashMap<>();
+        result.put("createdCount", createdCount);
+        result.put("skippedCount", skippedCount);
+        result.put("skippedDates", skippedDates);
+        result.put("message", String.format("成功创建 %d 天排班，跳过 %d 天（已有排班）", createdCount, skippedCount));
         
         return result;
     }

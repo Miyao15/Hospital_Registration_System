@@ -127,6 +127,12 @@ const routes = [
         meta: { title: '排班日历' }
       },
       {
+        path: 'schedule/add',
+        name: 'DoctorScheduleAdd',
+        component: () => import('@/views/doctor/ScheduleAdd.vue'),
+        meta: { title: '新增排班' }
+      },
+      {
         path: 'leaves',
         name: 'DoctorLeaves',
         component: () => import('@/views/doctor/Leaves.vue'),

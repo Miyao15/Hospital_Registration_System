@@ -150,6 +150,29 @@ public class DoctorReviewService {
         return stats;
     }
     
+    /**
+     * 公开API - 获取医生评价统计（通过医生ID）
+     */
+    public Map<String, Object> getDoctorReviewStats(String doctorId) {
+        Map<String, Object> stats = new HashMap<>();
+        
+        Double avgRating = doctorReviewRepository.getAverageRatingByDoctorId(doctorId);
+        Integer totalCount = doctorReviewRepository.getReviewCountByDoctorId(doctorId);
+        
+        stats.put("averageRating", avgRating != null ? avgRating : 5.0);
+        stats.put("totalCount", totalCount != null ? totalCount : 0);
+        
+        // 获取各星级分布
+        Map<Integer, Long> distribution = new HashMap<>();
+        for (int i = 1; i <= 5; i++) {
+            Long count = doctorReviewRepository.countByDoctorIdAndRating(doctorId, i);
+            distribution.put(i, count != null ? count : 0L);
+        }
+        stats.put("distribution", distribution);
+        
+        return stats;
+    }
+    
     private DoctorReviewDTO convertToDTO(DoctorReview review) {
         DoctorReviewDTO dto = new DoctorReviewDTO();
         dto.setId(review.getId());

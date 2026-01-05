@@ -329,7 +329,7 @@ public class AdminScheduleService {
             // 获取预约数量
             if (doctor != null && doctor.getId() != null && schedule.getScheduleDate() != null) {
                 try {
-                    int appointmentCount = appointmentRepository.countByDoctorIdAndAppointmentDate(
+                    int appointmentCount = (int) appointmentRepository.countByDoctorIdAndAppointmentDate(
                             doctor.getId(), schedule.getScheduleDate());
                     dto.setAppointmentCount(appointmentCount);
                 } catch (Exception e) {
