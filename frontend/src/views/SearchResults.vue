@@ -272,12 +272,6 @@
               </div>
 
             </div>
-
-            <div class="more-btn-column">
-              <button class="btn-more" @click="openBookingModal(doctor)">
-                更多<br>排班
-              </button>
-            </div>
           </div>
 
         </div>
@@ -1588,10 +1582,6 @@ const fetchSlotsForVisibleDays = async (doctor) => {
 .slot-count { font-weight: 800; font-size: 14px; color: #000; }
 .slot-label { font-size: 10px; color: #333; }
 .slot-placeholder { color: #999; font-size: 11px; }
-
-/* 更多按钮列 */
-.more-btn-column { width: 50px; display: flex; align-items: center; justify-content: center; background: #fff; border-left: 1px solid #EEE; }
-.btn-more { border: 1px solid #DDD; background: #fff; padding: 8px 4px; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: pre-wrap; }
 
 /* === 地图 === */
 .map-column { flex: 35%; background: #f5f5f5; position: relative; border-left: 1px solid #DDD; min-height: 600px; }
