@@ -87,7 +87,7 @@
           <!-- 手机号和身份证 -->
           <div class="form-row two-cols">
             <div class="form-group">
-              <label for="phone">手机号 <span class="required">*</span></label>
+              <label for="phone">手机号</label>
               <input 
                 type="tel" 
                 id="phone" 
@@ -98,7 +98,7 @@
               <span v-if="errors.phone" class="error-text">{{ errors.phone }}</span>
             </div>
             <div class="form-group">
-              <label for="idCard">身份证号 <span class="required">*</span></label>
+              <label for="idCard">身份证号</label>
               <input 
                 type="text" 
                 id="idCard" 
@@ -113,7 +113,7 @@
           <!-- 性别和出生日期 -->
           <div class="form-row two-cols">
             <div class="form-group">
-              <label for="gender">性别 <span class="required">*</span></label>
+              <label for="gender">性别</label>
               <select id="gender" v-model="form.gender" :class="{ 'error': errors.gender }">
                 <option value="" disabled>请选择性别</option>
                 <option value="MALE">男</option>
@@ -122,7 +122,7 @@
               <span v-if="errors.gender" class="error-text">{{ errors.gender }}</span>
             </div>
             <div class="form-group">
-              <label for="birthDate">出生日期 <span class="required">*</span></label>
+              <label for="birthDate">出生日期</label>
               <input 
                 type="date" 
                 id="birthDate" 
@@ -313,7 +313,7 @@ onMounted(async () => {
   }
 });
 
-// 表单验证
+// 表单验证 - 简化版，只验证姓名
 const validateForm = () => {
   errors.value = {};
   
@@ -321,26 +321,7 @@ const validateForm = () => {
     errors.value.name = '请输入姓名';
   }
   
-  if (!form.value.phone.trim()) {
-    errors.value.phone = '请输入手机号';
-  } else if (!/^1[3-9]\d{9}$/.test(form.value.phone)) {
-    errors.value.phone = '手机号格式不正确';
-  }
-  
-  if (!form.value.idCard.trim()) {
-    errors.value.idCard = '请输入身份证号';
-  } else if (!/^\d{17}[\dXx]$/.test(form.value.idCard)) {
-    errors.value.idCard = '身份证号格式不正确';
-  }
-  
-  if (!form.value.gender) {
-    errors.value.gender = '请选择性别';
-  }
-  
-  if (!form.value.birthDate) {
-    errors.value.birthDate = '请选择出生日期';
-  }
-  
+  // 其他字段不做强制验证，允许为空
   return Object.keys(errors.value).length === 0;
 };
 
