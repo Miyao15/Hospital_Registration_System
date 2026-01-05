@@ -81,9 +81,9 @@ public class FileUploadController {
             String base64Data = Base64.getEncoder().encodeToString(fileBytes);
             String dataUrl = "data:" + contentType + ";base64," + base64Data;
 
-            // 获取当前用户（使用手机号作为用户名）
-            String phone = authentication.getName();
-            Optional<User> userOpt = userRepository.findByPhone(phone);
+            // 获取当前用户（JWT中存储的是userId）
+            String userId = authentication.getName();
+            Optional<User> userOpt = userRepository.findById(userId);
             
             if (userOpt.isEmpty()) {
                 return ResponseEntity.badRequest()
@@ -91,7 +91,6 @@ public class FileUploadController {
             }
 
             User user = userOpt.get();
-            String userId = user.getId();
 
             // 根据用户角色保存到对应表
             String role = user.getRole().name();
@@ -113,7 +112,7 @@ public class FileUploadController {
                 }
             }
 
-            log.info("头像上传成功，用户: {}, 大小: {} bytes", phone, fileBytes.length);
+            log.info("头像上传成功，用户ID: {}, 大小: {} bytes", userId, fileBytes.length);
 
             Map<String, String> result = new HashMap<>();
             result.put("url", dataUrl);
@@ -141,9 +140,9 @@ public class FileUploadController {
             Authentication authentication) {
         
         try {
-            // 获取当前用户（使用手机号作为用户名）
-            String phone = authentication.getName();
-            Optional<User> userOpt = userRepository.findByPhone(phone);
+            // 获取当前用户（JWT中存储的是userId）
+            String userId = authentication.getName();
+            Optional<User> userOpt = userRepository.findById(userId);
             
             if (userOpt.isEmpty()) {
                 return ResponseEntity.badRequest()
@@ -151,7 +150,6 @@ public class FileUploadController {
             }
 
             User user = userOpt.get();
-            String userId = user.getId();
             String role = user.getRole().name();
 
             // 清除头像数据
@@ -173,7 +171,7 @@ public class FileUploadController {
                 }
             }
 
-            log.info("头像删除成功，用户: {}", phone);
+            log.info("头像删除成功，用户ID: {}", userId);
             return ResponseEntity.ok(ApiResponse.success(null));
 
         } catch (Exception e) {
