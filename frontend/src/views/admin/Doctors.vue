@@ -23,7 +23,7 @@
         class="doctor-card"
       >
         <div class="doctor-avatar-section">
-          <img :src="doctor.avatarUrl || defaultAvatar" class="doctor-avatar" />
+          <img :src="doctor.avatarData || doctor.avatarUrl || defaultAvatar" class="doctor-avatar" />
           <el-tag :type="getStatusType(doctor.status)" size="small" class="status-tag">
             {{ getStatusText(doctor.status) }}
           </el-tag>
@@ -97,7 +97,7 @@
     >
       <div v-if="selectedDoctor" class="doctor-detail-panel">
         <div class="detail-header">
-          <img :src="selectedDoctor.avatarUrl || defaultAvatar" class="detail-avatar" />
+          <img :src="selectedDoctor.avatarData || selectedDoctor.avatarUrl || defaultAvatar" class="detail-avatar" />
           <div class="detail-header-info">
             <h3>{{ selectedDoctor.name }}</h3>
             <p>{{ getTitleText(selectedDoctor.title) }} · {{ selectedDoctor.departmentName }}</p>

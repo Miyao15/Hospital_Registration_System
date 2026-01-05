@@ -2,7 +2,7 @@
   <div class="doctor-card">
     <div class="list-index" v-if="index">{{ index }}</div>
     <div class="doctor-info">
-      <img :src="doctor.avatarUrl || 'https://i.imgur.com/gQkFvZU.png'" alt="Doctor Avatar" class="avatar" />
+      <img :src="doctor.avatarData || doctor.avatarUrl || 'https://i.imgur.com/gQkFvZU.png'" alt="Doctor Avatar" class="avatar" />
       <div class="details">
         <h3 class="name">{{ doctor.name }}</h3>
         <p class="department">{{ doctor.departmentName }}</p>

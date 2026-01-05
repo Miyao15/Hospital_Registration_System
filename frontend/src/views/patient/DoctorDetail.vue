@@ -19,7 +19,7 @@
       <!-- 医生信息卡片 -->
       <div class="doctor-card">
         <div class="doctor-avatar">
-          <img :src="doctor.avatarUrl || defaultAvatar" alt="医生头像" />
+          <img :src="doctor.avatarData || doctor.avatarUrl || defaultAvatar" alt="医生头像" />
         </div>
         <div class="doctor-info">
           <h1 class="doctor-name">{{ doctor.name }}</h1>

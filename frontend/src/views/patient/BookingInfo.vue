@@ -30,7 +30,7 @@
       <div class="booking-card">
         <div class="doctor-info">
           <img 
-            :src="doctorInfo.avatarUrl || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'" 
+            :src="doctorInfo.avatarData || doctorInfo.avatarUrl || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'" 
             :alt="doctorInfo.name" 
             class="doctor-avatar"
           />

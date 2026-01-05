@@ -113,7 +113,7 @@
             <div class="card-info">
               <div class="info-top">
                 <img 
-                  :src="doctor.avatarUrl || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'" 
+                  :src="doctor.avatarData || doctor.avatarUrl || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'" 
                   :alt="doctor.name" 
                   class="avatar"
                 />
