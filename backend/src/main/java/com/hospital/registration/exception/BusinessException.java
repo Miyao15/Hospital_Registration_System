@@ -60,40 +60,44 @@ public class BusinessException extends RuntimeException {
     }
 
     public static BusinessException invalidAdminKey() {
-        return new BusinessException("AUTH_008", "无效的管理员注册密钥", HttpStatus.FORBIDDEN);
+        return new BusinessException("AUTH_008", "管理员注册密钥错误，请检查后重试", HttpStatus.FORBIDDEN);
     }
 
     // 注册错误
     public static BusinessException invalidPhone() {
-        return new BusinessException("REG_001", "手机号格式无效", HttpStatus.BAD_REQUEST);
+        return new BusinessException("REG_001", "手机号格式无效：请输入11位手机号，以1开头，第二位为3-9", HttpStatus.BAD_REQUEST);
     }
 
     public static BusinessException invalidIdCard() {
-        return new BusinessException("REG_002", "身份证格式无效", HttpStatus.BAD_REQUEST);
+        return new BusinessException("REG_002", "身份证格式无效：请输入18位身份证号（17位数字+1位校验码）", HttpStatus.BAD_REQUEST);
     }
 
     public static BusinessException invalidLicense() {
-        return new BusinessException("REG_003", "资格证格式无效", HttpStatus.BAD_REQUEST);
+        return new BusinessException("REG_003", "医师资格证格式无效：请输入10-20位字母或数字", HttpStatus.BAD_REQUEST);
+    }
+    
+    public static BusinessException invalidEmployeeId() {
+        return new BusinessException("REG_009", "工号格式无效：工号长度应在3-20位之间", HttpStatus.BAD_REQUEST);
     }
 
     public static BusinessException phoneExists() {
-        return new BusinessException("REG_004", "手机号已注册", HttpStatus.CONFLICT);
+        return new BusinessException("REG_004", "该手机号已被注册，请使用其他手机号或尝试登录", HttpStatus.CONFLICT);
     }
 
     public static BusinessException idCardExists() {
-        return new BusinessException("REG_005", "身份证已注册", HttpStatus.CONFLICT);
+        return new BusinessException("REG_005", "该身份证号已被注册，请使用其他身份证号", HttpStatus.CONFLICT);
     }
 
     public static BusinessException employeeIdExists() {
-        return new BusinessException("REG_006", "工号已注册", HttpStatus.CONFLICT);
+        return new BusinessException("REG_006", "该工号已被注册，请使用其他工号", HttpStatus.CONFLICT);
     }
     
     public static BusinessException licenseNumberExists() {
-        return new BusinessException("REG_007", "医师资格证号已注册", HttpStatus.CONFLICT);
+        return new BusinessException("REG_007", "该医师资格证号已被注册，请使用其他资格证号", HttpStatus.CONFLICT);
     }
     
     public static BusinessException departmentNotFound() {
-        return new BusinessException("REG_008", "科室不存在", HttpStatus.BAD_REQUEST);
+        return new BusinessException("REG_008", "选择的科室不存在，请重新选择", HttpStatus.BAD_REQUEST);
     }
 
     public static BusinessException missingFields(String fields) {
@@ -102,11 +106,15 @@ public class BusinessException extends RuntimeException {
 
     // 密码错误
     public static BusinessException weakPassword() {
-        return new BusinessException("PWD_001", "密码强度不足", HttpStatus.BAD_REQUEST);
+        return new BusinessException("PWD_001", "密码强度不足：密码至少需要8位，且必须包含字母和数字", HttpStatus.BAD_REQUEST);
     }
 
     public static BusinessException wrongPassword() {
-        return new BusinessException("PWD_002", "当前密码错误", HttpStatus.BAD_REQUEST);
+        return new BusinessException("PWD_002", "密码错误，请检查后重试", HttpStatus.BAD_REQUEST);
+    }
+    
+    public static BusinessException userNotFound() {
+        return new BusinessException("AUTH_009", "用户不存在，请检查手机号/工号是否正确", HttpStatus.UNAUTHORIZED);
     }
 
     public static BusinessException invalidCode() {

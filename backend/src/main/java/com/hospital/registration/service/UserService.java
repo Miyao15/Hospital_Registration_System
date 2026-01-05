@@ -77,6 +77,7 @@ public class UserService {
                     if (updateData.containsKey("allergyHistory")) patient.setAllergyHistory((String) updateData.get("allergyHistory"));
                     if (updateData.containsKey("emergencyContact")) patient.setEmergencyContact((String) updateData.get("emergencyContact"));
                     if (updateData.containsKey("emergencyPhone")) patient.setEmergencyPhone((String) updateData.get("emergencyPhone"));
+                    if (updateData.containsKey("avatarUrl")) patient.setAvatarUrl((String) updateData.get("avatarUrl"));
                     patientRepository.save(patient);
                 });
                 break;

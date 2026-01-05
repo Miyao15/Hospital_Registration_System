@@ -42,6 +42,7 @@ public class SecurityConfig {
             .requestMatchers(HttpMethod.GET, "/api/doctors/**", "/api/doctors").permitAll()
             .requestMatchers(HttpMethod.GET, "/api/medical-items/**", "/api/medical-items").permitAll()
             .requestMatchers(HttpMethod.GET, "/api/schedules/**").permitAll()
+            .requestMatchers(HttpMethod.GET, "/api/hospitals/**", "/api/hospitals").permitAll()
             // 患者端接口
             .requestMatchers("/api/appointments/**").hasRole("PATIENT")
             .requestMatchers("/api/patients/**").hasRole("PATIENT")
@@ -52,6 +53,10 @@ public class SecurityConfig {
             .requestMatchers("/api/doctor/leaves/**").hasRole("DOCTOR")
             // 通知接口 - 医生和患者都可以访问
             .requestMatchers("/api/notifications/**").hasAnyRole("PATIENT", "DOCTOR")
+            // 文件上传接口 - 需要认证
+            .requestMatchers("/api/upload/**").authenticated()
+            // 静态资源访问 - 允许访问上传的文件
+            .requestMatchers("/uploads/**").permitAll()
             .requestMatchers("/error").permitAll()
             .anyRequest().authenticated()
         )

@@ -15,13 +15,16 @@ import com.hospital.registration.exception.BusinessException;
 import com.hospital.registration.repository.AdminRepository;
 import com.hospital.registration.repository.DoctorRepository;
 import com.hospital.registration.repository.DepartmentRepository;
+import com.hospital.registration.repository.HospitalRepository;
 import com.hospital.registration.repository.PatientRepository;
 import com.hospital.registration.repository.UserRepository;
 import com.hospital.registration.security.JwtService;
+import com.hospital.registration.util.AvatarUtils;
 import com.hospital.registration.util.ValidationUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +43,7 @@ public class AuthService {
     private final DoctorRepository doctorRepository;
     private final AdminRepository adminRepository;
     private final DepartmentRepository departmentRepository;
+    private final HospitalRepository hospitalRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final StringRedisTemplate redisTemplate;
@@ -78,7 +82,15 @@ public class AuthService {
             throw BusinessException.phoneExists();
         }
 
-        // 5. 检查工号是否已注册
+        // 5. 验证工号格式
+        if (request.getEmployeeId() == null || request.getEmployeeId().trim().isEmpty()) {
+            throw new BusinessException("REG_009", "工号不能为空", HttpStatus.BAD_REQUEST);
+        }
+        if (request.getEmployeeId().length() < 3 || request.getEmployeeId().length() > 20) {
+            throw BusinessException.invalidEmployeeId();
+        }
+        
+        // 6. 检查工号是否已注册
         if (adminRepository.findByEmployeeId(request.getEmployeeId()).isPresent()) {
             throw BusinessException.employeeIdExists();
         }
@@ -118,6 +130,10 @@ public class AuthService {
 
         // 验证密码强度
         if (!ValidationUtils.isValidPassword(request.getPassword())) {
+            String passwordError = ValidationUtils.getPasswordValidationMessage(request.getPassword());
+            if (passwordError != null) {
+                throw new BusinessException("PWD_001", "密码验证失败：" + passwordError, HttpStatus.BAD_REQUEST);
+            }
             throw BusinessException.weakPassword();
         }
 
@@ -153,6 +169,10 @@ public class AuthService {
         patient.setAllergyHistory(request.getAllergyHistory());
         patient.setEmergencyContact(request.getEmergencyContact());
         patient.setEmergencyPhone(request.getEmergencyPhone());
+        // 自动生成默认头像（基于姓名和性别）
+        patient.setAvatarUrl(AvatarUtils.generateAvatarFromNameAndGender(
+                request.getName(), 
+                request.getGender() != null ? request.getGender().name() : null));
         patientRepository.save(patient);
 
         return userId;
@@ -172,6 +192,10 @@ public class AuthService {
 
         // 验证密码强度
         if (!ValidationUtils.isValidPassword(request.getPassword())) {
+            String passwordError = ValidationUtils.getPasswordValidationMessage(request.getPassword());
+            if (passwordError != null) {
+                throw new BusinessException("PWD_001", "密码验证失败：" + passwordError, HttpStatus.BAD_REQUEST);
+            }
             throw BusinessException.weakPassword();
         }
 
@@ -180,6 +204,14 @@ public class AuthService {
             throw BusinessException.phoneExists();
         }
 
+        // 验证工号格式
+        if (request.getEmployeeId() == null || request.getEmployeeId().trim().isEmpty()) {
+            throw new BusinessException("REG_009", "工号不能为空", HttpStatus.BAD_REQUEST);
+        }
+        if (request.getEmployeeId().length() < 3 || request.getEmployeeId().length() > 20) {
+            throw BusinessException.invalidEmployeeId();
+        }
+        
         // 检查工号是否已注册
         if (doctorRepository.existsByEmployeeId(request.getEmployeeId())) {
             throw BusinessException.employeeIdExists();
@@ -193,6 +225,14 @@ public class AuthService {
         // 检查科室是否存在
         if (!departmentRepository.existsById(request.getDepartmentId())) {
             throw BusinessException.departmentNotFound();
+        }
+
+        // 检查医院是否存在
+        if (request.getHospitalId() == null || request.getHospitalId().trim().isEmpty()) {
+            throw new BusinessException("REG_010", "所属医院不能为空", HttpStatus.BAD_REQUEST);
+        }
+        if (!hospitalRepository.existsById(request.getHospitalId())) {
+            throw new BusinessException("REG_011", "医院不存在", HttpStatus.BAD_REQUEST);
         }
 
         // 创建用户（状态为待审批）
@@ -210,9 +250,12 @@ public class AuthService {
         doctor.setId(UUID.randomUUID().toString());
         doctor.setUserId(userId);
         doctor.setName(request.getName());
+        // 自动生成默认头像（基于姓名）
+        doctor.setAvatarUrl(AvatarUtils.generateAvatarFromName(request.getName()));
         doctor.setEmployeeId(request.getEmployeeId());
         doctor.setTitle(request.getTitle());
         doctor.setDepartmentId(request.getDepartmentId());
+        doctor.setHospitalId(request.getHospitalId());
         doctor.setSpecialty(request.getSpecialty());
         doctor.setLicenseNumber(request.getLicenseNumber());
         doctor.setIntroduction(request.getIntroduction());
@@ -235,7 +278,7 @@ public class AuthService {
                 );
 
         if (user == null) {
-            throw BusinessException.invalidCredentials();
+            throw BusinessException.userNotFound();
         }
 
         // 检查账户状态
@@ -244,7 +287,7 @@ public class AuthService {
         // 验证密码
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             recordLoginFailure(user);
-            throw BusinessException.invalidCredentials();
+            throw BusinessException.wrongPassword();
         }
 
         // 清除登录失败记录

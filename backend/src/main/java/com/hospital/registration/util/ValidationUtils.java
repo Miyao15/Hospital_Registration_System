@@ -52,4 +52,33 @@ public class ValidationUtils {
         if (password == null || password.isEmpty()) return false;
         return PASSWORD_PATTERN.matcher(password).matches();
     }
+    
+    /**
+     * 验证工号格式
+     * 要求：3-20位字符
+     */
+    public static boolean isValidEmployeeId(String employeeId) {
+        if (employeeId == null || employeeId.trim().isEmpty()) return false;
+        int length = employeeId.trim().length();
+        return length >= 3 && length <= 20;
+    }
+    
+    /**
+     * 获取密码验证的详细错误信息
+     */
+    public static String getPasswordValidationMessage(String password) {
+        if (password == null || password.isEmpty()) {
+            return "密码不能为空";
+        }
+        if (password.length() < 8) {
+            return "密码长度至少需要8位";
+        }
+        if (!password.matches(".*[A-Za-z].*")) {
+            return "密码必须包含至少一个字母";
+        }
+        if (!password.matches(".*\\d.*")) {
+            return "密码必须包含至少一个数字";
+        }
+        return null; // 验证通过
+    }
 }

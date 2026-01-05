@@ -10,6 +10,7 @@ import com.hospital.registration.exception.BusinessException;
 import com.hospital.registration.repository.DepartmentRepository;
 import com.hospital.registration.repository.DoctorRepository;
 import com.hospital.registration.repository.AdminRepository;
+import com.hospital.registration.repository.HospitalRepository;
 import com.hospital.registration.repository.PatientRepository;
 import com.hospital.registration.repository.UserRepository;
 import com.hospital.registration.security.JwtService;
@@ -35,6 +36,7 @@ class DoctorRegistrationPropertyTest {
     private DoctorRepository doctorRepository;
     private AdminRepository adminRepository;
     private DepartmentRepository departmentRepository;
+    private HospitalRepository hospitalRepository;
     private JwtService jwtService;
     private StringRedisTemplate redisTemplate;
     private PasswordEncoder passwordEncoder;
@@ -47,6 +49,7 @@ class DoctorRegistrationPropertyTest {
         doctorRepository = Mockito.mock(DoctorRepository.class);
         adminRepository = Mockito.mock(AdminRepository.class);
         departmentRepository = Mockito.mock(DepartmentRepository.class);
+        hospitalRepository = Mockito.mock(HospitalRepository.class);
         jwtService = Mockito.mock(JwtService.class);
         redisTemplate = Mockito.mock(StringRedisTemplate.class);
         passwordEncoder = new BCryptPasswordEncoder();
@@ -57,6 +60,7 @@ class DoctorRegistrationPropertyTest {
                 doctorRepository,
                 adminRepository,
                 departmentRepository,
+                hospitalRepository,
                 passwordEncoder,
                 jwtService,
                 redisTemplate

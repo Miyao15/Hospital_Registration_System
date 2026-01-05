@@ -2,6 +2,7 @@ package com.hospital.registration.controller;
 
 import com.hospital.registration.dto.*;
 import com.hospital.registration.dto.response.ApiResponse;
+import com.hospital.registration.entity.Doctor;
 import com.hospital.registration.service.DoctorProfileService;
 import com.hospital.registration.service.DoctorReviewService;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
 
 @Slf4j
 @RestController
@@ -41,14 +44,23 @@ public class DoctorController {
             @RequestParam(required = false) String departmentId,
             @RequestParam(required = false) String title,
             @RequestParam(required = false) String medicalItemId,
+            @RequestParam(required = false) String region,
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) String province,
+            @RequestParam(required = false) String district,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        log.info("GET /api/doctors/search called with keyword={}, departmentId={}, title={}, medicalItemId={}", keyword, departmentId, title, medicalItemId);
+        log.info("GET /api/doctors/search called with keyword={}, departmentId={}, title={}, medicalItemId={}, region={}, city={}", 
+                keyword, departmentId, title, medicalItemId, region, city);
         DoctorSearchDTO searchDTO = new DoctorSearchDTO();
         searchDTO.setKeyword(keyword);
         searchDTO.setDepartmentId(departmentId);
         searchDTO.setTitle(title);
         searchDTO.setMedicalItemId(medicalItemId);
+        searchDTO.setRegion(region);
+        searchDTO.setCity(city);
+        searchDTO.setProvince(province);
+        searchDTO.setDistrict(district);
         searchDTO.setPage(page);
         searchDTO.setSize(size);
         Page<DoctorListDTO> result = doctorProfileService.searchDoctors(searchDTO);
@@ -66,10 +78,26 @@ public class DoctorController {
 
     @GetMapping("/top")
     public ApiResponse<List<DoctorListDTO>> getTopDoctors(@RequestParam(name = "limit", defaultValue = "10", required = false) Integer limit) {
-        List<DoctorListDTO> topDoctors = doctorProfileService.getTopDoctors(limit);
-        return ApiResponse.success(topDoctors != null ? topDoctors : new ArrayList<>());
+        log.info("GET /api/doctors/top called with limit: {}", limit);
+        try {
+            List<DoctorListDTO> topDoctors = doctorProfileService.getTopDoctors(limit);
+            log.info("Controller: Returning {} top doctors", topDoctors != null ? topDoctors.size() : 0);
+            if (topDoctors != null && !topDoctors.isEmpty()) {
+                log.info("Controller: First doctor: id={}, name={}, rating={}, reviewCount={}", 
+                    topDoctors.get(0).getId(), 
+                    topDoctors.get(0).getName(),
+                    topDoctors.get(0).getRating(),
+                    topDoctors.get(0).getReviewCount());
+            } else {
+                log.warn("Controller: topDoctors is empty or null!");
+            }
+            return ApiResponse.success(topDoctors != null ? topDoctors : new ArrayList<>());
+        } catch (Exception e) {
+            log.error("Controller: Error in getTopDoctors: {}", e.getMessage(), e);
+            return ApiResponse.success(new ArrayList<>());
+        }
     }
-
+    
     @GetMapping("/specialty/{specialty}")
     public ApiResponse<List<DoctorListDTO>> getDoctorsBySpecialty(@PathVariable String specialty) {
         try {
@@ -83,20 +111,28 @@ public class DoctorController {
         }
     }
     
-    // 调试端点 - 直接查询数据库医生总数
+    // 调试接口：检查数据库中的医生数量
     @GetMapping("/debug/count")
-    public ApiResponse<String> debugCount() {
+    public ApiResponse<Map<String, Object>> getDoctorCount() {
         log.info("========== DEBUG: 开始查询医生数量 ==========");
         try {
             long count = doctorProfileService.getTotalDoctorCount();
+            List<Doctor> rawDoctors = doctorProfileService.debugFindAllRaw();
+            Map<String, Object> result = new HashMap<>();
+            result.put("totalCount", count);
+            result.put("rawDoctorsCount", rawDoctors != null ? rawDoctors.size() : 0);
+            if (rawDoctors != null && !rawDoctors.isEmpty()) {
+                result.put("firstDoctorId", rawDoctors.get(0).getId());
+                result.put("firstDoctorName", rawDoctors.get(0).getName());
+            }
             log.info("========== DEBUG: 查询成功，医生数量 = {} ==========", count);
-            return ApiResponse.success("数据库中共有 " + count + " 位医生");
+            return ApiResponse.success(result);
         } catch (Exception e) {
             log.error("========== DEBUG: 查询失败 ==========");
             log.error("异常类型: {}", e.getClass().getName());
             log.error("异常消息: {}", e.getMessage());
             log.error("完整堆栈:", e);
-            return ApiResponse.success("查询失败: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+            return ApiResponse.error("ERROR", "查询失败: " + e.getMessage());
         }
     }
     

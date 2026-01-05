@@ -27,6 +27,9 @@ public class DoctorRegistrationRequest {
     @NotBlank(message = "科室不能为空")
     private String departmentId;
 
+    @NotBlank(message = "所属医院不能为空")
+    private String hospitalId;
+
     private String specialty;
 
     @NotBlank(message = "医师资格证号不能为空")

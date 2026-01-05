@@ -28,6 +28,9 @@ public class DoctorListDTO {
     private String hospitalId;
     private String hospitalName;
     private String hospitalAddress;
+    private String hospitalCity;      // 医院所在城市
+    private String hospitalRegion;     // 医院所在地区
+    private String hospitalProvince;   // 医院所在省份
     private Double hospitalLongitude;
     private Double hospitalLatitude;
 }
