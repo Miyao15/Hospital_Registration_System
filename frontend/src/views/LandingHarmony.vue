@@ -431,6 +431,7 @@ import { useUserStore } from '@/stores/user';
 import request from '@/utils/request';
 import { getCurrentLocation, getLocationByIP } from '@/utils/location';
 import { getAllHospitals } from '@/api/hospital';
+import { getAllDepartments } from '@/api/department';
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -446,16 +447,8 @@ const isLocating = ref(false);
 const locationError = ref('');
 const currentLocation = ref('');
 
-// New data for enriched sections - 真实数据
-const departments = ref([
-  { id: 1, name: '儿科', doctorCount: 4 },
-  { id: 2, name: '皮肤科', doctorCount: 3 },
-  { id: 3, name: '口腔科', doctorCount: 1 },
-  { id: 4, name: '妇科', doctorCount: 1 },
-  { id: 5, name: '心血管内科', doctorCount: 1 },
-  { id: 6, name: '眼科', doctorCount: 1 },
-  { id: 7, name: '骨科', doctorCount: 1 }
-]);
+// New data for enriched sections - 从API获取真实数据
+const departments = ref([]);
 
 const testimonials = ref([
   {
@@ -821,10 +814,21 @@ const initNumberCounters = () => {
 const fetchLandingData = async () => {
   try {
     const results = await Promise.allSettled([
-      request.get('/api/doctors/top', { params: { limit: 10 } })
+      request.get('/api/doctors/top', { params: { limit: 10 } }),
+      getAllDepartments()
     ]);
     const allDoctors = (results[0].status === 'fulfilled' && results[0].value) ? results[0].value : [];
     topDoctors.value = allDoctors.filter(doc => (doc.rating || 0) === 5.0).slice(0, 6);
+    
+    // 获取科室数据
+    if (results[1].status === 'fulfilled' && results[1].value) {
+      const deptData = results[1].value;
+      departments.value = Array.isArray(deptData) ? deptData.map(dept => ({
+        id: dept.id,
+        name: dept.name,
+        doctorCount: dept.doctorCount || 0
+      })) : [];
+    }
   } catch (error) {
     console.error('Failed to fetch landing page data:', error);
   }
