@@ -9,7 +9,7 @@ const routes = [
   {
     path: '/landing',
     name: 'Landing',
-    component: () => import('@/views/Landing.vue'),
+    component: () => import('@/views/LandingHarmony.vue'),
     meta: { title: '首页' }
   },
   {

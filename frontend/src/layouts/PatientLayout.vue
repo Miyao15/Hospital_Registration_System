@@ -26,10 +26,10 @@
           </el-badge>
           <el-dropdown @command="handleCommand">
             <div class="user-info">
-              <el-avatar :size="36" :src="userStore.userInfo?.avatar">
+              <el-avatar :size="36" :src="avatarUrl">
                 {{ avatarPlaceholderText }}
               </el-avatar>
-              <span>{{ userStore.userInfo?.realName }}</span>
+              <span>{{ patientInfo.name || userStore.userInfo?.realName }}</span>
               <el-icon><ArrowDown /></el-icon>
             </div>
             <template #dropdown>
@@ -78,12 +78,17 @@ import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessageBox } from 'element-plus'
 import { getUnreadCount } from '@/api/notification'
+import request from '@/utils/request'
 
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
 
 const unreadCount = ref(0)
+const patientInfo = ref({
+  name: '',
+  avatarUrl: ''
+})
 
 const activeMenu = computed(() => route.path)
 const pageTitle = computed(() => route.meta.title || '患者中心')
@@ -92,6 +97,11 @@ const showBackButton = computed(() => route.path !== '/patient/home')
 // 头像占位符文字 - 患者显示"患"
 const avatarPlaceholderText = computed(() => {
   return '患'
+})
+
+// 获取头像URL
+const avatarUrl = computed(() => {
+  return patientInfo.value.avatarUrl || ''
 })
 
 const handleBack = () => {
@@ -112,11 +122,25 @@ const refreshUnreadCount = async () => {
   }
 }
 
+// 获取患者信息
+const fetchPatientInfo = async () => {
+  try {
+    const data = await request.get('/api/patients/profile')
+    if (data) {
+      patientInfo.value.name = data.name || ''
+      patientInfo.value.avatarUrl = data.avatarUrl || ''
+    }
+  } catch (e) {
+    console.error('获取患者信息失败:', e)
+  }
+}
+
 // 提供刷新方法给子组件
 provide('refreshUnreadCount', refreshUnreadCount)
 
 onMounted(() => {
   refreshUnreadCount()
+  fetchPatientInfo()
 })
 
 // 监听路由变化，刷新未读数量

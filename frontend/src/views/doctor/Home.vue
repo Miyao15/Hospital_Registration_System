@@ -3,11 +3,11 @@
     <!-- Hero区域 - Oatmeal风格 -->
     <div class="hero-section slide-down">
       <div class="hero-content">
-        <div class="hero-text fade-in">
+        <div class="hero-text fade-in-up">
           <h1 class="hero-title">早上好，{{ doctorName }} 医生</h1>
-          <p class="hero-subtitle">{{ todayDate }} · 今天又是充满希望的一天</p>
+          <p class="hero-subtitle fade-in delay-200">{{ todayDate }} · 今天又是充满希望的一天</p>
         </div>
-        <div class="hero-image scale-in">
+        <div class="hero-image bounce-in delay-300">
           <div class="hero-image-overlay"></div>
           <img src="https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=500&h=400&fit=crop&q=80" alt="医疗健康" />
         </div>
@@ -16,10 +16,10 @@
 
     <!-- 统计卡片 - Zocdoc 风格 -->
     <div class="stats-grid">
-      <div class="stat-card card-hover stagger-item">
+      <div class="stat-card card-hover card-tilt stagger-item">
         <div class="stat-header">
           <span class="stat-label">今日预约</span>
-          <div class="stat-icon today">
+          <div class="stat-icon today icon-scale">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
               <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -28,47 +28,47 @@
             </svg>
           </div>
         </div>
-        <div class="stat-value">{{ stats.todayCount }}</div>
+        <div class="stat-value number-roll">{{ stats.todayCount }}</div>
         <div class="stat-footer" v-if="stats.pendingCount > 0">
           <span class="stat-detail">待就诊 {{ stats.pendingCount }} 人</span>
         </div>
       </div>
 
-      <div class="stat-card card-hover stagger-item">
+      <div class="stat-card card-hover card-tilt stagger-item">
         <div class="stat-header">
           <span class="stat-label">本周完成</span>
-          <div class="stat-icon completed">
+          <div class="stat-icon completed icon-scale">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
               <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
               <polyline points="22 4 12 14.01 9 11.01"></polyline>
             </svg>
           </div>
         </div>
-        <div class="stat-value">{{ stats.completedCount }}</div>
+        <div class="stat-value number-roll">{{ stats.completedCount }}</div>
         <div class="stat-footer">
           <span class="stat-detail positive">较上周 +12%</span>
         </div>
       </div>
 
-      <div class="stat-card">
+      <div class="stat-card card-hover card-tilt stagger-item">
         <div class="stat-header">
           <span class="stat-label">患者评分</span>
-          <div class="stat-icon rating">
+          <div class="stat-icon rating icon-scale">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
             </svg>
           </div>
         </div>
-        <div class="stat-value">{{ stats.rating || '5.0' }}</div>
+        <div class="stat-value number-roll">{{ stats.rating || '5.0' }}</div>
         <div class="stat-footer">
           <span class="stat-detail">{{ stats.reviewCount || 0 }} 条评价</span>
         </div>
       </div>
 
-      <div class="stat-card">
+      <div class="stat-card card-hover card-tilt stagger-item">
         <div class="stat-header">
           <span class="stat-label">本月预约</span>
-          <div class="stat-icon month">
+          <div class="stat-icon month icon-scale">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
               <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"></path>
               <circle cx="9" cy="7" r="4"></circle>
@@ -76,7 +76,7 @@
             </svg>
           </div>
         </div>
-        <div class="stat-value">{{ stats.weekCount }}</div>
+        <div class="stat-value number-roll">{{ stats.weekCount }}</div>
         <div class="stat-footer">
           <span class="stat-detail">环比 +8%</span>
         </div>
@@ -134,8 +134,10 @@
           </div>
           <div class="appointment-actions" v-if="apt.status === 'PENDING'">
             <button class="btn-sm check-in" @click="handleCheckIn(apt)">签到</button>
-            <button class="btn-sm complete" @click="handleComplete(apt)">完成</button>
             <button class="btn-sm cancel" @click="handleNoShow(apt)">爽约</button>
+          </div>
+          <div class="appointment-actions" v-if="apt.status === 'CHECKED_IN'">
+            <button class="btn-sm complete" @click="handleComplete(apt)">完成</button>
           </div>
         </div>
       </div>

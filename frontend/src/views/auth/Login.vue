@@ -1,34 +1,34 @@
 <template>
-  <div class="auth-page">
-    <div class="cream-wrapper">
+  <div class="auth-page page-animate">
+    <div class="cream-wrapper slide-down">
       <header class="main-header">
         <div class="container nav-container">
-          <div class="logo-area" @click="goHome">
-            <div class="logo-box">优</div>
+          <div class="logo-area card-scale" @click="goHome">
+            <div class="logo-box breathing">优</div>
             <span class="logo-text">优医预约</span>
           </div>
           <nav class="main-nav">
-            <span class="nav-text">还没有账户？</span>
-            <a href="#" class="nav-link register-link" @click.prevent="goRegister">立即注册</a>
-            <button class="btn-signup" @click="goHome">返回首页</button>
+            <span class="nav-text fade-in delay-200">还没有账户？</span>
+            <a href="#" class="nav-link register-link link-underline" @click.prevent="goRegister">立即注册</a>
+            <button class="btn-signup btn-shine" @click="goHome">返回首页</button>
           </nav>
         </div>
       </header>
     </div>
 
     <main class="auth-main">
-      <div class="auth-card">
-        <h1 class="auth-title">欢迎回来</h1>
-        <p class="auth-subtitle">请选择您的身份并登录系统</p>
+      <div class="auth-card bounce-in">
+        <h1 class="auth-title fade-in-up">欢迎回来</h1>
+        <p class="auth-subtitle fade-in-up delay-100">请选择您的身份并登录系统</p>
 
-        <div class="role-selector">
-          <button :class="['role-btn', { active: role === 'patient' }]" @click="role = 'patient'">患者登录</button>
-          <button :class="['role-btn', { active: role === 'doctor' }]" @click="role = 'doctor'">医生登录</button>
-          <button :class="['role-btn', { active: role === 'admin' }]" @click="role = 'admin'">管理员</button>
+        <div class="role-selector fade-in-up delay-200">
+          <button :class="['role-btn btn-elastic', { active: role === 'patient' }]" @click="role = 'patient'">患者登录</button>
+          <button :class="['role-btn btn-elastic', { active: role === 'doctor' }]" @click="role = 'doctor'">医生登录</button>
+          <button :class="['role-btn btn-elastic', { active: role === 'admin' }]" @click="role = 'admin'">管理员</button>
         </div>
 
         <form @submit.prevent="handleLogin">
-          <div class="form-group">
+          <div class="form-group stagger-item">
             <label v-if="role !== 'admin'">手机号</label>
             <label v-else>用户名</label>
             <input 
@@ -37,6 +37,7 @@
               v-model="loginForm.identifier" 
               placeholder="请输入您的手机号" 
               required
+              class="input-focus"
             >
             <input 
               v-else
@@ -44,46 +45,45 @@
               v-model="loginForm.identifier" 
               placeholder="请输入管理员用户名" 
               required
+              class="input-focus"
             >
           </div>
-          <div class="form-group" style="margin-top: 20px;">
+          <div class="form-group stagger-item" style="margin-top: 20px;">
             <label>密码</label>
             <input 
               type="password" 
               v-model="loginForm.password" 
               placeholder="请输入密码" 
               required
+              class="input-focus"
             >
           </div>
           
-          <div class="form-options">
+          <div class="form-options fade-in delay-300">
             <label class="remember-me">
               <input type="checkbox" v-model="loginForm.remember"> 记住我
             </label>
-            <a href="#" class="forgot-pwd">忘记密码？</a>
+            <a href="#" class="forgot-pwd link-underline">忘记密码？</a>
           </div>
 
-          <button type="submit" class="btn-submit" :disabled="loading">
+          <button type="submit" class="btn-submit btn-shine ripple" :disabled="loading">
             {{ loading ? '登录中...' : '立即登录' }}
           </button>
         </form>
 
         <!-- 测试快捷登录 -->
-        <div class="quick-login-section">
+        <div class="quick-login-section fade-in-up delay-400">
           <div class="quick-login-divider">
             <span>测试快捷登录</span>
           </div>
           <div class="quick-login-buttons">
-            <button class="quick-btn patient-btn" @click="quickLogin('patient')" :disabled="loading">
-              <span class="quick-icon">👤</span>
+            <button class="quick-btn patient-btn card-hover stagger-scale" @click="quickLogin('patient')" :disabled="loading">
               <span>患者端</span>
             </button>
-            <button class="quick-btn doctor-btn" @click="quickLogin('doctor')" :disabled="loading">
-              <span class="quick-icon">👨‍⚕️</span>
+            <button class="quick-btn doctor-btn card-hover stagger-scale" @click="quickLogin('doctor')" :disabled="loading">
               <span>医生端</span>
             </button>
-            <button class="quick-btn admin-btn" @click="quickLogin('admin')" :disabled="loading">
-              <span class="quick-icon">⚙️</span>
+            <button class="quick-btn admin-btn card-hover stagger-scale" @click="quickLogin('admin')" :disabled="loading">
               <span>管理员</span>
             </button>
           </div>

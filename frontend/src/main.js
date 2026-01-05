@@ -11,6 +11,7 @@ import router from './router'
 import { useUserStore } from './stores/user'
 import './styles/global.scss'
 import './assets/styles/animations.css' // 全局动效样式
+import './assets/styles/harmony-theme.css' // HarmonyOS 风格主题
 
 const app = createApp(App)
 const pinia = createPinia()

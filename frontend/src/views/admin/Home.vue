@@ -3,11 +3,11 @@
     <!-- Hero区域 - Oatmeal风格 -->
     <div class="hero-section slide-down">
       <div class="hero-content">
-        <div class="hero-text fade-in">
+        <div class="hero-text fade-in-up">
           <h1 class="hero-title">欢迎回来，{{ adminName }}</h1>
-          <p class="hero-subtitle">管理系统概览 · 一切尽在掌握</p>
+          <p class="hero-subtitle fade-in delay-200">管理系统概览 · 一切尽在掌握</p>
         </div>
-        <div class="hero-image scale-in">
+        <div class="hero-image bounce-in delay-300">
           <div class="hero-image-overlay"></div>
           <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&h=400&fit=crop&q=80" alt="管理后台" />
         </div>
@@ -16,8 +16,8 @@
 
     <!-- 统计卡片 -->
     <div class="stats-grid">
-      <div class="stat-card card-hover stagger-item">
-        <div class="stat-icon" style="background: #E3F2FD;">
+      <div class="stat-card card-hover card-tilt stagger-item">
+        <div class="stat-icon icon-scale" style="background: #E3F2FD;">
           <svg viewBox="0 0 24 24" fill="none" stroke="#1976D2" stroke-width="2" width="24" height="24">
             <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"></path>
             <circle cx="9" cy="7" r="4"></circle>
@@ -26,25 +26,25 @@
           </svg>
         </div>
         <div class="stat-content">
-          <div class="stat-value">{{ statistics.totalPatients || 0 }}</div>
+          <div class="stat-value number-roll">{{ statistics.totalPatients || 0 }}</div>
           <div class="stat-label">总患者数</div>
         </div>
       </div>
 
-      <div class="stat-card card-hover stagger-item">
-        <div class="stat-icon" style="background: #E8F5E9;">
+      <div class="stat-card card-hover card-tilt stagger-item">
+        <div class="stat-icon icon-scale" style="background: #E8F5E9;">
           <svg viewBox="0 0 24 24" fill="none" stroke="#388E3C" stroke-width="2" width="24" height="24">
             <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
           </svg>
         </div>
         <div class="stat-content">
-          <div class="stat-value">{{ statistics.totalDoctors || 0 }}</div>
+          <div class="stat-value number-roll">{{ statistics.totalDoctors || 0 }}</div>
           <div class="stat-label">总医生数</div>
         </div>
       </div>
 
-      <div class="stat-card card-hover stagger-item">
-        <div class="stat-icon" style="background: #FFF3E0;">
+      <div class="stat-card card-hover card-tilt stagger-item">
+        <div class="stat-icon icon-scale" style="background: #FFF3E0;">
           <svg viewBox="0 0 24 24" fill="none" stroke="#F57C00" stroke-width="2" width="24" height="24">
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
             <line x1="16" y1="2" x2="16" y2="6"></line>

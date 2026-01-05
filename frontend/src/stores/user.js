@@ -49,21 +49,9 @@ export const useUserStore = defineStore('user', () => {
         }
       }
 
-      // 正常登录后，根据角色跳转到对应的首页
-      // 不再使用redirect参数，确保登录后跳转的一致性
-      switch (response.role) {
-        case 'ADMIN':
-          router.push('/admin/home');
-          break;
-        case 'DOCTOR':
-          router.push('/doctor/home');
-          break;
-        case 'PATIENT':
-          router.push('/patient/home');
-          break;
-        default:
-          router.push('/');
-      }
+      // 正常登录后，统一跳转到首页
+      // 用户可以从首页导航到各自的功能页面
+      router.push('/landing');
       return true;
     } catch (error) {
       // request.js的拦截器已经显示了错误消息，这里不需要重复显示

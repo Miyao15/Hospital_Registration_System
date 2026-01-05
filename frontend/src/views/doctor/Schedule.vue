@@ -227,6 +227,10 @@ const calendarDays = computed(() => {
       hasAfternoon: schedule?.hasAfternoon || false,
       morningSlots: schedule?.morningSlots || 0,
       afternoonSlots: schedule?.afternoonSlots || 0,
+      morningTotalSlots: schedule?.morningTotalSlots || 0,
+      afternoonTotalSlots: schedule?.afternoonTotalSlots || 0,
+      morningBooked: schedule?.morningBooked || 0,
+      afternoonBooked: schedule?.afternoonBooked || 0,
       morningTime: schedule?.morningTime,
       afternoonTime: schedule?.afternoonTime,
       appointmentCount: schedule?.appointmentCount || 0
@@ -294,13 +298,11 @@ const viewAppointments = (day) => {
 };
 
 const getMorningAppointments = (day) => {
-  // 这里可以根据实际数据计算上午的预约数
-  return Math.floor((day.morningSlots || 0) * 0.6);
+  return day.morningBooked || 0;
 };
 
 const getAfternoonAppointments = (day) => {
-  // 这里可以根据实际数据计算下午的预约数
-  return Math.floor((day.afternoonSlots || 0) * 0.6);
+  return day.afternoonBooked || 0;
 };
 </script>
 

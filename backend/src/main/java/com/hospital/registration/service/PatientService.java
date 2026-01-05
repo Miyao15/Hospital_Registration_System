@@ -64,6 +64,9 @@ public class PatientService {
         if (dto.getEmergencyPhone() != null) {
             patient.setEmergencyPhone(dto.getEmergencyPhone());
         }
+        if (dto.getAvatarUrl() != null) {
+            patient.setAvatarUrl(dto.getAvatarUrl());
+        }
 
         patient = patientRepository.save(patient);
         log.info("更新患者信息成功 - patientId: {}", patient.getId());
@@ -88,6 +91,7 @@ public class PatientService {
             dto.setAllergyHistory(patient.getAllergyHistory());
             dto.setEmergencyContact(patient.getEmergencyContact());
             dto.setEmergencyPhone(patient.getEmergencyPhone());
+            dto.setAvatarUrl(patient.getAvatarUrl());
             log.debug("患者信息DTO转换成功 - patientId: {}", patient.getId());
             return dto;
         } catch (Exception e) {

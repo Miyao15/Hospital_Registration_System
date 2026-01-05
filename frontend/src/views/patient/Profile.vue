@@ -8,8 +8,26 @@
     <div class="content-card">
       <div class="card-header">
         <div class="avatar-section">
-          <img :src="userInfo.avatarUrl || defaultAvatar" class="avatar" />
-          <button class="btn-change-avatar">更换头像</button>
+          <div class="avatar-wrapper">
+            <img :src="userInfo.avatarUrl || defaultAvatar" class="avatar" />
+            <label class="avatar-upload-btn" for="avatar-input">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"></path>
+                <circle cx="12" cy="13" r="4"></circle>
+              </svg>
+            </label>
+            <input 
+              type="file" 
+              id="avatar-input" 
+              accept="image/*" 
+              @change="handleAvatarChange" 
+              style="display: none"
+            />
+          </div>
+          <div class="avatar-info">
+            <span class="avatar-hint">点击图标更换头像</span>
+            <span class="avatar-size">支持 JPG、PNG 格式，最大 5MB</span>
+          </div>
         </div>
       </div>
 
@@ -103,6 +121,7 @@ const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726
 
 const userInfo = ref({});
 const saving = ref(false);
+const uploadingAvatar = ref(false);
 
 const form = ref({
   name: '',
@@ -128,6 +147,7 @@ onMounted(async () => {
   try {
     const data = await request.get('/api/patients/profile');
     if (data) {
+      userInfo.value = data;
       form.value = {
         name: data.name || '',
         phone: userStore.userInfo?.phone || '',
@@ -145,6 +165,51 @@ onMounted(async () => {
     console.error('获取个人信息失败:', e);
   }
 });
+
+const handleAvatarChange = async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  // 验证文件类型
+  if (!file.type.startsWith('image/')) {
+    ElMessage.error('请选择图片文件');
+    return;
+  }
+  
+  // 验证文件大小 (5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    ElMessage.error('图片大小不能超过 5MB');
+    return;
+  }
+  
+  uploadingAvatar.value = true;
+  try {
+    // 上传文件
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const uploadRes = await request.post('/api/upload/avatar', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    
+    if (uploadRes && uploadRes.url) {
+      // 更新用户头像
+      await request.put('/api/patients/profile', {
+        ...form.value,
+        avatarUrl: uploadRes.url
+      });
+      
+      userInfo.value.avatarUrl = uploadRes.url;
+      ElMessage.success('头像更新成功');
+    }
+  } catch (e) {
+    console.error('上传头像失败:', e);
+    ElMessage.error('上传头像失败，请稍后重试');
+  } finally {
+    uploadingAvatar.value = false;
+    event.target.value = ''; // 清空input
+  }
+};
 
 const resetForm = () => {
   form.value = { ...originalForm.value };
@@ -222,12 +287,58 @@ const handleSave = async () => {
   gap: 20px;
 }
 
+.avatar-wrapper {
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+
 .avatar {
   width: 80px;
   height: 80px;
   border-radius: 50%;
   object-fit: cover;
   border: 3px solid #FFD300;
+}
+
+.avatar-upload-btn {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  width: 28px;
+  height: 28px;
+  background: #FFD300;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #2a2a2a;
+  transition: all 0.2s;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+.avatar-upload-btn:hover {
+  background: #f4ca00;
+  transform: scale(1.1);
+}
+
+.avatar-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.avatar-hint {
+  font-size: 14px;
+  color: #2a2a2a;
+  font-weight: 500;
+}
+
+.avatar-size {
+  font-size: 12px;
+  color: #9ca3af;
 }
 
 .btn-change-avatar {

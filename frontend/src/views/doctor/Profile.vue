@@ -6,12 +6,19 @@
         <div class="avatar-section">
           <div class="avatar">
             <img :src="profile.avatarUrl || defaultAvatar" alt="头像" />
-            <button class="avatar-edit">
+            <label class="avatar-edit" for="doctor-avatar-input">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
                 <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"></path>
                 <circle cx="12" cy="13" r="4"></circle>
               </svg>
-            </button>
+            </label>
+            <input 
+              type="file" 
+              id="doctor-avatar-input" 
+              accept="image/*" 
+              @change="handleAvatarChange" 
+              style="display: none"
+            />
           </div>
           <div class="profile-title">
             <h2>{{ profile.name || '医生' }}</h2>
@@ -177,6 +184,7 @@ const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726
 
 const isEditing = ref(false);
 const saving = ref(false);
+const uploadingAvatar = ref(false);
 const profile = ref({});
 const formData = reactive({
   name: '',
@@ -258,6 +266,50 @@ const getTitleText = (title) => {
   };
   return map[title] || title || '医师';
 };
+
+const handleAvatarChange = async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  // 验证文件类型
+  if (!file.type.startsWith('image/')) {
+    ElMessage.error('请选择图片文件');
+    return;
+  }
+  
+  // 验证文件大小 (5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    ElMessage.error('图片大小不能超过 5MB');
+    return;
+  }
+  
+  uploadingAvatar.value = true;
+  try {
+    // 上传文件
+    const formDataObj = new FormData();
+    formDataObj.append('file', file);
+    
+    const uploadRes = await request.post('/api/upload/avatar', formDataObj, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    
+    if (uploadRes && uploadRes.url) {
+      // 更新医生头像
+      await request.put('/api/doctor/profile', {
+        avatarUrl: uploadRes.url
+      });
+      
+      profile.value.avatarUrl = uploadRes.url;
+      ElMessage.success('头像更新成功');
+    }
+  } catch (e) {
+    console.error('上传头像失败:', e);
+    ElMessage.error('上传头像失败，请稍后重试');
+  } finally {
+    uploadingAvatar.value = false;
+    event.target.value = ''; // 清空input
+  }
+};
 </script>
 
 <style scoped>
@@ -308,13 +360,20 @@ const getTitleText = (title) => {
   width: 32px;
   height: 32px;
   background: #FFD300;
-  border: none;
+  border: 2px solid #fff;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   color: #1a1a2e;
+  transition: all 0.2s;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.avatar-edit:hover {
+  background: #f4ca00;
+  transform: scale(1.1);
 }
 
 .profile-title h2 {

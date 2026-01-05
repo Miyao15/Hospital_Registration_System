@@ -112,8 +112,10 @@
                     </svg>
                     签到
                   </button>
-                  <button class="btn complete" @click="handleComplete(apt)">完成</button>
                   <button class="btn no-show" @click="handleNoShow(apt)">爽约</button>
+                </div>
+                <div class="actions" v-if="apt.status === 'CHECKED_IN'">
+                  <button class="btn complete" @click="handleComplete(apt)">完成</button>
                 </div>
               </div>
             </div>
@@ -159,8 +161,10 @@
                 <span class="appointment-no">{{ apt.appointmentNo }}</span>
                 <div class="actions" v-if="apt.status === 'PENDING'">
                   <button class="btn check-in" @click="handleCheckIn(apt)">签到</button>
-                  <button class="btn complete" @click="handleComplete(apt)">完成</button>
                   <button class="btn no-show" @click="handleNoShow(apt)">爽约</button>
+                </div>
+                <div class="actions" v-if="apt.status === 'CHECKED_IN'">
+                  <button class="btn complete" @click="handleComplete(apt)">完成</button>
                 </div>
               </div>
             </div>

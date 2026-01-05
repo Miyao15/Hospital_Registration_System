@@ -6,54 +6,13 @@
       :class="{ 'is-open': isOpen }"
       @click="toggleChat"
     >
-      <div v-if="!isOpen" class="avatar-3d">
-        <!-- 3D粉色动漫女孩头像 SVG -->
-        <svg viewBox="0 0 100 100" class="fairy-svg-3d">
-          <defs>
-            <linearGradient id="hairGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style="stop-color:#FFB6C1"/>
-              <stop offset="50%" style="stop-color:#FF69B4"/>
-              <stop offset="100%" style="stop-color:#FF1493"/>
-            </linearGradient>
-            <radialGradient id="faceGradient" cx="40%" cy="30%" r="60%">
-              <stop offset="0%" style="stop-color:#FFF5EE"/>
-              <stop offset="100%" style="stop-color:#FFE4E1"/>
-            </radialGradient>
-            <clipPath id="circleClip">
-              <circle cx="50" cy="50" r="48"/>
-            </clipPath>
-          </defs>
-          <g clip-path="url(#circleClip)">
-            <!-- 背景 -->
-            <circle cx="50" cy="50" r="50" fill="#FFF0F5"/>
-            <!-- 头发背景 -->
-            <ellipse cx="50" cy="58" rx="42" ry="45" fill="url(#hairGradient)"/>
-            <!-- 脸 -->
-            <ellipse cx="50" cy="52" rx="30" ry="32" fill="url(#faceGradient)"/>
-            <!-- 腮红 -->
-            <ellipse cx="30" cy="58" rx="7" ry="4" fill="#FFB6C1" opacity="0.5"/>
-            <ellipse cx="70" cy="58" rx="7" ry="4" fill="#FFB6C1" opacity="0.5"/>
-            <!-- 眼睛 -->
-            <ellipse cx="38" cy="50" rx="7" ry="8" fill="#fff"/>
-            <ellipse cx="62" cy="50" rx="7" ry="8" fill="#fff"/>
-            <circle cx="39" cy="51" r="5" fill="#6B4423"/>
-            <circle cx="63" cy="51" r="5" fill="#6B4423"/>
-            <circle cx="41" cy="49" r="2" fill="#fff"/>
-            <circle cx="65" cy="49" r="2" fill="#fff"/>
-            <!-- 眉毛 -->
-            <path d="M30 42 Q38 38 46 42" stroke="#A0522D" stroke-width="2" fill="none" stroke-linecap="round"/>
-            <path d="M54 42 Q62 38 70 42" stroke="#A0522D" stroke-width="2" fill="none" stroke-linecap="round"/>
-            <!-- 嘴巴 - 微笑 -->
-            <path d="M42 66 Q50 72 58 66" stroke="#FF69B4" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-            <!-- 刘海 -->
-            <path d="M12 40 Q25 15 50 18 Q75 15 88 40 Q80 32 68 35 Q58 22 50 28 Q42 22 32 35 Q20 32 12 40" fill="url(#hairGradient)"/>
-            <!-- 头发高光 -->
-            <path d="M28 28 Q38 18 48 24" stroke="rgba(255,255,255,0.5)" stroke-width="3" fill="none" stroke-linecap="round"/>
-            <!-- 蝴蝶结 -->
-            <ellipse cx="78" cy="28" rx="12" ry="8" fill="#FF1493"/>
-            <ellipse cx="78" cy="28" rx="8" ry="5" fill="#FF69B4"/>
-            <circle cx="78" cy="28" r="4" fill="#FFB6C1"/>
-          </g>
+      <div v-if="!isOpen" class="avatar-simple">
+        <!-- 简约AI图标 -->
+        <svg viewBox="0 0 100 100" class="ai-icon">
+          <circle cx="50" cy="50" r="45" fill="#2A2A2A"/>
+          <circle cx="35" cy="40" r="5" fill="white"/>
+          <circle cx="65" cy="40" r="5" fill="white"/>
+          <path d="M35 60 Q50 70 65 60" stroke="white" stroke-width="3" fill="none" stroke-linecap="round"/>
         </svg>
       </div>
       <!-- AI标识徽章 -->
@@ -68,30 +27,15 @@
       <div class="chat-window" v-if="isOpen">
         <div class="chat-header">
           <div class="header-avatar">
-            <svg viewBox="0 0 100 100" class="header-fairy-svg">
-              <defs>
-                <linearGradient id="hairGradient2" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" style="stop-color:#FFB6C1"/>
-                  <stop offset="100%" style="stop-color:#FF69B4"/>
-                </linearGradient>
-              </defs>
-              <circle cx="50" cy="50" r="48" fill="#FFF0F5"/>
-              <ellipse cx="50" cy="58" rx="40" ry="42" fill="url(#hairGradient2)"/>
-              <ellipse cx="50" cy="52" rx="28" ry="30" fill="#FFE4E1"/>
-              <ellipse cx="32" cy="58" rx="6" ry="4" fill="#FFB6C1" opacity="0.5"/>
-              <ellipse cx="68" cy="58" rx="6" ry="4" fill="#FFB6C1" opacity="0.5"/>
-              <ellipse cx="38" cy="50" rx="6" ry="7" fill="#fff"/>
-              <ellipse cx="62" cy="50" rx="6" ry="7" fill="#fff"/>
-              <circle cx="39" cy="51" r="4" fill="#6B4423"/>
-              <circle cx="63" cy="51" r="4" fill="#6B4423"/>
-              <circle cx="40" cy="49" r="1.5" fill="#fff"/>
-              <circle cx="64" cy="49" r="1.5" fill="#fff"/>
-              <path d="M42 66 Q50 71 58 66" stroke="#FF69B4" stroke-width="2" fill="none"/>
-              <path d="M15 40 Q28 18 50 20 Q72 18 85 40 Q78 33 65 36 Q55 24 50 30 Q45 24 35 36 Q22 33 15 40" fill="url(#hairGradient2)"/>
+            <svg viewBox="0 0 100 100" class="ai-icon-small">
+              <circle cx="50" cy="50" r="45" fill="#2A2A2A"/>
+              <circle cx="35" cy="40" r="5" fill="white"/>
+              <circle cx="65" cy="40" r="5" fill="white"/>
+              <path d="M35 60 Q50 70 65 60" stroke="white" stroke-width="3" fill="none" stroke-linecap="round"/>
             </svg>
           </div>
           <div class="header-info">
-            <span class="assistant-name">小樱 · AI助手</span>
+            <span class="assistant-name">AI助手</span>
             <span class="assistant-status">● 在线为您服务</span>
           </div>
         </div>
@@ -104,26 +48,11 @@
             :class="msg.type"
           >
             <div class="message-avatar" v-if="msg.type === 'bot'">
-              <svg viewBox="0 0 100 100" class="msg-fairy-svg">
-                <defs>
-                  <linearGradient id="hairGradient3" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" style="stop-color:#FFB6C1"/>
-                    <stop offset="100%" style="stop-color:#FF69B4"/>
-                  </linearGradient>
-                </defs>
-                <circle cx="50" cy="50" r="48" fill="#FFF0F5"/>
-                <ellipse cx="50" cy="58" rx="38" ry="40" fill="url(#hairGradient3)"/>
-                <ellipse cx="50" cy="52" rx="26" ry="28" fill="#FFE4E1"/>
-                <ellipse cx="34" cy="56" rx="5" ry="3" fill="#FFB6C1" opacity="0.5"/>
-                <ellipse cx="66" cy="56" rx="5" ry="3" fill="#FFB6C1" opacity="0.5"/>
-                <ellipse cx="40" cy="50" rx="5" ry="6" fill="#fff"/>
-                <ellipse cx="60" cy="50" rx="5" ry="6" fill="#fff"/>
-                <circle cx="41" cy="51" r="3" fill="#6B4423"/>
-                <circle cx="61" cy="51" r="3" fill="#6B4423"/>
-                <circle cx="42" cy="49" r="1" fill="#fff"/>
-                <circle cx="62" cy="49" r="1" fill="#fff"/>
-                <path d="M44 64 Q50 68 56 64" stroke="#FF69B4" stroke-width="2" fill="none"/>
-                <path d="M18 40 Q30 20 50 22 Q70 20 82 40 Q75 34 65 36 Q55 26 50 30 Q45 26 35 36 Q25 34 18 40" fill="url(#hairGradient3)"/>
+              <svg viewBox="0 0 100 100" class="ai-icon-msg">
+                <circle cx="50" cy="50" r="45" fill="#2A2A2A"/>
+                <circle cx="35" cy="40" r="5" fill="white"/>
+                <circle cx="65" cy="40" r="5" fill="white"/>
+                <path d="M35 60 Q50 70 65 60" stroke="white" stroke-width="3" fill="none" stroke-linecap="round"/>
               </svg>
             </div>
             <div class="message-content">
@@ -177,7 +106,7 @@ const messagesContainer = ref(null);
 const messages = ref([
   {
     type: 'bot',
-    text: '你好呀~ 我是小樱，您的专属医疗助手 💕\n有什么可以帮助您的吗？',
+    text: '你好！我是AI助手，有什么可以帮助您的吗？',
     time: getCurrentTime()
   }
 ]);
@@ -196,20 +125,6 @@ function getCurrentTime() {
 
 function toggleChat() {
   isOpen.value = !isOpen.value;
-}
-
-function handleImageError(e) {
-  // 图片加载失败时使用备用图片
-  e.target.src = 'data:image/svg+xml,' + encodeURIComponent(`
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-      <circle cx="50" cy="50" r="48" fill="#FFB6C1"/>
-      <circle cx="50" cy="40" r="20" fill="#FFE4E1"/>
-      <ellipse cx="50" cy="70" rx="18" ry="22" fill="#FFB6C1"/>
-      <circle cx="43" cy="38" r="3" fill="#333"/>
-      <circle cx="57" cy="38" r="3" fill="#333"/>
-      <path d="M45 48 Q50 52 55 48" stroke="#FF69B4" stroke-width="2" fill="none"/>
-    </svg>
-  `);
 }
 
 // 构建历史消息用于API调用
@@ -324,6 +239,14 @@ function getLocalReply(question) {
 
 
 <style scoped>
+/* ========== HarmonyOS Style Variables ========== */
+:root {
+  --harmony-gradient-start: #FFD300;
+  --harmony-gradient-end: #FF9800;
+  --harmony-text-gray: #9CA3AF;
+  --harmony-accent: #FFD300;
+}
+
 .ai-assistant-container {
   position: fixed;
   bottom: 30px;
@@ -332,199 +255,81 @@ function getLocalReply(question) {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-/* 悬浮按钮 - 3D立体效果 */
+/* 悬浮按钮 - HarmonyOS风格 */
 .ai-float-btn {
-  width: 75px;
-  height: 75px;
-  border-radius: 50%;
-  background: 
-    radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, 0.8) 0%, transparent 50%),
-    radial-gradient(ellipse at 70% 80%, rgba(200, 50, 100, 0.3) 0%, transparent 40%),
-    linear-gradient(160deg, #FFB6C1 0%, #FF69B4 40%, #FF1493 100%);
-  box-shadow: 
-    0 8px 32px rgba(255, 105, 180, 0.5),
-    0 4px 16px rgba(255, 20, 147, 0.3),
-    inset 0 2px 4px rgba(255, 255, 255, 0.6),
-    inset 0 -3px 6px rgba(200, 50, 100, 0.3);
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, var(--harmony-gradient-start), var(--harmony-gradient-end));
   cursor: pointer;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-  overflow: visible;
-  transform-style: preserve-3d;
-  perspective: 500px;
-}
-
-/* 3D光环效果 */
-.ai-float-btn::before {
-  content: '';
-  position: absolute;
-  width: 90px;
-  height: 90px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 182, 193, 0.4) 0%, transparent 70%);
-  animation: pulse3d 2s ease-in-out infinite;
-  z-index: -1;
+  box-shadow: 0 8px 30px rgba(255, 211, 0, 0.4);
+  border: none;
+  animation: subtlePulse 3s ease-in-out infinite;
 }
 
-/* 底部阴影层 - 增加立体感 */
-.ai-float-btn::after {
-  content: '';
-  position: absolute;
-  bottom: -8px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 60px;
-  height: 12px;
-  background: radial-gradient(ellipse, rgba(255, 105, 180, 0.4) 0%, transparent 70%);
-  border-radius: 50%;
-  filter: blur(4px);
-  z-index: -2;
-}
-
-@keyframes pulse3d {
-  0%, 100% { 
-    transform: scale(1);
-    opacity: 0.6;
-  }
-  50% { 
-    transform: scale(1.15);
-    opacity: 0.3;
-  }
+@keyframes subtlePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
 }
 
 .ai-float-btn:hover {
-  transform: scale(1.1) translateY(-4px) rotateX(10deg);
-  box-shadow: 
-    0 16px 48px rgba(255, 105, 180, 0.6),
-    0 8px 24px rgba(255, 20, 147, 0.4),
-    inset 0 2px 4px rgba(255, 255, 255, 0.8),
-    inset 0 -3px 6px rgba(200, 50, 100, 0.4);
-}
-
-.ai-float-btn:hover::after {
-  bottom: -14px;
-  width: 50px;
-  opacity: 0.6;
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: 0 12px 40px rgba(255, 211, 0, 0.6);
+  animation: none;
 }
 
 .ai-float-btn:active {
-  transform: scale(1.05) translateY(-2px);
-  box-shadow: 
-    0 6px 20px rgba(255, 105, 180, 0.5),
-    0 3px 10px rgba(255, 20, 147, 0.3),
-    inset 0 1px 2px rgba(255, 255, 255, 0.5),
-    inset 0 -2px 4px rgba(200, 50, 100, 0.4);
+  transform: translateY(-2px) scale(1.02);
 }
 
 .ai-float-btn.is-open {
-  background: 
-    radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, 0.7) 0%, transparent 50%),
-    radial-gradient(ellipse at 70% 80%, rgba(150, 0, 80, 0.3) 0%, transparent 40%),
-    linear-gradient(160deg, #FF69B4 0%, #FF1493 40%, #C71585 100%);
+  background: linear-gradient(135deg, var(--harmony-gradient-start), var(--harmony-gradient-end));
   animation: none;
 }
 
-.ai-float-btn.is-open::before {
-  animation: none;
-  opacity: 0;
-}
-
-.fairy-avatar {
-  width: 45px;
-  height: 45px;
-}
-
-/* 3D头像容器 */
-.avatar-3d {
-  width: 65px;
-  height: 65px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, #FFF5EE, #FFE4E1);
+/* 头像容器 */
+.avatar-simple {
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 
-    0 4px 12px rgba(0, 0, 0, 0.15),
-    inset 0 2px 4px rgba(255, 255, 255, 0.8),
-    inset 0 -2px 4px rgba(255, 105, 180, 0.2);
-  border: 2px solid rgba(255, 255, 255, 0.7);
-  overflow: visible;
 }
 
-.fairy-svg-3d {
-  width: 60px;
-  height: 60px;
-  filter: drop-shadow(0 2px 3px rgba(255, 105, 180, 0.3));
-  animation: float3d 3s ease-in-out infinite;
-}
-
-@keyframes float3d {
-  0%, 100% { 
-    transform: translateY(0) rotateY(0deg);
-  }
-  25% {
-    transform: translateY(-3px) rotateY(5deg);
-  }
-  50% { 
-    transform: translateY(-5px) rotateY(0deg);
-  }
-  75% {
-    transform: translateY(-3px) rotateY(-5deg);
-  }
-}
-
-.fairy-avatar-img {
-  width: 58px;
-  height: 58px;
-  border-radius: 50%;
-  object-fit: cover;
-  animation: float3d 3s ease-in-out infinite;
-  border: 2px solid rgba(255, 255, 255, 0.7);
-  box-shadow: 
-    0 4px 12px rgba(0, 0, 0, 0.15),
-    inset 0 -2px 4px rgba(0, 0, 0, 0.1);
-  filter: drop-shadow(0 2px 4px rgba(255, 105, 180, 0.3));
-}
-
-.fairy-svg {
+.ai-icon {
   width: 100%;
   height: 100%;
-  animation: float 3s ease-in-out infinite;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-3px); }
+.ai-icon circle:first-child {
+  fill: #2A2A2A;
 }
 
-.float-btn-text {
-  font-size: 11px;
-  color: #fff;
-  font-weight: 600;
-  margin-top: -5px;
+.ai-icon-small {
+  width: 40px;
+  height: 40px;
+}
+
+.ai-icon-msg {
+  width: 100%;
+  height: 100%;
 }
 
 .close-icon {
   font-size: 32px;
-  color: #fff;
+  color: #2A2A2A;
   font-weight: 300;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  animation: rotateIn 0.3s ease-out;
+  transition: transform 0.3s ease;
 }
 
-@keyframes rotateIn {
-  from {
-    transform: rotate(-90deg) scale(0.5);
-    opacity: 0;
-  }
-  to {
-    transform: rotate(0deg) scale(1);
-    opacity: 1;
-  }
+.ai-float-btn:hover .close-icon {
+  transform: rotate(90deg);
 }
 
 /* AI标识徽章 */
@@ -532,139 +337,102 @@ function getLocalReply(question) {
   position: absolute;
   bottom: -2px;
   right: -2px;
-  background: #fff;
-  color: #FF69B4;
-  font-size: 10px;
+  background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+  color: white;
+  font-size: 11px;
   font-weight: 700;
-  padding: 3px 6px;
-  border-radius: 8px;
-  box-shadow: 
-    0 2px 8px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  border: 2px solid #FF69B4;
+  padding: 4px 8px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+  border: 2px solid #FFF9E5;
   letter-spacing: 0.5px;
-  animation: badgePulse 2s ease-in-out infinite;
-  z-index: 10;
 }
 
-.ai-badge span {
-  display: block;
-  text-shadow: none;
-}
-
-@keyframes badgePulse {
-  0%, 100% {
-    transform: scale(1);
-    box-shadow: 
-      0 2px 8px rgba(0, 0, 0, 0.15),
-      inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  }
-  50% {
-    transform: scale(1.05);
-    box-shadow: 
-      0 4px 12px rgba(255, 105, 180, 0.3),
-      inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  }
-}
-
-/* 聊天窗口 - 3D立体效果 */
+/* 聊天窗口 - HarmonyOS风格 */
 .chat-window {
   position: absolute;
-  bottom: 90px;
+  bottom: 84px;
   right: 0;
-  width: 360px;
-  height: 500px;
-  background: linear-gradient(180deg, #ffffff 0%, #FFF9FC 100%);
+  width: 380px;
+  height: 520px;
+  background: linear-gradient(180deg, #FFF9E5 0%, #FFFDF5 50%, #FFF9E5 100%);
   border-radius: 24px;
-  box-shadow: 
-    0 20px 60px rgba(0, 0, 0, 0.15),
-    0 8px 24px rgba(255, 105, 180, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  box-shadow: 0 20px 60px rgba(255, 211, 0, 0.3);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid rgba(255, 182, 193, 0.3);
-  transform-origin: bottom right;
+  border: 1px solid rgba(255, 211, 0, 0.3);
+  backdrop-filter: blur(20px);
 }
 
 .chat-header {
-  background: 
-    linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 50%),
-    linear-gradient(135deg, #FFB6C1 0%, #FF69B4 60%, #FF1493 100%);
-  padding: 18px 20px;
+  background: rgba(255, 249, 229, 0.8);
+  backdrop-filter: blur(20px);
+  padding: 20px 24px;
   display: flex;
   align-items: center;
-  gap: 12px;
-  box-shadow: 
-    0 4px 12px rgba(255, 105, 180, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  gap: 14px;
+  border-bottom: 1px solid rgba(255, 211, 0, 0.2);
+  position: relative;
+}
+
+.chat-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--harmony-gradient-start), var(--harmony-gradient-end));
 }
 
 .header-avatar {
-  width: 48px;
-  height: 48px;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 50%;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  box-shadow: 
-    0 4px 12px rgba(0, 0, 0, 0.1),
-    inset 0 2px 4px rgba(255, 255, 255, 0.8);
-  border: 2px solid rgba(255, 255, 255, 0.5);
-}
-
-.header-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, var(--harmony-gradient-start), var(--harmony-gradient-end));
   border-radius: 50%;
-}
-
-.header-fairy-svg {
-  width: 42px;
-  height: 42px;
-}
-
-.mini-fairy {
-  width: 35px;
-  height: 35px;
+  box-shadow: 0 4px 12px rgba(255, 211, 0, 0.3);
 }
 
 .header-info {
   display: flex;
   flex-direction: column;
+  gap: 4px;
 }
 
 .assistant-name {
-  color: #fff;
-  font-weight: 600;
-  font-size: 16px;
+  color: #2A2A2A;
+  font-weight: 700;
+  font-size: 18px;
 }
 
 .assistant-status {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 12px;
+  color: #666;
+  font-size: 13px;
+  font-weight: 500;
 }
 
 /* 消息区域 */
 .chat-messages {
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
-  background: #FFF5F7;
+  padding: 20px 24px;
+  background: transparent;
 }
 
 .message {
   display: flex;
-  gap: 10px;
-  margin-bottom: 16px;
-  animation: fadeIn 0.3s ease;
+  gap: 12px;
+  margin-bottom: 20px;
+  animation: fadeInMessage 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
+@keyframes fadeInMessage {
+  from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
@@ -675,77 +443,59 @@ function getLocalReply(question) {
 .message-avatar {
   width: 36px;
   height: 36px;
-  background: linear-gradient(135deg, #FFF5EE 0%, #FFE4E1 100%);
-  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
   flex-shrink: 0;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(255, 105, 180, 0.2);
-}
-
-.message-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
   border-radius: 50%;
-}
-
-.msg-fairy-svg {
-  width: 32px;
-  height: 32px;
+  background: linear-gradient(135deg, var(--harmony-gradient-start), var(--harmony-gradient-end));
+  box-shadow: 0 4px 12px rgba(255, 211, 0, 0.3);
 }
 
 .message-content {
   max-width: 70%;
-  padding: 12px 16px;
-  border-radius: 18px;
+  padding: 14px 18px;
+  border-radius: 16px;
   position: relative;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .message.bot .message-content {
-  background: #fff;
-  border-bottom-left-radius: 4px;
-  box-shadow: 
-    0 4px 12px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(255, 182, 193, 0.2);
+  background: linear-gradient(135deg, rgba(255, 211, 0, 0.15), rgba(255, 152, 0, 0.1));
+  border: 1px solid rgba(255, 211, 0, 0.2);
+  color: #2A2A2A;
 }
 
 .message.user .message-content {
-  background: 
-    linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, transparent 50%),
-    linear-gradient(135deg, #FF69B4 0%, #FF1493 100%);
-  color: #fff;
-  border-bottom-right-radius: 4px;
-  box-shadow: 
-    0 4px 12px rgba(255, 105, 180, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  background: linear-gradient(135deg, var(--harmony-gradient-start), var(--harmony-gradient-end));
+  color: #2A2A2A;
+  border: 1px solid rgba(255, 211, 0, 0.3);
 }
 
 .message-content p {
   margin: 0;
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 15px;
+  line-height: 1.6;
   white-space: pre-line;
+  font-weight: 500;
 }
 
 .message-time {
-  font-size: 10px;
-  opacity: 0.6;
+  font-size: 11px;
+  opacity: 0.7;
   display: block;
-  margin-top: 4px;
+  margin-top: 6px;
+  font-weight: 500;
 }
 
 /* 打字指示器 */
 .typing-indicator {
   display: flex;
-  gap: 4px;
-  padding: 12px 16px;
-  background: #fff;
-  border-radius: 18px;
+  gap: 6px;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, rgba(255, 211, 0, 0.15), rgba(255, 152, 0, 0.1));
+  border: 1px solid rgba(255, 211, 0, 0.2);
+  border-radius: 16px;
   width: fit-content;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
@@ -753,108 +503,126 @@ function getLocalReply(question) {
 .typing-indicator span {
   width: 8px;
   height: 8px;
-  background: #FF69B4;
+  background: var(--harmony-gradient-start);
   border-radius: 50%;
-  animation: typing 1.4s infinite;
+  animation: typingBounce 1.4s infinite;
 }
 
 .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
 .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
 
-@keyframes typing {
-  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+@keyframes typingBounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
   30% { transform: translateY(-8px); opacity: 1; }
 }
 
 /* 快捷问题 */
 .quick-questions {
-  padding: 12px 16px;
+  padding: 16px 20px;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  background: #fff;
-  border-top: 1px solid #FFE4E9;
+  gap: 10px;
+  background: rgba(255, 249, 229, 0.6);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(255, 211, 0, 0.2);
 }
 
 .quick-btn {
-  padding: 8px 14px;
-  background: linear-gradient(180deg, #FFF5F7 0%, #FFE8ED 100%);
-  border: 1px solid #FFB6C1;
-  border-radius: 18px;
-  font-size: 12px;
-  color: #FF69B4;
+  padding: 10px 18px;
+  background: rgba(255, 249, 229, 0.8);
+  border: 1px solid rgba(255, 211, 0, 0.3);
+  border-radius: 20px;
+  font-size: 13px;
+  color: #2A2A2A;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  box-shadow: 
-    0 2px 6px rgba(255, 182, 193, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 6px rgba(255, 211, 0, 0.1);
 }
 
 .quick-btn:hover {
-  background: linear-gradient(135deg, #FF69B4 0%, #FF1493 100%);
-  color: #fff;
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 
-    0 4px 12px rgba(255, 105, 180, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  background: linear-gradient(135deg, var(--harmony-gradient-start), var(--harmony-gradient-end));
   border-color: transparent;
+  color: #2A2A2A;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 211, 0, 0.3);
 }
 
 .quick-btn:active {
-  transform: translateY(0) scale(1);
+  transform: translateY(0);
 }
 
 /* 输入区域 */
 .chat-input {
-  padding: 12px 16px;
+  padding: 16px 20px;
   display: flex;
-  gap: 10px;
-  background: #fff;
-  border-top: 1px solid #FFE4E9;
+  gap: 12px;
+  background: rgba(255, 249, 229, 0.8);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(255, 211, 0, 0.2);
 }
 
 .chat-input input {
   flex: 1;
-  padding: 10px 16px;
-  border: 1px solid #FFB6C1;
-  border-radius: 20px;
+  padding: 14px 20px;
+  border: 1px solid rgba(255, 211, 0, 0.3);
+  border-radius: 28px;
   outline: none;
-  font-size: 14px;
-  transition: all 0.2s;
+  font-size: 15px;
+  font-weight: 500;
+  background: rgba(255, 249, 229, 0.6);
+  color: #2A2A2A;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.chat-input input::placeholder {
+  color: rgba(156, 163, 175, 0.6);
 }
 
 .chat-input input:focus {
-  border-color: #FF69B4;
-  box-shadow: 0 0 0 3px rgba(255, 105, 180, 0.1);
+  border-color: var(--harmony-gradient-start);
+  background: rgba(255, 249, 229, 0.9);
+  box-shadow: 0 0 0 4px rgba(255, 211, 0, 0.1);
 }
 
 .chat-input button {
-  width: 42px;
-  height: 42px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-  background: 
-    radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, 0.3) 0%, transparent 50%),
-    linear-gradient(135deg, #FF69B4 0%, #FF1493 100%);
+  background: linear-gradient(135deg, var(--harmony-gradient-start), var(--harmony-gradient-end));
   border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  box-shadow: 
-    0 4px 12px rgba(255, 105, 180, 0.4),
-    inset 0 1px 2px rgba(255, 255, 255, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 15px rgba(255, 211, 0, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.chat-input button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.6s ease;
+}
+
+.chat-input button:hover:not(:disabled)::before {
+  left: 100%;
 }
 
 .chat-input button:hover:not(:disabled) {
-  transform: scale(1.1) translateY(-2px);
-  box-shadow: 
-    0 6px 16px rgba(255, 105, 180, 0.5),
-    inset 0 1px 2px rgba(255, 255, 255, 0.4);
+  transform: scale(1.08) rotate(5deg);
+  box-shadow: 0 6px 20px rgba(255, 211, 0, 0.6);
 }
 
 .chat-input button:active:not(:disabled) {
-  transform: scale(1.05);
+  transform: scale(1.02);
 }
 
 .chat-input button:disabled {
@@ -863,24 +631,26 @@ function getLocalReply(question) {
 }
 
 .chat-input button svg {
-  width: 18px;
-  height: 18px;
-  color: #fff;
+  width: 20px;
+  height: 20px;
+  color: #2A2A2A;
+  position: relative;
+  z-index: 1;
 }
 
-/* 动画 - 3D弹出效果 */
+/* 动画 */
 .chat-slide-enter-active,
 .chat-slide-leave-active {
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .chat-slide-enter-from,
 .chat-slide-leave-to {
   opacity: 0;
-  transform: translateY(30px) scale(0.85) rotateX(10deg);
+  transform: translateY(24px) scale(0.95);
 }
 
-/* 滚动条美化 */
+/* 滚动条美化 - HarmonyOS风格 */
 .chat-messages::-webkit-scrollbar {
   width: 6px;
 }
@@ -890,7 +660,46 @@ function getLocalReply(question) {
 }
 
 .chat-messages::-webkit-scrollbar-thumb {
-  background: #FFB6C1;
+  background: rgba(255, 211, 0, 0.3);
   border-radius: 3px;
+  transition: background 0.3s ease;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 211, 0, 0.5);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .chat-window {
+    width: calc(100vw - 40px);
+    max-width: 380px;
+  }
+}
+
+@media (max-width: 480px) {
+  .ai-assistant-container {
+    bottom: 20px;
+    right: 20px;
+  }
+  
+  .ai-float-btn {
+    width: 56px;
+    height: 56px;
+  }
+  
+  .chat-window {
+    bottom: 76px;
+    width: calc(100vw - 40px);
+    height: 480px;
+  }
+  
+  .chat-messages {
+    padding: 16px 20px;
+  }
+  
+  .message-content {
+    max-width: 80%;
+  }
 }
 </style>

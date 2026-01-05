@@ -185,10 +185,14 @@ public class ScheduleService {
                         dto.setHasMorning(true);
                         dto.setMorningTime(slot.getStartTime().format(timeFormatter) + " - " + slot.getEndTime().format(timeFormatter));
                         dto.setMorningSlots(slot.getRemainingSlots());
+                        dto.setMorningTotalSlots(slot.getTotalSlots());
+                        dto.setMorningBooked(slot.getTotalSlots() - slot.getRemainingSlots());
                     } else if (slot.getPeriod() == TimePeriod.AFTERNOON) {
                         dto.setHasAfternoon(true);
                         dto.setAfternoonTime(slot.getStartTime().format(timeFormatter) + " - " + slot.getEndTime().format(timeFormatter));
                         dto.setAfternoonSlots(slot.getRemainingSlots());
+                        dto.setAfternoonTotalSlots(slot.getTotalSlots());
+                        dto.setAfternoonBooked(slot.getTotalSlots() - slot.getRemainingSlots());
                     }
                 }
                 

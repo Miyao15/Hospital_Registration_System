@@ -16,5 +16,6 @@ public class PatientProfileDTO {
     private String allergyHistory;
     private String emergencyContact;
     private String emergencyPhone;
+    private String avatarUrl;
 }
 

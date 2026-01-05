@@ -15,5 +15,6 @@ public class UpdatePatientProfileDTO {
     private String allergyHistory;
     private String emergencyContact;
     private String emergencyPhone;
+    private String avatarUrl;
 }
 

@@ -11,8 +11,12 @@ public class DoctorScheduleDTO {
     private Boolean hasAfternoon;
     private String morningTime;
     private String afternoonTime;
-    private Integer morningSlots;
-    private Integer afternoonSlots;
-    private Integer appointmentCount;
+    private Integer morningSlots;      // 上午剩余号源
+    private Integer afternoonSlots;    // 下午剩余号源
+    private Integer morningTotalSlots; // 上午总号源
+    private Integer afternoonTotalSlots; // 下午总号源
+    private Integer morningBooked;     // 上午已预约数
+    private Integer afternoonBooked;   // 下午已预约数
+    private Integer appointmentCount;  // 当天总预约数
 }
 
