@@ -19,7 +19,7 @@ public class CreateAppointmentDTO {
     @NotBlank(message = "就诊人姓名不能为空")
     private String patientName;
     
-    @NotBlank(message = "就诊人电话不能为空")
+    // 电话号码改为选填
     private String patientPhone;
     
     private String symptomDesc;
