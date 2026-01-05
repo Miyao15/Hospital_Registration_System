@@ -7,13 +7,8 @@
       @click="toggleChat"
     >
       <div v-if="!isOpen" class="avatar-simple">
-        <!-- 简约AI图标 -->
-        <svg viewBox="0 0 100 100" class="ai-icon">
-          <circle cx="50" cy="50" r="45" fill="#2A2A2A"/>
-          <circle cx="35" cy="40" r="5" fill="white"/>
-          <circle cx="65" cy="40" r="5" fill="white"/>
-          <path d="M35 60 Q50 70 65 60" stroke="white" stroke-width="3" fill="none" stroke-linecap="round"/>
-        </svg>
+        <!-- AI头像图片 -->
+        <img src="/ai-avatar.jpg" alt="AI助手" class="ai-avatar-img" />
       </div>
       <!-- AI标识徽章 -->
       <div class="ai-badge" v-if="!isOpen">
@@ -27,12 +22,7 @@
       <div class="chat-window" v-if="isOpen">
         <div class="chat-header">
           <div class="header-avatar">
-            <svg viewBox="0 0 100 100" class="ai-icon-small">
-              <circle cx="50" cy="50" r="45" fill="#2A2A2A"/>
-              <circle cx="35" cy="40" r="5" fill="white"/>
-              <circle cx="65" cy="40" r="5" fill="white"/>
-              <path d="M35 60 Q50 70 65 60" stroke="white" stroke-width="3" fill="none" stroke-linecap="round"/>
-            </svg>
+            <img src="/ai-avatar.jpg" alt="AI助手" class="ai-avatar-img" />
           </div>
           <div class="header-info">
             <span class="assistant-name">AI助手</span>
@@ -48,12 +38,7 @@
             :class="msg.type"
           >
             <div class="message-avatar" v-if="msg.type === 'bot'">
-              <svg viewBox="0 0 100 100" class="ai-icon-msg">
-                <circle cx="50" cy="50" r="45" fill="#2A2A2A"/>
-                <circle cx="35" cy="40" r="5" fill="white"/>
-                <circle cx="65" cy="40" r="5" fill="white"/>
-                <path d="M35 60 Q50 70 65 60" stroke="white" stroke-width="3" fill="none" stroke-linecap="round"/>
-              </svg>
+              <img src="/ai-avatar.jpg" alt="AI助手" class="ai-avatar-img" />
             </div>
             <div class="message-content">
               <p>{{ msg.text }}</p>
@@ -299,6 +284,15 @@ function getLocalReply(question) {
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+  border-radius: 50%;
+}
+
+.ai-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
 }
 
 .ai-icon {
