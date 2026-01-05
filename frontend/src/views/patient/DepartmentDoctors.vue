@@ -323,7 +323,8 @@ const hasSlots = (doctor, dateStr) => {
 
 const getSlotCount = (doctor, dateStr) => {
   const slots = doctor.availabilityMap?.[dateStr] || [];
-  return slots.length;
+  // 计算剩余号源总数，而不是时间段数量
+  return slots.reduce((total, slot) => total + (slot.remainingSlots || 0), 0);
 };
 
 const filterByDepartment = (deptId) => {
