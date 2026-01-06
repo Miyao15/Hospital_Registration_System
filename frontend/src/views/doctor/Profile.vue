@@ -213,7 +213,22 @@ const fetchProfile = async () => {
     Object.keys(formData).forEach(key => {
       formData[key] = data?.[key] || '';
     });
-    formData.phone = userStore.userInfo?.phone || '';
+    // 优先使用API返回的phone，如果没有则从userStore获取
+    formData.phone = data?.phone || userStore.userInfo?.phone || '';
+    
+    // 使用titleCode（枚举值）用于表单编辑，如果没有则使用title
+    if (data?.titleCode) {
+      formData.title = data.titleCode;
+    } else if (data?.title && !['RESIDENT', 'ATTENDING', 'ASSOCIATE_CHIEF', 'DEPUTY_CHIEF_PHYSICIAN', 'CHIEF'].includes(data.title)) {
+      // 如果title是显示名称，需要找到对应的枚举值
+      const titleMap = {
+        '住院医师': 'RESIDENT',
+        '主治医师': 'ATTENDING',
+        '副主任医师': 'ASSOCIATE_CHIEF',
+        '主任医师': 'CHIEF'
+      };
+      formData.title = titleMap[data.title] || data.title;
+    }
     
     originalData.value = { ...formData };
   } catch (e) {

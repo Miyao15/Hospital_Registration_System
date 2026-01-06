@@ -104,7 +104,18 @@
                 </div>
                 <div class="patient-info">
                   <span class="patient-name">{{ apt.patientName }}</span>
-                  <span class="patient-phone">{{ maskPhone(apt.patientPhone) }}</span>
+                  <div class="patient-contact">
+                    <span class="patient-phone">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                        <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"></path>
+                      </svg>
+                      {{ apt.patientPhone || '未提供' }}
+                    </span>
+                    <span v-if="apt.patientGender || apt.patientAge" class="patient-meta">
+                      {{ apt.patientGender === 'MALE' ? '男' : apt.patientGender === 'FEMALE' ? '女' : '' }}
+                      <span v-if="apt.patientAge"> {{ apt.patientAge }}岁</span>
+                    </span>
+                  </div>
                 </div>
                 <div class="status-badge" :class="apt.status?.toLowerCase()">
                   {{ getStatusText(apt.status) }}
@@ -116,8 +127,8 @@
                   <span class="info-value time-value">{{ apt.timeRange }}</span>
                 </div>
                 <div class="info-row" v-if="apt.symptomDesc">
-                  <span class="info-label">主诉：</span>
-                  <span class="info-value">{{ apt.symptomDesc }}</span>
+                  <span class="info-label">病情描述：</span>
+                  <span class="info-value symptom-desc">{{ apt.symptomDesc }}</span>
                 </div>
                 <div class="info-row" v-if="apt.medicalItemName">
                   <span class="info-label">检查项目：</span>
@@ -169,7 +180,18 @@
                 </div>
                 <div class="patient-info">
                   <span class="patient-name">{{ apt.patientName }}</span>
-                  <span class="patient-phone">{{ maskPhone(apt.patientPhone) }}</span>
+                  <div class="patient-contact">
+                    <span class="patient-phone">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                        <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"></path>
+                      </svg>
+                      {{ apt.patientPhone || '未提供' }}
+                    </span>
+                    <span v-if="apt.patientGender || apt.patientAge" class="patient-meta">
+                      {{ apt.patientGender === 'MALE' ? '男' : apt.patientGender === 'FEMALE' ? '女' : '' }}
+                      <span v-if="apt.patientAge"> {{ apt.patientAge }}岁</span>
+                    </span>
+                  </div>
                 </div>
                 <div class="status-badge" :class="apt.status?.toLowerCase()">
                   {{ getStatusText(apt.status) }}
@@ -181,8 +203,8 @@
                   <span class="info-value time-value">{{ apt.timeRange }}</span>
                 </div>
                 <div class="info-row" v-if="apt.symptomDesc">
-                  <span class="info-label">主诉：</span>
-                  <span class="info-value">{{ apt.symptomDesc }}</span>
+                  <span class="info-label">病情描述：</span>
+                  <span class="info-value symptom-desc">{{ apt.symptomDesc }}</span>
                 </div>
                 <div class="info-row" v-if="apt.medicalItemName">
                   <span class="info-label">检查项目：</span>
@@ -336,9 +358,10 @@ const getStatusText = (status) => {
   return map[status] || status;
 };
 
+// 医生端不需要脱敏电话号码，直接显示完整号码
 const maskPhone = (phone) => {
-  if (!phone) return '';
-  return phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
+  if (!phone) return '未提供';
+  return phone;
 };
 
 const handleCheckIn = async (apt) => {
@@ -623,6 +646,7 @@ const handleNoShow = async (apt) => {
   flex: 1;
   display: flex;
   flex-direction: column;
+  gap: 4px;
 }
 
 .patient-name {
@@ -631,9 +655,32 @@ const handleNoShow = async (apt) => {
   color: #1a1a2e;
 }
 
+.patient-contact {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .patient-phone {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   font-size: 13px;
+  color: #3b82f6;
+  font-weight: 500;
+}
+
+.patient-phone svg {
+  flex-shrink: 0;
+}
+
+.patient-meta {
+  font-size: 12px;
   color: #64748b;
+  padding: 2px 8px;
+  background: #f1f5f9;
+  border-radius: 4px;
 }
 
 .status-badge {
@@ -697,6 +744,16 @@ const handleNoShow = async (apt) => {
 .info-value.time-value {
   font-weight: 600;
   color: #3b82f6;
+}
+
+.info-value.symptom-desc {
+  color: #1a1a2e;
+  line-height: 1.6;
+  word-break: break-word;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border-radius: 6px;
+  border-left: 3px solid #3b82f6;
 }
 
 .item-price {
