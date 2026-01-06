@@ -21,6 +21,7 @@ public class StatisticsService {
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
     private final DepartmentRepository departmentRepository;
+    private final DoctorReviewRepository doctorReviewRepository;
     private final EntityManager entityManager;
     
     public StatisticsDTO getDashboardStatistics() {
@@ -151,5 +152,48 @@ public class StatisticsService {
         result.put("dates", dates);
         result.put("counts", counts);
         return result;
+    }
+    
+    /**
+     * 获取首页公开统计数据（无需登录）
+     */
+    public Map<String, Object> getPublicStatistics() {
+        Map<String, Object> stats = new HashMap<>();
+        
+        // 总医生数
+        long totalDoctors = doctorRepository.count();
+        stats.put("totalDoctors", totalDoctors);
+        
+        // 总患者数
+        long totalPatients = patientRepository.count();
+        stats.put("totalPatients", totalPatients);
+        
+        // 计算满意度（基于所有评价的平均评分，转换为百分比）
+        String sql = "SELECT AVG(r.rating) FROM DoctorReview r";
+        Query query = entityManager.createQuery(sql);
+        Object result = query.getSingleResult();
+        Double avgRating = null;
+        if (result != null) {
+            avgRating = ((Number) result).doubleValue();
+        }
+        
+        // 将平均评分（1-5分）转换为满意度百分比（0-100%）
+        // 如果平均分是4.9，满意度约为98%
+        double satisfactionRate = 0.0;
+        if (avgRating != null) {
+            // 将1-5分制转换为0-100%：((avgRating - 1) / 4) * 100
+            satisfactionRate = ((avgRating - 1.0) / 4.0) * 100.0;
+            // 确保在合理范围内
+            satisfactionRate = Math.max(0, Math.min(100, satisfactionRate));
+        } else {
+            // 如果没有评价数据，使用默认值98%
+            satisfactionRate = 98.0;
+        }
+        stats.put("satisfactionRate", Math.round(satisfactionRate));
+        
+        // 24小时在线服务（固定值）
+        stats.put("onlineServiceHours", 24);
+        
+        return stats;
     }
 }

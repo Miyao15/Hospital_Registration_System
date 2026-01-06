@@ -5,6 +5,7 @@ import com.hospital.registration.dto.DepartmentListDTO;
 import com.hospital.registration.dto.DoctorSimpleDTO;
 import com.hospital.registration.entity.Department;
 import com.hospital.registration.entity.Doctor;
+import com.hospital.registration.enums.UserStatus;
 import com.hospital.registration.exception.BusinessException;
 import com.hospital.registration.repository.DepartmentRepository;
 import com.hospital.registration.repository.DoctorRepository;
@@ -65,8 +66,8 @@ public class DepartmentService {
         dto.setLocation(department.getLocation());
         dto.setPhone(department.getPhone());
         
-        // 获取科室医生数量
-        int doctorCount = doctorRepository.countByDepartmentId(department.getId());
+        // 获取科室医生数量，只统计ACTIVE状态的医生
+        int doctorCount = doctorRepository.countByDepartmentIdAndUserStatus(department.getId(), UserStatus.ACTIVE.name());
         dto.setDoctorCount(doctorCount);
         
         // 获取科室主任信息

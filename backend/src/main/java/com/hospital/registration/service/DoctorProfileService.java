@@ -7,11 +7,13 @@ import com.hospital.registration.entity.User;
 import com.hospital.registration.enums.DoctorTitle;
 import com.hospital.registration.enums.UserStatus;
 import com.hospital.registration.exception.BusinessException;
+import com.hospital.registration.entity.MedicalItem;
 import com.hospital.registration.repository.DepartmentRepository;
 import com.hospital.registration.repository.DoctorRepository;
 import com.hospital.registration.repository.DoctorReviewRepository;
 import com.hospital.registration.repository.ExaminationItemDepartmentRepository;
 import com.hospital.registration.repository.HospitalRepository;
+import com.hospital.registration.repository.MedicalItemRepository;
 import com.hospital.registration.repository.UserRepository;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
@@ -37,12 +39,14 @@ public class DoctorProfileService {
     private final UserRepository userRepository;
     private final ExaminationItemDepartmentRepository examinationItemDepartmentRepository;
     private final HospitalRepository hospitalRepository;
+    private final MedicalItemRepository medicalItemRepository;
     
     public List<DoctorListDTO> getDoctorsByDepartment(String departmentId) {
         try {
-            log.info("Fetching doctors by department ID: {}", departmentId);
-            List<Doctor> doctors = doctorRepository.findByDepartmentId(departmentId);
-            log.info("Found {} doctors in department", doctors.size());
+            log.info("Fetching active doctors by department ID: {}", departmentId);
+            // 只返回status为ACTIVE的医生
+            List<Doctor> doctors = doctorRepository.findByDepartmentIdAndUserStatus(departmentId, UserStatus.ACTIVE.name());
+            log.info("Found {} active doctors in department", doctors.size());
             return doctors.stream()
                     .map(this::safeConvertToListDTO)
                     .collect(Collectors.toList());
@@ -55,12 +59,29 @@ public class DoctorProfileService {
     public Page<DoctorListDTO> getAllDoctors(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         try {
-            log.info("Fetching all doctors with page: {} and size: {}", page, size);
-            Page<Doctor> doctors = doctorRepository.findAll(pageable);
-            log.info("Found {} doctors", doctors.getTotalElements());
+            log.info("Fetching all active doctors with page: {} and size: {}", page, size);
+            // 只返回status为ACTIVE的医生
+            Page<Doctor> doctors = doctorRepository.findAllByUserStatus(UserStatus.ACTIVE.name(), pageable);
+            log.info("Found {} active doctors", doctors.getTotalElements());
             return doctors.map(this::safeConvertToListDTO);
         } catch (Exception e) {
             log.error("Error fetching all doctors with page: {} and size: {}, error: {}", page, size, e.getMessage(), e);
+            // 返回空页而不是抛出异常
+            return Page.empty(pageable);
+        }
+    }
+    
+    // 管理员专用：获取所有状态的医生（包括PENDING、ACTIVE、LOCKED等）
+    public Page<DoctorListDTO> getAllDoctorsForAdmin(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        try {
+            log.info("Admin fetching all doctors (all statuses) with page: {} and size: {}", page, size);
+            // 返回所有状态的医生
+            Page<Doctor> doctors = doctorRepository.findAll(pageable);
+            log.info("Found {} doctors (all statuses)", doctors.getTotalElements());
+            return doctors.map(this::safeConvertToListDTO);
+        } catch (Exception e) {
+            log.error("Error fetching all doctors for admin with page: {} and size: {}, error: {}", page, size, e.getMessage(), e);
             // 返回空页而不是抛出异常
             return Page.empty(pageable);
         }
@@ -108,6 +129,14 @@ public class DoctorProfileService {
     public DoctorDetailDTO getDoctorById(String id) {
         Doctor doctor = doctorRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("医生不存在"));
+        
+        // 检查医生的用户状态，只有ACTIVE状态的医生才能被查看
+        User user = userRepository.findById(doctor.getUserId())
+                .orElseThrow(() -> new BusinessException("医生用户信息不存在"));
+        if (user.getStatus() != UserStatus.ACTIVE) {
+            throw new BusinessException("医生不存在");
+        }
+        
         try {
             return convertToDetailDTO(doctor);
         } catch (Exception e) {
@@ -178,16 +207,40 @@ public class DoctorProfileService {
             
             Page<Doctor> doctors;
             
-            // 如果提供了检查项目ID，先查询关联的科室ID列表
+            // 如果提供了检查项目ID，先查询检查项目信息
             if (searchDTO.getMedicalItemId() != null && !searchDTO.getMedicalItemId().isEmpty()) {
-                List<String> departmentIds = examinationItemDepartmentRepository
-                        .findDepartmentIdsByExaminationItemId(searchDTO.getMedicalItemId());
-                log.info("Found {} departments for medical item {}", departmentIds.size(), searchDTO.getMedicalItemId());
-                
-                if (departmentIds.isEmpty()) {
-                    // 如果没有关联的科室，返回空结果
-                    return Page.empty(pageable);
+                // 查询检查项目信息，判断是否是"健康体检"
+                MedicalItem medicalItem = medicalItemRepository.findById(searchDTO.getMedicalItemId()).orElse(null);
+                boolean isHealthCheckup = false;
+                if (medicalItem != null) {
+                    // 判断是否是"健康体检"（通过名称或ID判断）
+                    isHealthCheckup = "健康体检".equals(medicalItem.getName()) || "item-001".equals(medicalItem.getId());
                 }
+                
+                // 如果是"健康体检"，直接返回所有已审核的医生（所有科室都可以进行体检）
+                if (isHealthCheckup) {
+                    log.info("Health checkup item detected, returning all active doctors");
+                    Page<Doctor> allActiveDoctors = doctorRepository.findAllByUserStatus(UserStatus.ACTIVE.name(), pageable);
+                    // 应用医院筛选
+                    if (allowedHospitalIds != null) {
+                        final List<String> finalIds = allowedHospitalIds;
+                        List<Doctor> filteredDoctors = allActiveDoctors.getContent().stream()
+                                .filter(doc -> doc.getHospitalId() != null && finalIds.contains(doc.getHospitalId()))
+                                .collect(Collectors.toList());
+                        doctors = new org.springframework.data.domain.PageImpl<>(filteredDoctors, pageable, filteredDoctors.size());
+                    } else {
+                        doctors = allActiveDoctors;
+                    }
+                } else {
+                    // 其他检查项目，通过科室关联查询
+                    List<String> departmentIds = examinationItemDepartmentRepository
+                            .findDepartmentIdsByExaminationItemId(searchDTO.getMedicalItemId());
+                    log.info("Found {} departments for medical item {}", departmentIds.size(), searchDTO.getMedicalItemId());
+                    
+                    if (departmentIds.isEmpty()) {
+                        // 如果没有关联的科室，返回空结果
+                        return Page.empty(pageable);
+                    }
                 
                 // 如果同时指定了departmentId，则取交集
                 if (searchDTO.getDepartmentId() != null && !searchDTO.getDepartmentId().isEmpty()) {
@@ -195,8 +248,8 @@ public class DoctorProfileService {
                         // 指定的科室不在关联列表中，返回空结果
                         return Page.empty(pageable);
                     }
-                    // 使用指定的科室ID
-                    List<Doctor> deptDoctors = doctorRepository.findByDepartmentId(searchDTO.getDepartmentId());
+                    // 使用指定的科室ID，只返回ACTIVE状态的医生
+                    List<Doctor> deptDoctors = doctorRepository.findByDepartmentIdAndUserStatus(searchDTO.getDepartmentId(), UserStatus.ACTIVE.name());
                     // 应用医院筛选
                     if (allowedHospitalIds != null) {
                         final List<String> finalIds = allowedHospitalIds;
@@ -209,10 +262,10 @@ public class DoctorProfileService {
                     List<Doctor> pageContent = start < deptDoctors.size() ? deptDoctors.subList(start, end) : new ArrayList<>();
                     doctors = new org.springframework.data.domain.PageImpl<>(pageContent, pageable, deptDoctors.size());
                 } else {
-                    // 查询所有关联科室的医生
+                    // 查询所有关联科室的医生，只返回ACTIVE状态的医生
                     List<Doctor> allDeptDoctors = new ArrayList<>();
                     for (String deptId : departmentIds) {
-                        allDeptDoctors.addAll(doctorRepository.findByDepartmentId(deptId));
+                        allDeptDoctors.addAll(doctorRepository.findByDepartmentIdAndUserStatus(deptId, UserStatus.ACTIVE.name()));
                     }
                     // 应用医院筛选
                     if (allowedHospitalIds != null) {
@@ -228,9 +281,10 @@ public class DoctorProfileService {
                     List<Doctor> pageContent = start < allDeptDoctors.size() ? allDeptDoctors.subList(start, end) : new ArrayList<>();
                     doctors = new org.springframework.data.domain.PageImpl<>(pageContent, pageable, allDeptDoctors.size());
                 }
+                }
             } else if (searchDTO.getDepartmentId() != null && !searchDTO.getDepartmentId().isEmpty()) {
-                // 按科室查询
-                List<Doctor> deptDoctors = doctorRepository.findByDepartmentId(searchDTO.getDepartmentId());
+                // 按科室查询，只返回ACTIVE状态的医生
+                List<Doctor> deptDoctors = doctorRepository.findByDepartmentIdAndUserStatus(searchDTO.getDepartmentId(), UserStatus.ACTIVE.name());
                 // 应用医院筛选
                 if (allowedHospitalIds != null) {
                     final List<String> finalIds = allowedHospitalIds;
@@ -245,8 +299,8 @@ public class DoctorProfileService {
                 List<Doctor> pageContent = start < deptDoctors.size() ? deptDoctors.subList(start, end) : new ArrayList<>();
                 doctors = new org.springframework.data.domain.PageImpl<>(pageContent, pageable, deptDoctors.size());
             } else if (searchDTO.getKeyword() != null && !searchDTO.getKeyword().isEmpty()) {
-                // 按关键字查询
-                Page<Doctor> keywordDoctors = doctorRepository.findByNameContaining(searchDTO.getKeyword(), pageable);
+                // 按关键字查询，只返回ACTIVE状态的医生
+                Page<Doctor> keywordDoctors = doctorRepository.findByNameContainingAndUserStatus(searchDTO.getKeyword(), UserStatus.ACTIVE.name(), pageable);
                 // 应用医院筛选
                 if (allowedHospitalIds != null) {
                     final List<String> finalIds = allowedHospitalIds;
@@ -258,8 +312,8 @@ public class DoctorProfileService {
                     doctors = keywordDoctors;
                 }
             } else {
-                // 返回所有医生
-                Page<Doctor> allDoctorsPage = doctorRepository.findAll(pageable);
+                // 返回所有医生，只返回ACTIVE状态的医生
+                Page<Doctor> allDoctorsPage = doctorRepository.findAllByUserStatus(UserStatus.ACTIVE.name(), pageable);
                 // 应用医院筛选
                 if (allowedHospitalIds != null) {
                     final List<String> finalIds = allowedHospitalIds;
@@ -287,10 +341,10 @@ public class DoctorProfileService {
     
     public List<DoctorListDTO> getTopDoctors(Integer limit) {
         try {
-            log.info("Fetching top doctors with limit: {}", limit);
-            // 获取所有医生并转换为DTO
-            List<Doctor> allDoctors = doctorRepository.findAll();
-            log.info("Found {} doctors in database", allDoctors.size());
+            log.info("Fetching top active doctors with limit: {}", limit);
+            // 获取所有ACTIVE状态的医生并转换为DTO
+            List<Doctor> allDoctors = doctorRepository.findAllByUserStatusList(UserStatus.ACTIVE.name());
+            log.info("Found {} active doctors in database", allDoctors.size());
             
             if (allDoctors.isEmpty()) {
                 log.warn("No doctors found in database!");
@@ -367,7 +421,8 @@ public class DoctorProfileService {
 
     public List<DoctorListDTO> getDoctorsBySpecialty(String specialty) {
         try {
-            return doctorRepository.findAll().stream()
+            // 只返回ACTIVE状态的医生
+            return doctorRepository.findAllByUserStatusList(UserStatus.ACTIVE.name()).stream()
                     .filter(doctor -> doctor.getSpecialty() != null && 
                             doctor.getSpecialty().toLowerCase().contains(specialty.toLowerCase()))
                     .map(this::convertToListDTO)

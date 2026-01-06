@@ -13,6 +13,8 @@ import com.hospital.registration.service.AdminDepartmentService;
 import com.hospital.registration.service.AdminScheduleService;
 import com.hospital.registration.service.AdminService;
 import com.hospital.registration.service.DoctorLeaveService;
+import com.hospital.registration.service.DoctorProfileService;
+import com.hospital.registration.dto.DoctorListDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -42,6 +44,7 @@ public class AdminController {
     private final AdminScheduleService adminScheduleService;
     private final DoctorLeaveService doctorLeaveService;
     private final AppointmentService appointmentService;
+    private final DoctorProfileService doctorProfileService;
 
     @GetMapping("/users")
     public ResponseEntity<ApiResponse<Page<UserDetailDTO>>> listUsers(
@@ -49,6 +52,14 @@ public class AdminController {
             @RequestParam(defaultValue = "20") int size) {
         Page<UserDetailDTO> users = adminService.listUsers(page, size);
         return ResponseEntity.ok(ApiResponse.success(users));
+    }
+
+    // 获取所有医生列表（管理员专用，包括所有状态）
+    @GetMapping("/doctors")
+    public ResponseEntity<ApiResponse<Page<DoctorListDTO>>> getAllDoctorsForAdmin(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1000") int size) {
+        return ResponseEntity.ok(ApiResponse.success(doctorProfileService.getAllDoctorsForAdmin(page, size)));
     }
 
     @PutMapping("/doctors/{id}/approve")
