@@ -577,7 +577,8 @@ public class DoctorProfileService {
         DoctorDetailDTO dto = new DoctorDetailDTO();
         dto.setId(doctor.getId());
         dto.setName(doctor.getName());
-        dto.setTitle(getTitleDisplayName(doctor.getTitle()));
+        dto.setTitle(getTitleDisplayName(doctor.getTitle()));  // 显示名称
+        dto.setTitleCode(doctor.getTitle() != null ? doctor.getTitle().name() : null);  // 枚举值，用于表单编辑
         dto.setEmployeeId(doctor.getEmployeeId());        // 添加工号
         dto.setLicenseNumber(doctor.getLicenseNumber());  // 添加执业证号
         dto.setDepartmentId(doctor.getDepartmentId());
@@ -590,6 +591,16 @@ public class DoctorProfileService {
         dto.setSpecialty(doctor.getSpecialty());
         dto.setScheduleInfo(doctor.getScheduleInfo());
         dto.setOnlineStatus("AVAILABLE");
+        
+        // 从User表获取手机号码
+        try {
+            if (doctor.getUserId() != null) {
+                userRepository.findById(doctor.getUserId())
+                        .ifPresent(user -> dto.setPhone(user.getPhone()));
+            }
+        } catch (Exception e) {
+            log.warn("Could not get phone number for doctor: {}", doctor.getId(), e);
+        }
         
         // 获取科室名称
         try {
