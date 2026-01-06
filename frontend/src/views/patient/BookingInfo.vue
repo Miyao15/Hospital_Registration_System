@@ -127,6 +127,7 @@
                 type="date" 
                 id="birthDate" 
                 v-model="form.birthDate"
+                lang="en"
                 :class="{ 'error': errors.birthDate }"
               />
               <span v-if="errors.birthDate" class="error-text">{{ errors.birthDate }}</span>

@@ -28,7 +28,7 @@
         </svg>
       </button>
       <button class="today-btn" @click="goToToday" v-if="!isToday">今天</button>
-      <input type="date" v-model="datePickerValue" @change="onDatePick" class="date-picker" />
+      <input type="date" v-model="datePickerValue" @change="onDatePick" class="date-picker" lang="en" />
     </div>
 
     <!-- 统计栏 -->

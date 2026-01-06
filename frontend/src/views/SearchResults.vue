@@ -1012,57 +1012,14 @@ const openBookingModal = (doctor, dayObj = null) => {
   // 允许未登录用户打开预约模态框，选择时间后再提示登录
   selectedDoctor.value = doctor;
   
-  // 每次打开弹窗时，根据医生科室自动选择默认的检查项目
-  // 只有在没有从路由预选项目时才自动选择
-  if (!route.query.medicalItemId) {
-    let defaultItem = null;
-    
-    // 根据医生科室名称智能匹配检查项目
-    const deptName = doctor.departmentName || '';
-    if (deptName) {
-      // 科室名称到检查项目名称的映射
-      const deptToItemMap = {
-        '口腔科': '口腔检查',
-        '眼科': '眼科检查',
-        '皮肤科': '皮肤检查',
-        '妇科': '妇科检查',
-        '妇产科': '妇科检查',
-        '心血管内科': '健康体检',
-        '内科': '健康体检',
-        '外科': '健康体检',
-        '儿科': '健康体检',
-        '神经内科': '健康体检',
-        '骨科': '健康体检'
-      };
-      
-      // 查找匹配的检查项目名称
-      const targetItemName = deptToItemMap[deptName];
-      if (targetItemName) {
-        defaultItem = medicalItems.value.find(item => item.name === targetItemName);
-      }
-      
-      // 如果没有精确匹配，尝试模糊匹配（科室名称包含在检查项目名称中）
-      if (!defaultItem) {
-        defaultItem = medicalItems.value.find(item => 
-          item.name.includes(deptName.replace('科', '')) || 
-          deptName.includes(item.name.replace('检查', ''))
-        );
-      }
-    }
-    
-    // 如果还是没有匹配的项目，选择"健康体检"作为默认
-    if (!defaultItem) {
-      defaultItem = medicalItems.value.find(item => item.name === '健康体检');
-    }
-    
-    // 最后兜底：选择第一个可用的项目
-    if (!defaultItem && medicalItems.value.length > 0) {
-      defaultItem = medicalItems.value[0];
-    }
-    
-    if (defaultItem) {
-      selectedMedicalItem.value = defaultItem;
-      preselectedMedicalItemId.value = defaultItem.id;
+  // 只有当从路由参数中有medicalItemId时才设置（从检查项目入口进入的情况）
+  // 否则让用户通过下拉列表手动选择检查项目
+  if (route.query.medicalItemId && !selectedMedicalItem.value) {
+    const routeItemId = route.query.medicalItemId;
+    const routeItem = medicalItems.value.find(item => item.id === routeItemId);
+    if (routeItem) {
+      selectedMedicalItem.value = routeItem;
+      preselectedMedicalItemId.value = routeItemId;
     }
   }
   

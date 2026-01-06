@@ -40,11 +40,11 @@
         <div class="date-inputs">
           <div class="input-group">
             <label>{{ dateMode === 'single' ? '排班日期' : '开始日期' }}</label>
-            <input type="date" v-model="form.startDate" :min="minDate" />
+            <input type="date" v-model="form.startDate" :min="minDate" lang="en" />
           </div>
           <div class="input-group" v-if="dateMode === 'range'">
             <label>结束日期</label>
-            <input type="date" v-model="form.endDate" :min="form.startDate || minDate" />
+            <input type="date" v-model="form.endDate" :min="form.startDate || minDate" lang="en" />
           </div>
         </div>
       </div>

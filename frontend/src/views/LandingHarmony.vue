@@ -214,20 +214,20 @@
       <div class="container">
         <div class="stats-grid">
           <div class="stat-item fade-in-up" style="animation-delay: 0.1s">
-            <div class="stat-number" data-target="10000">0</div>
+            <div class="stat-number" :data-target="publicStats.totalDoctors || 0">{{ publicStats.totalDoctors || 0 }}</div>
             <div class="stat-label">注册医生</div>
           </div>
           <div class="stat-item fade-in-up" style="animation-delay: 0.2s">
-            <div class="stat-number" data-target="50000">0</div>
+            <div class="stat-number" :data-target="publicStats.totalPatients || 0">{{ publicStats.totalPatients || 0 }}</div>
             <div class="stat-label">服务患者</div>
           </div>
           <div class="stat-item fade-in-up" style="animation-delay: 0.3s">
-            <div class="stat-number" data-target="98">0</div>
+            <div class="stat-number" :data-target="publicStats.satisfactionRate || 98">{{ publicStats.satisfactionRate || 98 }}</div>
             <div class="stat-suffix">%</div>
             <div class="stat-label">满意度</div>
           </div>
           <div class="stat-item fade-in-up" style="animation-delay: 0.4s">
-            <div class="stat-number" data-target="24">0</div>
+            <div class="stat-number" :data-target="publicStats.onlineServiceHours || 24">{{ publicStats.onlineServiceHours || 24 }}</div>
             <div class="stat-suffix">小时</div>
             <div class="stat-label">在线服务</div>
           </div>
@@ -449,6 +449,12 @@ const currentLocation = ref('');
 
 // New data for enriched sections - 从API获取真实数据
 const departments = ref([]);
+const publicStats = ref({
+  totalDoctors: 0,
+  totalPatients: 0,
+  satisfactionRate: 98,
+  onlineServiceHours: 24
+});
 
 const testimonials = ref([
   {
@@ -784,6 +790,9 @@ const animateNumber = (element, target, duration = 2000) => {
   const increment = target / (duration / 16);
   let current = start;
   
+  // 先设置为0，然后开始动画
+  element.textContent = '0';
+  
   const timer = setInterval(() => {
     current += increment;
     if (current >= target) {
@@ -796,13 +805,18 @@ const animateNumber = (element, target, duration = 2000) => {
 };
 
 const initNumberCounters = () => {
+  // 清除之前的计数标记，以便重新计数
   const statNumbers = document.querySelectorAll('.stat-number');
+  statNumbers.forEach(num => num.classList.remove('counted'));
+  
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting && !entry.target.classList.contains('counted')) {
-        const target = parseInt(entry.target.getAttribute('data-target'));
-        animateNumber(entry.target, target);
-        entry.target.classList.add('counted');
+        const target = parseInt(entry.target.getAttribute('data-target')) || 0;
+        if (target > 0) {
+          animateNumber(entry.target, target);
+          entry.target.classList.add('counted');
+        }
       }
     });
   }, { threshold: 0.5 });
@@ -815,7 +829,8 @@ const fetchLandingData = async () => {
   try {
     const results = await Promise.allSettled([
       request.get('/api/doctors/top', { params: { limit: 10 } }),
-      getAllDepartments()
+      getAllDepartments(),
+      request.get('/api/statistics/public')
     ]);
     const allDoctors = (results[0].status === 'fulfilled' && results[0].value) ? results[0].value : [];
     topDoctors.value = allDoctors.filter(doc => (doc.rating || 0) === 5.0).slice(0, 6);
@@ -828,6 +843,35 @@ const fetchLandingData = async () => {
         name: dept.name,
         doctorCount: dept.doctorCount || 0
       })) : [];
+    }
+    
+    // 获取公开统计数据
+    if (results[2].status === 'fulfilled' && results[2].value) {
+      const statsData = results[2].value;
+      publicStats.value = {
+        totalDoctors: statsData.totalDoctors || 0,
+        totalPatients: statsData.totalPatients || 0,
+        satisfactionRate: statsData.satisfactionRate || 98,
+        onlineServiceHours: statsData.onlineServiceHours || 24
+      };
+      // 数据加载后，等待DOM更新，然后重新初始化数字动画
+      await nextTick();
+      setTimeout(() => {
+        // 更新所有统计数字的data-target属性
+        const statNumbers = document.querySelectorAll('.stat-number');
+        statNumbers.forEach((num, index) => {
+          let target = 0;
+          switch(index) {
+            case 0: target = publicStats.value.totalDoctors; break;
+            case 1: target = publicStats.value.totalPatients; break;
+            case 2: target = publicStats.value.satisfactionRate; break;
+            case 3: target = publicStats.value.onlineServiceHours; break;
+          }
+          num.setAttribute('data-target', target);
+          num.textContent = '0'; // 重置为0以便动画
+        });
+        initNumberCounters();
+      }, 200);
     }
   } catch (error) {
     console.error('Failed to fetch landing page data:', error);

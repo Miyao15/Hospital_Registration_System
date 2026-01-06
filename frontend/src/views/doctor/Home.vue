@@ -4,7 +4,7 @@
     <div class="hero-section slide-down">
       <div class="hero-content">
         <div class="hero-text fade-in-up">
-          <h1 class="hero-title">早上好，{{ doctorName }} 医生</h1>
+          <h1 class="hero-title">早上好，{{ doctorName ? doctorName + '医生' : '医生' }}</h1>
           <p class="hero-subtitle fade-in delay-200">{{ todayDate }} · 今天又是充满希望的一天</p>
         </div>
         <div class="hero-image bounce-in delay-300">
@@ -241,12 +241,14 @@ import { ref, computed, onMounted } from 'vue';
 import { useUserStore } from '@/stores/user';
 import { ElMessage } from 'element-plus';
 import request from '@/utils/request';
+import { getMyDoctorInfo } from '@/api/doctor';
 
 const userStore = useUserStore();
 
 const loading = ref(true);
 const todayAppointments = ref([]);
 const recentReviews = ref([]);
+const doctorInfo = ref({ name: '' });
 const stats = ref({
   todayCount: 0,
   pendingCount: 0,
@@ -260,7 +262,8 @@ const stats = ref({
   reviewCount: 0
 });
 
-const doctorName = computed(() => userStore.userInfo?.realName || '医生');
+// 获取医生姓名，如果都没有则返回空字符串（不显示"医生"后缀）
+const doctorName = computed(() => doctorInfo.value.name || userStore.userInfo?.realName || '');
 
 const todayDate = computed(() => {
   const now = new Date();
@@ -272,6 +275,16 @@ const todayDate = computed(() => {
 });
 
 onMounted(async () => {
+  // 先获取医生信息
+  try {
+    const data = await getMyDoctorInfo();
+    if (data) {
+      doctorInfo.value.name = data.name || '';
+    }
+  } catch (error) {
+    console.error('获取医生信息失败:', error);
+  }
+  
   await Promise.all([
     fetchTodayAppointments(),
     fetchAppointmentStats(),

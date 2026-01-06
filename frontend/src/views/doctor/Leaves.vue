@@ -124,11 +124,11 @@
           <div class="form-row">
             <div class="form-group">
               <label>开始日期</label>
-              <input type="date" v-model="leaveForm.startDate" :min="minDate" required />
+              <input type="date" v-model="leaveForm.startDate" :min="minDate" required lang="en" />
             </div>
             <div class="form-group">
               <label>结束日期</label>
-              <input type="date" v-model="leaveForm.endDate" :min="leaveForm.startDate || minDate" required />
+              <input type="date" v-model="leaveForm.endDate" :min="leaveForm.startDate || minDate" required lang="en" />
             </div>
           </div>
           

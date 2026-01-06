@@ -15,9 +15,9 @@
         <input type="text" v-model="searchKeyword" placeholder="搜索医生或科室..." @input="handleSearch" />
       </div>
       <div class="date-filter">
-        <input type="date" v-model="startDate" @change="fetchRecords" />
+        <input type="date" v-model="startDate" @change="fetchRecords" lang="en" />
         <span>至</span>
-        <input type="date" v-model="endDate" @change="fetchRecords" />
+        <input type="date" v-model="endDate" @change="fetchRecords" lang="en" />
       </div>
     </div>
 

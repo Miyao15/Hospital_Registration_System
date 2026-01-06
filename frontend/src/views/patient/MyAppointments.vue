@@ -167,7 +167,7 @@
           <div class="reschedule-form">
             <div class="form-group">
               <label>选择新日期：</label>
-              <input type="date" v-model="rescheduleForm.newDate" :min="minDate" />
+              <input type="date" v-model="rescheduleForm.newDate" :min="minDate" lang="en" />
             </div>
             <div class="form-group">
               <label>选择时段：</label>

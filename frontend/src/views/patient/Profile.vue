@@ -65,7 +65,7 @@
           <div class="form-row">
             <div class="form-group">
               <label>出生日期</label>
-              <input type="date" v-model="form.birthDate" />
+              <input type="date" v-model="form.birthDate" lang="en" />
             </div>
             <div class="form-group">
               <label>紧急联系人</label>

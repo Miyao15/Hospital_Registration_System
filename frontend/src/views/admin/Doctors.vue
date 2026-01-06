@@ -158,7 +158,7 @@
 
 <script setup>
 import { ref, computed, onMounted, reactive } from 'vue';
-import { listAllDoctors } from '@/api/doctor';
+import { getAllDoctorsForAdmin } from '@/api/admin';
 import { approveDoctor } from '@/api/admin';
 import { ElMessage, ElMessageBox } from 'element-plus';
 
@@ -186,7 +186,7 @@ onMounted(() => {
 const fetchDoctors = async () => {
   loading.value = true;
   try {
-    const data = await listAllDoctors({ page: 0, size: 1000 });
+    const data = await getAllDoctorsForAdmin({ page: 0, size: 1000 });
     // 后端返回的是分页数据，需要取 content 字段
     doctors.value = data.content || [];
   } catch (error) {

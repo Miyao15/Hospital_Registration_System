@@ -261,8 +261,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useUserStore } from '@/stores/user';
-import { listUsers, getPendingLeaves, getDashboardStatistics } from '@/api/admin';
-import { listAllDoctors } from '@/api/doctor';
+import { listUsers, getPendingLeaves, getDashboardStatistics, getAllDoctorsForAdmin } from '@/api/admin';
 import { ElMessage } from 'element-plus';
 
 const userStore = useUserStore();
@@ -299,8 +298,8 @@ onMounted(async () => {
 
 const loadStats = async () => {
   try {
-    // 获取医生数
-    const doctorsRes = await listAllDoctors({ page: 0, size: 1000 });
+    // 获取所有医生（包括所有状态，管理员专用）
+    const doctorsRes = await getAllDoctorsForAdmin({ page: 0, size: 1000 });
     const doctors = doctorsRes.content || [];
     stats.value.pendingDoctors = doctors.filter(d => d.status === 'PENDING').length || 0;
 

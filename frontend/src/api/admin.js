@@ -18,6 +18,13 @@ export function updateUserStatus(userId, status) {
 }
 
 // ==================== 医生审批 ====================
+export function getAllDoctorsForAdmin(params) {
+  return request({
+    url: '/api/admin/doctors',
+    method: 'get',
+    params
+  })
+}
 export function approveDoctor(doctorId) {
   return request({
     url: `/api/admin/doctors/${doctorId}/approve`,
