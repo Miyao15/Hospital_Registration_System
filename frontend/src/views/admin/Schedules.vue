@@ -383,10 +383,19 @@ const handleSubmit = async () => {
 };
 
 const formatDate = (date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  // 如果已经是字符串格式（YYYY-MM-DD），直接返回
+  if (typeof date === 'string') {
+    return date;
+  }
+  // 如果是 Date 对象，进行格式化
+  if (date instanceof Date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+  // 其他情况，尝试转换为字符串
+  return String(date);
 };
 
 const fetchSchedules = async () => {
