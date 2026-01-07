@@ -682,7 +682,12 @@ public class DoctorProfileService {
         }
         if (dto.getTitle() != null) {
             try {
-                doctor.setTitle(DoctorTitle.valueOf(dto.getTitle()));
+                DoctorTitle title = DoctorTitle.valueOf(dto.getTitle());
+                // 将 DEPUTY_CHIEF_PHYSICIAN 转换为 ASSOCIATE_CHIEF 以匹配数据库 ENUM
+                if (title == DoctorTitle.DEPUTY_CHIEF_PHYSICIAN) {
+                    title = DoctorTitle.ASSOCIATE_CHIEF;
+                }
+                doctor.setTitle(title);
             } catch (IllegalArgumentException e) {
                 log.warn("无效的职称: {}", dto.getTitle());
             }

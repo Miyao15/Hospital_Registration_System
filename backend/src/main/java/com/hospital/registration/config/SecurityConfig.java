@@ -44,6 +44,7 @@ public class SecurityConfig {
             .requestMatchers(HttpMethod.GET, "/api/schedules/**").permitAll()
             .requestMatchers(HttpMethod.GET, "/api/hospitals/**", "/api/hospitals").permitAll()
             .requestMatchers(HttpMethod.GET, "/api/reviews/doctor/**").permitAll() // 公开访问医生评价
+            .requestMatchers(HttpMethod.GET, "/api/statistics/public").permitAll() // 公开访问首页统计数据
             // 患者端接口
             .requestMatchers("/api/appointments/**").hasRole("PATIENT")
             .requestMatchers("/api/patients/**").hasRole("PATIENT")

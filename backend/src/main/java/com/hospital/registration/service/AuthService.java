@@ -9,6 +9,7 @@ import com.hospital.registration.entity.Admin;
 import com.hospital.registration.entity.Doctor;
 import com.hospital.registration.entity.Patient;
 import com.hospital.registration.entity.User;
+import com.hospital.registration.enums.DoctorTitle;
 import com.hospital.registration.enums.UserRole;
 import com.hospital.registration.enums.UserStatus;
 import com.hospital.registration.exception.BusinessException;
@@ -253,7 +254,12 @@ public class AuthService {
         // 自动生成默认头像（基于姓名）
         doctor.setAvatarUrl(AvatarUtils.generateAvatarFromName(request.getName()));
         doctor.setEmployeeId(request.getEmployeeId());
-        doctor.setTitle(request.getTitle());
+        // 将 DEPUTY_CHIEF_PHYSICIAN 转换为 ASSOCIATE_CHIEF 以匹配数据库 ENUM
+        DoctorTitle title = request.getTitle();
+        if (title == DoctorTitle.DEPUTY_CHIEF_PHYSICIAN) {
+            title = DoctorTitle.ASSOCIATE_CHIEF;
+        }
+        doctor.setTitle(title);
         doctor.setDepartmentId(request.getDepartmentId());
         doctor.setHospitalId(request.getHospitalId());
         doctor.setSpecialty(request.getSpecialty());

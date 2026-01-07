@@ -64,7 +64,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         long invalidTime = Long.parseLong(invalidatedAt);
                         long tokenIssuedAt = jwtService.extractClaims(token).getIssuedAt().getTime();
                         if (tokenIssuedAt < invalidTime) {
-                            log.debug("Token invalidated for user: {}", userId);
+                            log.warn("Token invalidated for user: {} at request: {}", userId, request.getRequestURI());
                             filterChain.doFilter(request, response);
                             return;
                         }
@@ -82,10 +82,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
                 log.info("Authentication set for user: {} with role: ROLE_{}", userId, role.name());
             } else {
-                log.warn("JWT token is invalid");
+                log.warn("JWT token is invalid for request: {}", request.getRequestURI());
             }
         } catch (Exception e) {
-            log.error("Error processing JWT token: {}", e.getMessage());
+            log.error("Error processing JWT token for request {}: {}", request.getRequestURI(), e.getMessage(), e);
         }
 
         filterChain.doFilter(request, response);
