@@ -27,7 +27,8 @@ request.interceptors.response.use(
     
     // 后端返回的 ApiResponse 格式为 { success: boolean, data: T, error: ErrorInfo }
     // success 为 true 表示业务成功
-    if (!res.success) {
+    // 严格检查：只有当 success 明确为 false 时才进入错误处理
+    if (res && res.success === false) {
       const errorInfo = res.error || {};
       
       // 处理details字段（验证错误）
@@ -55,8 +56,13 @@ request.interceptors.response.use(
       return Promise.reject(new Error(errorInfo.message || '请求失败'));
     }
     
-    // 如果 success 为 true，直接返回 data 字段
-    return res.data;
+    // 如果 success 为 true 或未定义（兼容旧接口），直接返回 data 字段或整个响应
+    // 优先返回 data 字段，如果没有 data 字段则返回整个响应
+    if (res && res.data !== undefined) {
+      return res.data;
+    }
+    // 兼容没有 ApiResponse 包装的响应
+    return res;
   },
   error => {
     // 处理HTTP错误（401, 400, 500等）
@@ -108,6 +114,27 @@ request.interceptors.response.use(
           ElMessage.error(res.message);
           return Promise.reject(new Error(res.message));
         }
+      }
+      
+      // 处理403 Forbidden错误（通常是token无效或权限不足）
+      if (error.response.status === 403) {
+        // 清除本地存储的token和用户信息
+        localStorage.removeItem('token');
+        localStorage.removeItem('userInfo');
+        localStorage.removeItem('userRole');
+        ElMessage.warning('登录已过期，请重新登录');
+        router.push('/login');
+        return Promise.reject(new Error('登录已过期'));
+      }
+      
+      // 处理401 Unauthorized错误
+      if (error.response.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('userInfo');
+        localStorage.removeItem('userRole');
+        ElMessage.warning('未授权，请重新登录');
+        router.push('/login');
+        return Promise.reject(new Error('未授权'));
       }
       
       // 如果无法解析错误信息，显示通用错误

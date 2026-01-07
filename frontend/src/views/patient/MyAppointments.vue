@@ -355,13 +355,21 @@ const submitReview = async () => {
       rating: reviewForm.value.rating,
       content: reviewForm.value.content
     });
+    // 评价成功 - 响应拦截器已经处理了错误，这里只处理成功情况
     ElMessage.success('评价成功，感谢您的反馈！');
     closeReviewModal();
     // 标记已评价
     const apt = appointments.value.find(a => a.id === reviewingAppointment.value.id);
     if (apt) apt.hasReviewed = true;
+    // 刷新预约列表以显示最新状态
+    fetchAppointments();
   } catch (e) {
-    ElMessage.error(e.response?.data?.message || '评价失败，请稍后重试');
+    // 错误消息已经在响应拦截器中显示，这里不再重复显示
+    // 只有在响应拦截器没有处理的情况下才显示错误
+    if (!e.message || e.message === '请求失败') {
+      // 响应拦截器已经显示了错误消息，这里不需要再显示
+      console.error('评价失败:', e);
+    }
   } finally {
     submittingReview.value = false;
   }
